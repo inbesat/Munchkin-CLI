@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Startup",
+    "durationMs": 28.23,
+    "memoryMB": 0,
+    "opsPerSec": 354
+  },
+  {
+    "name": "Streaming Markdown (1000 chars)",
+    "durationMs": 553.79,
+    "memoryMB": 0.3400000000000034,
+    "opsPerSec": 9
+  },
+  {
+    "name": "File List (1000 items)",
+    "durationMs": 1664.82,
+    "memoryMB": 0.5300000000000011,
+    "opsPerSec": 3
+  },
+  {
+    "name": "Diff (500 lines)",
+    "durationMs": 819.49,
+    "memoryMB": -56.010000000000005,
+    "opsPerSec": 6
+  },
+  {
+    "name": "Tool Status (100 tools)",
+    "durationMs": 506.69,
+    "memoryMB": 11.239999999999995,
+    "opsPerSec": 10
+  },
+  {
+    "name": "Rapid Re-renders (100 updates)",
+    "durationMs": 327.21,
+    "memoryMB": 0,
+    "opsPerSec": 9
+  }
+]

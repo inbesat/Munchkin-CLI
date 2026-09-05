@@ -1,0 +1,7 @@
+[test]
+coverage = true
+coverageDir = "coverage"
+coverageThreshold = { line = 80, function = 80, branch = 80 }
+
+[run]
+bun = true

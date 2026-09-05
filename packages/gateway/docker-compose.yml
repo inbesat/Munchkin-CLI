@@ -1,0 +1,26 @@
+services:
+  forge-gateway:
+    build:
+      context: ../..
+      dockerfile: packages/gateway/Dockerfile
+    image: forge-gateway:0.1.0
+    ports:
+      - '${GATEWAY_PORT:-8787}:8787'
+    environment:
+      PORT: '8787'
+      GATEWAY_MODE: '${GATEWAY_MODE:-anonymous}'
+      GATEWAY_TOKEN: '${GATEWAY_TOKEN:-}'
+      GATEWAY_QUOTA_DB: /data/quota.sqlite
+      GATEWAY_DAILY_TOKEN_CAP: '${GATEWAY_DAILY_TOKEN_CAP:-1000000}'
+      GATEWAY_DAILY_COST_CAP: '${GATEWAY_DAILY_COST_CAP:-}'
+      GATEWAY_RATE_LIMIT: '${GATEWAY_RATE_LIMIT:-60}'
+      NVIDIA_API_KEY: '${NVIDIA_API_KEY:-}'
+      GROQ_API_KEY: '${GROQ_API_KEY:-}'
+      CEREBRAS_API_KEY: '${CEREBRAS_API_KEY:-}'
+      OPENROUTER_API_KEY: '${OPENROUTER_API_KEY:-}'
+    volumes:
+      - gateway-data:/data
+    restart: unless-stopped
+
+volumes:
+  gateway-data:

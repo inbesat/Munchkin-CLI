@@ -1,0 +1,28 @@
+# forge-free gateway systemd unit
+# Install: cp deploy/systemd/forge-gateway.service /etc/systemd/system/
+#          systemctl daemon-reload && systemctl enable --now forge-gateway
+# Secrets/keys live in /etc/forge/gateway.env (see .env.example).
+
+[Unit]
+Description=forge free-model gateway
+Documentation=https://forge.local/docs/gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=forge
+Group=forge
+WorkingDirectory=/opt/forge/packages/gateway
+EnvironmentFile=/etc/forge/gateway.env
+Environment=GATEWAY_QUOTA_DB=/var/lib/forge/quota.sqlite
+ExecStart=/usr/local/bin/bun run src/cli.ts
+Restart=on-failure
+RestartSec=3
+# SQLite writes on the quota volume
+ReadWritePaths=/var/lib/forge
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
