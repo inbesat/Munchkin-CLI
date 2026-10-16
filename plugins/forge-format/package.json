@@ -1,0 +1,15 @@
+{
+  "name": "forge-format",
+  "version": "1.0.0",
+  "description": "PostToolUse hook: auto-formats edited files with Biome (fallback Prettier)",
+  "type": "module",
+  "files": [
+    "forge.plugin.json",
+    "hooks",
+    "commands",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

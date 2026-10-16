@@ -1,0 +1,8 @@
+{
+  "name": "forge-test",
+  "version": "1.0.0",
+  "description": "Slash command /test: runs the project test suite and reports results",
+  "parts": {
+    "commands": true
+  }
+}

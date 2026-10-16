@@ -1,0 +1,8 @@
+{
+  "name": "forge-security",
+  "version": "1.0.0",
+  "description": "PreToolUse hook: scans tool payloads for secrets and blocks dangerous shell commands",
+  "parts": {
+    "hooks": true
+  }
+}

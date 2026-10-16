@@ -1,0 +1,15 @@
+{
+  "name": "forge-test",
+  "version": "1.0.0",
+  "description": "Slash command /test: runs the project test suite and reports results",
+  "type": "module",
+  "files": [
+    "forge.plugin.json",
+    "hooks",
+    "commands",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "bun@1.3.11",
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "plugins/*"],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
