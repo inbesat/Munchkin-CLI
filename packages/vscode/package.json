@@ -1,0 +1,76 @@
+{
+  "name": "@forge/vscode",
+  "displayName": "Forge",
+  "description": "Forge coding-agent sidebar chat for VS Code.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "forge",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "files": ["dist", "media", "README.md"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "forge",
+          "title": "Forge",
+          "icon": "media/forge.svg"
+        }
+      ]
+    },
+    "views": {
+      "forge": [
+        {
+          "id": "forge.chat",
+          "name": "Chat",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "forge.openChat",
+        "title": "Forge: Open Chat"
+      }
+    ],
+    "configuration": {
+      "title": "Forge",
+      "properties": {
+        "forge.baseUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:3000",
+          "description": "Base URL of the running forge server."
+        },
+        "forge.token": {
+          "type": "string",
+          "default": "",
+          "description": "Optional bearer token for forge server auth."
+        },
+        "forge.model": {
+          "type": "string",
+          "default": "",
+          "description": "Optional model override (empty = server default)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test",
+    "lint": "biome check src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@forge/sdk": "workspace:*",
+    "@types/bun": "^1.2.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.7.0"
+  }
+}

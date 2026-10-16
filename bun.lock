@@ -169,6 +169,17 @@
         "typescript": "^5.3.0",
       },
     },
+    "packages/vscode": {
+      "name": "@forge/vscode",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@biomejs/biome": "^1.9.0",
+        "@forge/sdk": "workspace:*",
+        "@types/bun": "^1.2.0",
+        "@types/vscode": "^1.90.0",
+        "typescript": "^5.7.0",
+      },
+    },
     "plugins/forge-format": {
       "name": "forge-format",
       "version": "1.0.0",
@@ -302,6 +313,8 @@
     "@forge/server": ["@forge/server@workspace:packages/server"],
 
     "@forge/tui": ["@forge/tui@workspace:packages/tui"],
+
+    "@forge/vscode": ["@forge/vscode@workspace:packages/vscode"],
 
     "@hono/node-server": ["@hono/node-server@2.1.1", "", { "peerDependencies": { "hono": "^4" } }, "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg=="],
 
@@ -442,6 +455,8 @@
     "@types/react": ["@types/react@18.3.31", "", { "dependencies": { "@types/prop-types": "*", "csstype": "^3.2.2" } }, "sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw=="],
 
     "@types/unist": ["@types/unist@3.0.3", "", {}, "sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q=="],
+
+    "@types/vscode": ["@types/vscode@1.140.0", "", {}, "sha512-KAB5RBZIgnUhpp4mKsVJPPHLOQKu6WtGy2xpfWjaajEXO4xIIC+UESAXLiQ9ewx6QD1uBmvC/S8BJzkbvv4bRA=="],
 
     "@ungap/structured-clone": ["@ungap/structured-clone@1.4.0", "", {}, "sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ=="],
 
