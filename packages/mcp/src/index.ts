@@ -40,6 +40,15 @@ export {
   type McpConnectionState,
   type McpConnectionStatus,
 } from './client/manager'
+
+// forge MCP server (Phase 124) - capability types live in forge-tools
+export { ForgeMcpServer } from './server/forge-server'
+export {
+  defaultForgeTools,
+  type ForgeTool,
+  type ForgeToolContext,
+  type ForgeToolDefinition,
+} from './server/forge-tools'
 export {
   LazyToolIndex,
   type LazyResult,
