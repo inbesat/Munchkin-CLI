@@ -113,8 +113,16 @@ export class McpToolClient {
     }
   }
 
-  async callTool(name: string, args: Record<string, unknown> = {}): Promise<McpCallResult> {
-    const response = await this.transport.request('tools/call', { name, arguments: args })
+  async callTool(
+    name: string,
+    args: Record<string, unknown> = {},
+    timeoutMs?: number,
+  ): Promise<McpCallResult> {
+    const response = await this.transport.request(
+      'tools/call',
+      { name, arguments: args },
+      timeoutMs,
+    )
     if (!response.ok) return { ok: false, error: response.error }
     const result = response.result as { content?: McpToolContent[]; isError?: boolean }
     return {

@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'bun:test'
+﻿import { afterAll, describe, expect, it } from 'bun:test'
 import { join } from 'node:path'
 import { McpToolClient } from './tools'
 
@@ -11,11 +11,10 @@ describe('MCP client, stdio transport (Phase 117)', () => {
     for (const client of clients) client.disconnect()
   })
 
-  function spawnClient(timeoutMs?: number): McpToolClient {
+  function spawnClient(): McpToolClient {
     const client = McpToolClient.spawn({
       command: process.execPath,
       args: ['run', MOCK_SERVER],
-      requestTimeoutMs: timeoutMs,
     })
     clients.push(client)
     return client
@@ -68,7 +67,7 @@ describe('MCP client, stdio transport (Phase 117)', () => {
   it('times out instead of hanging when the server never answers', async () => {
     const client = spawnClient(150)
     await client.connect()
-    const slow = await client.callTool('slow', { delay: 5_000 })
+    const slow = await client.callTool('slow', { delay: 5_000 }, 150)
     expect(slow.ok).toBe(false)
     if (!slow.ok) expect(slow.error).toContain('timed out')
     client.disconnect()
