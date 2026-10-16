@@ -2726,6 +2726,8 @@ Each phase contains:
 
 **Testing:** Create a session with multiple tool calls. Browse trajectory. Verify all steps visible.
 
+**Status (2026-10-17):** Implemented. `packages/core/src/session/trajectory.ts` - `buildTrajectory(events)` maps a session log into ordered, turn-numbered `TrajectoryStep`s (kind/title/detail/meta): created, user/assistant messages (first line as title, tokens as meta), tool calls (JSON args), tool results (result or error, duration + error flag), errors, compaction, session end. `GET /trajectory/:id` (`packages/server/src/trajectory/routes.ts` + `page.ts`) renders the session as a self-contained dark-theme page (inline CSS, no scripts/CDN); every dynamic value is HTML-escaped (event payloads are untrusted agent/model output); unknown sessions return an HTML 404. Gated by the normal auth middleware like `/docs`; works out of the box in the no-auth dev setup. Tests: 8 green (core 5: full kind/turn mapping, summaries, empty log, title truncation; server 3: all steps rendered, XSS escaping, 404). Core suite 1325 pass / 0 fail; server suite 236 pass / 3 fail (2 known bash-on-Windows + 1 known-flaky EBUSY repair test); tsc 0 both; biome 0; builds clean; end-to-end smoke with the built server: created a session, appended tool-call events, page showed all steps and 404 for an unknown id.
+
 **Estimated Hours:** 8–10 hours.
 
 ---

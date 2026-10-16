@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 143 - Local Stats Dashboard (Complete); Phases 87-143 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-143 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) 1/6 done
-- **Next action:** Phase 144 - Trajectory Browser (Stage 14)
+- **Current phase:** Phase 144 - Trajectory Browser (Complete); Phases 87-144 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-144 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) 2/6 done
+- **Next action:** Phase 145 - Built-in Eval Runner (Stage 14)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
@@ -82,6 +82,7 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
   - Test environment limitations (OpenAI API key, bash on Windows)
   - SSE TextDecoder expects ArrayBuffer
   - Scalar docs returns 401/500
+  - TUI app.tsx:300 committed syntax error + ~14 pre-existing test failures (markdown/theme regressions) - pending TUI repair stream
 
 ## How to Update This File
 
