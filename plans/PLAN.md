@@ -2487,6 +2487,8 @@ Each phase contains:
 
 **Testing:** Edit a file, verify checkpoint created. Rollback, verify file restored. Test with many checkpoints for dedup.
 
+**Status (2026-10-17):** Implemented (`packages/git/src/checkpoints/engine.ts` - `CheckpointEngine(rootDir)`: `snapshotBeforeEdit(filePath)` stores content-addressed blobs under `.forge/checkpoints/blobs/<sha256>` + an append-only `journal.jsonl` (identical content reuses the blob - `deduplicated`/`blobWritten` flags - while the journal still records every checkpoint); `listCheckpoints(filePath?)`; `rollback(filePath, id?)` restores exact pre-edit content from the blob, detects the already-reverted no-op via content hash, and reports missing snapshots; `stats()` (entries vs stored blobs) + `clear()`. All result objects - missing files and corrupt journal degrade cleanly. **Phase-35 integration**: core's `createEditTool().execute` takes a best-effort shadow snapshot (dynamic `import('@forge/git')`, wrapped, never blocks or fails the edit) before mutating the file; `@forge/git` added as a core workspace dependency (no cycle - git has zero deps). Tests: 5 green - snapshot creates journal + blob (blueprint bullet 1), rollback restores exact content (bullet 2), targeted-id rollback + already-reverted detection, dedup: 5 checkpoints of alternating content → 2 blobs (bullet 3), clear + unknown-file clean reporting. git 6/6, core edit tools 11/11, core suite 1315/0 untouched, tsc 0 git+core, git lint 0 (core has pre-existing lint debt in unrelated agent/ test files - tracked, not from this phase).
+
 **Estimated Hours:** 8–10 hours.
 
 ---

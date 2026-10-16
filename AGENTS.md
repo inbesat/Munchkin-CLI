@@ -74,7 +74,7 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 - **Current phase:** Phase 130 - Remote Sandbox Providers E2B/Daytona (Complete; live cloud runs need API keys); Phases 87-130 implemented
   - Completed this engagement: audit repair (all packages), then Phases 87-130 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) COMPLETE 6/6
-- **Next action:** Stage 12 - Git Deep Integration (Phases 131-136), starting Phase 131
+- **Next action:** Phase 132 - Rewind Conversation + Code (Stage 12)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
