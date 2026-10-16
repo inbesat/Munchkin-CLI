@@ -2139,6 +2139,8 @@ Each phase contains:
 
 **Testing:** Plugin tries to access forbidden path → denied. Plugin tries to access API key → denied (unless granted).
 
+**Status (2026-10-17):** Implemented (`packages/plugin-kernel/src/plugin/sandbox.ts` - `PluginSandbox`: baseline read+write scoped to the plugin's install directory; extra `readPaths`/`writePaths` roots via grants, write-strictness enforced separately; normalized containment (Windows case-insensitive, `..` traversal caught post-resolve, relative paths denied); shell commands denied unless matching explicit grants (`git *` = command + any args with word boundary, `gitk` rejected, `npm test` allows trailing args; empty command denied); secrets/API keys denied unless the exact key or an `OPENAI_*`-style raw-prefix scope is granted; `fromManifest()` merges the Phase-108 manifest `sandbox` section over the install-dir baseline; all checks return `{allowed, reason}` decisions naming the plugin - no-throw, dependency-free per repo rule). Tests: 5 green - forbidden path denied w/ traversal, read-vs-write scope, command allowlist prefix semantics, API-key denied unless granted, manifest-derived grants). Kernel 78/78, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0.
+
 **Estimated Hours:** 5–6 hours.
 
 ---
