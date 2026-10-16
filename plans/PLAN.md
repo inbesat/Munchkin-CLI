@@ -2446,6 +2446,8 @@ Each phase contains:
 
 **Testing:** Run command in Docker sandbox. Verify isolation. Test volume mounting.
 
+**Status (2026-10-17):** Implemented (`packages/sandbox/src/docker/provider.ts` - `DockerSandboxProvider` (id `docker-container`): docker → podman runtime detection (`detectRuntime` result object); `buildDockerRunArgs(options)` pure assembly - `--network none` by default (opt-in), read-only root, `--cap-drop ALL`, `--security-opt no-new-privileges`, optional `--memory`, tmpfs /tmp, `-v scratch:/work` and `-v project:/workspace` volume mounts (Windows path normalization), `--workdir /workspace`; `isAvailable()` = runtime + live `run` probe (image present or alpine fallback), cached; `execute()` maps timeouts/errors to result objects; `checkIsolation()` probes: /workspace volume write allowed, /etc write denied (read-only root + dropped caps), network denied. SANDBOX_DOCKERFILE bundled: node:22-bookworm-slim + python3 + git + dedicated unprivileged `sandbox` user, workdir /workspace. Tests: 5 green - Dockerfile content assertions, locked-down argv assembly (network/read-only/cap-drop/two volume mounts/workdir/image position), network opt-in toggle, runtime detection result-object semantics (docker/podman/none), inert-when-unavailable provider (no-throw execute → exitCode null). Live container runs = machine with docker/podman (tests guard on isAvailable). sandbox 25/25, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 8–10 hours.
 
 ---
