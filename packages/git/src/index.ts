@@ -16,3 +16,30 @@ export {
   type RewindPoint,
   type RewindResult,
 } from './checkpoints/rewind'
+
+// Smart commit/PR tools (Phase 133)
+export {
+  SmartCommitTool,
+  smartCommitTool,
+  generateCommitMessage,
+  classifyChangeType,
+  readStatusEntries,
+  type ChangeFileEntry,
+  type SmartCommitInput,
+  type SmartCommitResult,
+} from './tools/smart-commit'
+export {
+  CreatePrTool,
+  createPrTool,
+  buildPrBody,
+  buildCreatePrArgs,
+  isGhAuthenticated,
+  type PrContext,
+} from './tools/create-pr'
+export {
+  ReviewPrTool,
+  reviewPrTool,
+  reviewDiff,
+  type DiffReview,
+  type ReviewFinding,
+} from './tools/review-pr'
