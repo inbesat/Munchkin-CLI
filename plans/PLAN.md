@@ -2252,6 +2252,8 @@ Each phase contains:
 
 **Testing:** Connect to GitHub MCP with OAuth. Verify token flow.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/auth/oauth.ts` - RFC 6749 authorization-code with RFC 7636 PKCE S256 (`buildPkcePair`), RFC 8414 metadata discovery (`fetchOAuthMetadata`, path-scoped then root fallback), `McpOAuthFlow.authorize` orchestrating a 127.0.0.1 loopback callback server (state validation incl. tamper rejection, injectable browser opener, bounded callback wait) → code exchange → persist; `TokenStore` file-backed JSON (`~/.forge/mcp-tokens.json`, injectable directory, corruption-tolerant) with `expires_in`→`expiresAt`; `refresh` grant rotating tokens (keeps prior refresh token when the IdP omits one); `getValidToken` auto-refresh on expiry; `authHeaders` Bearer shape for the Phase-118 transports' headers option). Tests: 5 green against a real mock IdP over HTTP (`Bun.serve`) - metadata discovery incl. root fallback, PKCE shape, end-to-end browser flow (state validation → exchange → persistence → Bearer header), tampered-state rejection (no token stored), expired-token auto-refresh. The blueprint's live GitHub test needs browser+credentials = manual. mcp 15/15, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 6–8 hours.
 
 ---
