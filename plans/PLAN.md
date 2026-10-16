@@ -2427,6 +2427,8 @@ Each phase contains:
 
 **Testing:** Run command in Landlock sandbox. Verify file access restrictions.
 
+**Status (2026-10-17):** Implemented (`packages/sandbox/src/linux/sandbox.ts` - `LandlockProvider` (id `linux-landlock`): the blueprint's sanctioned **bubblewrap** fallback that enforces Landlock LSM - no Node addon. `buildBwrapArgs(options)`: host root mounted `--ro-bind / /` (reads everywhere, writes nowhere), per-run scratch + optional cwd/custom binds read-WRITE, `/dev`, `/proc`, `tmpfs /tmp`, `--unshare-net` (network denied unless `allowNetwork`), `--die-with-parent --new-session`. `execute()` = per-run scratch + `bwrap` spawn w/ timeout; `checkIsolation()` live probes: bind-mount write must succeed, `/etc` write (read-only root) denied, network denied; `isAvailable()` = linux + `/usr/bin/bwrap` + live probe. Tests: 5 green - exact bwrap argv (read-only root + binds + fences), network opt-in toggle, provider identity (linux-conditional availability), live sandbox execute + isolation report (linux-only; this Windows box self-skips). sandbox 20/20, tsc 0, lint 0; barrel + dist rebuilt. Live landlock verification = Linux machine step (self-skipping tests ready).
+
 **Estimated Hours:** 6–8 hours.
 
 ---

@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 127 - macOS Seatbelt Profile (Complete; live verification needs a macOS machine - tests self-skip elsewhere); Phases 87-127 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-127 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) 3/6 done
-- **Next action:** Phase 128 - Linux Landlock + Seccomp (Stage 11)
+- **Current phase:** Phase 128 - Linux Landlock via bubblewrap (Complete; live verification needs a Linux machine - tests self-skip elsewhere); Phases 87-128 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-128 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) 4/6 done
+- **Next action:** Phase 129 - Sandbox Policy Engine (Stage 11)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
