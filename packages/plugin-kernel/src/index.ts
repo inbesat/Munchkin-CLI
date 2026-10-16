@@ -80,6 +80,17 @@ export {
   type VersionIndex,
   type VersionResult,
 } from './plugin/versioning'
+
+// Docs site generator (Phase 115)
+export {
+  generatePluginDocs,
+  renderDocsSite,
+  renderPluginPageHtml,
+  writeDocsSite,
+  type PluginDocPage,
+  type PluginDocsSite,
+  type SkillSummary,
+} from './docs/generator'
 export {
   createPolicyGate,
   feedbackFrom,
