@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { ForgeClient } from '../src'
-import { parseSSEData, SSEParser } from '../src/sse'
 import type { ForgeServer } from '@forge/server'
+import { ForgeClient } from '../src'
+import { SSEParser, parseSSEData } from '../src/sse'
 
 /** In-process transport: drive the Hono app's request method directly. */
 class AppSseTransport {
@@ -51,8 +51,14 @@ describe('Multi-client SSE attach (integration)', () => {
     const ctrlB = new AbortController()
     // handler form: streamSSE pushes every frame into the handler; nothing to
     // drain because the iterator is never consumed.
-    client.sse.stream({ signal: ctrlA.signal, handler: (f) => a.push(`${f.event}:${JSON.stringify(f.data)}`) })
-    client.sse.stream({ signal: ctrlB.signal, handler: (f) => b.push(`${f.event}:${JSON.stringify(f.data)}`) })
+    client.sse.stream({
+      signal: ctrlA.signal,
+      handler: (f) => a.push(`${f.event}:${JSON.stringify(f.data)}`),
+    })
+    client.sse.stream({
+      signal: ctrlB.signal,
+      handler: (f) => b.push(`${f.event}:${JSON.stringify(f.data)}`),
+    })
 
     await new Promise((r) => setTimeout(r, 30))
     const connectedA = a.find((s) => s.startsWith('connected'))
@@ -72,7 +78,11 @@ describe('Multi-client SSE attach (integration)', () => {
     // Broadcast a frame and verify both receive it.
     const aBefore = a.length
     const bBefore = b.length
-    const out = await client.sse.broadcast({ sessionId: 'S-room-1', event: 'text_delta', data: { delta: 'hello' } })
+    const out = await client.sse.broadcast({
+      sessionId: 'S-room-1',
+      event: 'text_delta',
+      data: { delta: 'hello' },
+    })
     expect(out.delivered).toBe(2)
     expect(out.failed).toBe(0)
 
@@ -89,7 +99,11 @@ describe('Multi-client SSE attach (integration)', () => {
     expect((await client.sse.presence('S-room-1')).clientCount).toBe(1)
     const aBefore2 = a.length
     const bBefore2 = b.length
-    const out2 = await client.sse.broadcast({ sessionId: 'S-room-1', event: 'text_delta', data: { delta: 'only-a' } })
+    const out2 = await client.sse.broadcast({
+      sessionId: 'S-room-1',
+      event: 'text_delta',
+      data: { delta: 'only-a' },
+    })
     expect(out2.delivered).toBe(1)
     await new Promise((r) => setTimeout(r, 30))
     expect(a.slice(aBefore2).filter((s) => s.includes('only-a')).length).toBe(1)

@@ -6,7 +6,7 @@ import type { ParsedSSEFrame } from './types'
  *
  * Spec: https://html.spec.whatwg.org/multipage/server-sent-events.html
  *  - `event: <name>` sets the event name (default `message`)
- *  - `data: <payload>` is concatenated with newlines and must be non-empty
+ *  - `data: <payload>` is concatenated with newlines (empty data is valid)
  *  - `id: <id>` sets the last event ID
  *  - `retry: <ms>` sets the reconnect interval
  *  - Lines beginning with `:` are comments (ignored)
@@ -18,25 +18,32 @@ export class SSEParser {
   private dataLines: string[] = []
   private lastId?: string
   private retry?: number
+  private skipLF = false
 
   /** Feed a chunk of raw wire bytes; return any complete frames. */
   push(chunk: string): ParsedSSEFrame[] {
-    this.buffer += chunk
+    const text = this.skipLF && chunk.startsWith('\n') ? chunk.slice(1) : chunk
+    if (this.skipLF && chunk.length > 0) {
+      this.skipLF = false
+    }
+    this.buffer += text
     const frames: ParsedSSEFrame[] = []
 
-    let sepIndex = this.buffer.indexOf('\n')
+    let sepIndex = this.buffer.search(/[\r\n]/)
     while (sepIndex >= 0) {
-      const rawLine = this.buffer.slice(0, sepIndex)
-      this.buffer = this.buffer.slice(sepIndex + 1)
+      const line = this.buffer.slice(0, sepIndex)
+      const isCR = this.buffer[sepIndex] === '\r'
+      const skip = isCR && this.buffer[sepIndex + 1] === '\n' ? 2 : 1
+      this.skipLF = isCR && sepIndex === this.buffer.length - 1
+      this.buffer = this.buffer.slice(sepIndex + skip)
 
-      const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine
       if (line === '') {
         const frame = this.flushFrame()
         if (frame) frames.push(frame)
       } else if (!line.startsWith(':')) {
         this.consumeLine(line)
       }
-      sepIndex = this.buffer.indexOf('\n')
+      sepIndex = this.buffer.search(/[\r\n]/)
     }
 
     return frames
@@ -72,8 +79,10 @@ export class SSEParser {
         if (!value.includes('\u0000')) this.lastId = value
         break
       case 'retry': {
-        const n = Number.parseInt(value, 10)
-        if (Number.isFinite(n) && n >= 0) this.retry = n
+        if (/^[0-9]+$/.test(value)) {
+          const n = Number(value)
+          if (Number.isFinite(n)) this.retry = n
+        }
         break
       }
       default:
@@ -88,7 +97,7 @@ export class SSEParser {
     }
     const payload = this.dataLines.join('\n')
     this.dataLines = []
-    const frame: ParsedSSEFrame = { event: this.eventName, data: payload }
+    const frame: ParsedSSEFrame = { event: this.eventName || 'message', data: payload }
     if (this.lastId !== undefined) frame.id = this.lastId
     if (this.retry !== undefined) frame.retry = this.retry
     this.eventName = 'message'

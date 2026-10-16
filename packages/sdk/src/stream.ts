@@ -1,9 +1,13 @@
-import type { ParsedSSEFrame, SSEEventName, SSEEventPayload } from './types'
 import { ForgeTransportError } from './errors'
-import { parseSSEData, SSEParser } from './sse'
+import { SSEParser, parseSSEData } from './sse'
+import type { ParsedSSEFrame, SSEEventName, SSEEventPayload } from './types'
 
 /** Callback-style SSE handler. Return `false` to stop the stream. */
-export type SSEFrameHandler = (frame: { event: SSEEventName; data: SSEEventPayload; raw: ParsedSSEFrame }) => boolean | undefined
+export type SSEFrameHandler = (frame: {
+  event: SSEEventName
+  data: SSEEventPayload
+  raw: ParsedSSEFrame
+}) => boolean | undefined
 
 export interface StreamOptions {
   sessionIds?: string[]
@@ -20,16 +24,34 @@ export interface StreamOptions {
  *  - `for await (const frame of streamSSE(...)) { ... }`  (no handler)
  *  - `streamSSE(..., { handler: (f) => ... })`            (callback-driven)
  *
- * With a handler, the function returns `void` after kicking off the
- * background pump. Without a handler, it returns an `AsyncGenerator`.
+ * With a handler, returns a completion promise; await it to observe fetch,
+ * read, or handler errors. Ignoring it keeps the background-pump behavior.
+ * Without a handler, returns an `AsyncGenerator`.
  *
  * Cancel the connection with `AbortSignal` (passed in `opts.signal`) or by
  * returning `false` from the handler.
  */
-export function streamSSE(baseUrl: string, options: StreamOptions = {}): AsyncGenerator<ParsedSSEFrame, void, undefined> | void {
+export function streamSSE(
+  baseUrl: string,
+  options: StreamOptions & { handler: SSEFrameHandler },
+): Promise<void>
+export function streamSSE(
+  baseUrl: string,
+  options?: StreamOptions & { handler?: undefined },
+): AsyncGenerator<ParsedSSEFrame, void, undefined>
+export function streamSSE(
+  baseUrl: string,
+  options: StreamOptions,
+): AsyncGenerator<ParsedSSEFrame, void, undefined> | Promise<void>
+export function streamSSE(
+  baseUrl: string,
+  options: StreamOptions = {},
+): AsyncGenerator<ParsedSSEFrame, void, undefined> | Promise<void> {
   if (options.handler) {
-    void pumpStream(baseUrl, options, options.handler)
-    return
+    const completion = pumpStream(baseUrl, options, options.handler)
+    // Observe detached pumps without changing the promise callers can await.
+    void completion.catch(() => {})
+    return completion
   }
   return iteratorStream(baseUrl, options)
 }
@@ -76,7 +98,10 @@ async function* iteratorStream(
     } catch {
       body = { error: { code: 'SSE_OPEN_FAILED', message: res.statusText } }
     }
-    throw new ForgeTransportError(`Failed to open SSE stream: ${res.status}`, { status: res.status, body })
+    throw new ForgeTransportError(`Failed to open SSE stream: ${res.status}`, {
+      status: res.status,
+      body,
+    })
   }
 
   // Bun's Hono app can return a ReadableStream<string> (server-internal) or
@@ -86,24 +111,43 @@ async function* iteratorStream(
   const decoder = new TextDecoder()
   const parser = new SSEParser()
   let cancelled = false
-  options.signal?.addEventListener('abort', () => {
+  let completed = false
+  let cancellation: Promise<void> | undefined
+  const cancelReader = () => {
+    // Cleanup errors must not mask read/handler errors or become unhandled.
+    cancellation ??= reader.cancel().catch(() => {})
+    return cancellation
+  }
+  const onAbort = () => {
     cancelled = true
-    try {
-      reader.cancel()
-    } catch {
-      // Ignore — already cancelled.
-    }
-  })
+    void cancelReader()
+  }
+  options.signal?.addEventListener('abort', onAbort, { once: true })
+  if (options.signal?.aborted) onAbort()
 
   try {
     while (!cancelled) {
       const { value, done } = await reader.read()
-      if (done) break
+      if (done) {
+        completed = true
+        break
+      }
       const text = typeof value === 'string' ? value : decoder.decode(value, { stream: true })
-      for (const frame of parser.push(text)) yield frame
+      for (const frame of parser.push(text)) {
+        if (cancelled) return
+        yield frame
+      }
     }
-    for (const frame of parser.end()) yield frame
+    if (!cancelled) {
+      for (const frame of [...parser.push(decoder.decode()), ...parser.end()]) {
+        if (cancelled) return
+        yield frame
+      }
+    }
   } finally {
+    options.signal?.removeEventListener('abort', onAbort)
+    if (!completed) await cancelReader()
+    else if (cancellation) await cancellation
     try {
       reader.releaseLock()
     } catch {

@@ -6,22 +6,23 @@ import type {
   AttachResponse,
   AuthStatus,
   BroadcastRequest,
-  CreateKeyRequest,
-  CreateKeyResponse,
-
   BroadcastResponse,
   ConfigScope,
   ConfigSetRequest,
   ConfigValue,
+  CreateKeyRequest,
+  CreateKeyResponse,
   DetachResponse,
   ForgeErrorResponse,
   HealthResponse,
+  ListKeysResponse,
   OkResponse,
   PromptRequest,
   PromptResponse,
   ReadyResponse,
   ReplayRequest,
   ReplayResponse,
+  RevokeKeyResponse,
   SSEStats,
   Session,
   SessionCreateRequest,
@@ -32,8 +33,6 @@ import type {
   ToolDefinition,
   ToolExecuteRequest,
   ToolExecuteResponse,
-  ListKeysResponse,
-  RevokeKeyResponse,
   UsageResponse,
 } from './types'
 
@@ -164,7 +163,8 @@ export class ForgeClient {
 
   auth = {
     status: (): Promise<AuthStatus> => this.request<AuthStatus>('GET', '/api/auth'),
-    listKeys: (): Promise<ListKeysResponse> => this.request<ListKeysResponse>('GET', '/api/auth/keys'),
+    listKeys: (): Promise<ListKeysResponse> =>
+      this.request<ListKeysResponse>('GET', '/api/auth/keys'),
     createKey: (req: CreateKeyRequest): Promise<CreateKeyResponse> =>
       this.request<CreateKeyResponse>('POST', '/api/auth/keys', { body: req }),
     revokeKey: (id: string): Promise<RevokeKeyResponse> =>
@@ -189,7 +189,7 @@ export class ForgeClient {
       streamSSE(this.baseUrl, {
         sessionIds: opts.sessionIds,
         signal: opts.signal,
-        headers: this.authHeader(),
+        headers: { ...this.defaultHeaders, Accept: 'text/event-stream', ...this.authHeader() },
         fetchImpl: this.fetchImpl,
         handler: opts.handler,
       }),
@@ -198,10 +198,14 @@ export class ForgeClient {
 
     /** Attach an open stream (by its `clientId`) to another session. */
     attach: (sessionId: string, req: AttachRequest): Promise<AttachResponse> =>
-      this.request<AttachResponse>('POST', `/api/sse/sessions/${encode(sessionId)}/attach`, { body: req }),
+      this.request<AttachResponse>('POST', `/api/sse/sessions/${encode(sessionId)}/attach`, {
+        body: req,
+      }),
     /** Drop a session from an open stream. */
     detach: (sessionId: string, req: AttachRequest): Promise<DetachResponse> =>
-      this.request<DetachResponse>('POST', `/api/sse/sessions/${encode(sessionId)}/detach`, { body: req }),
+      this.request<DetachResponse>('POST', `/api/sse/sessions/${encode(sessionId)}/detach`, {
+        body: req,
+      }),
     /** Clients currently watching a session. */
     presence: (sessionId: string): Promise<SessionPresence> =>
       this.request<SessionPresence>('GET', `/api/sse/sessions/${encode(sessionId)}/presence`),
@@ -250,15 +254,18 @@ export class ForgeClient {
     }
 
     if (!res.ok) {
-      let parsed: ForgeErrorResponse | undefined
+      let parsed: unknown
       try {
-        parsed = (await res.json()) as ForgeErrorResponse
+        parsed = await res.json()
       } catch {
-        throw new ForgeApiError(res.status, {
-          error: { code: 'UNKNOWN_ERROR', message: res.statusText || 'Request failed' },
-        })
+        // Invalid JSON and unexpected envelopes use the same typed fallback.
       }
-      throw new ForgeApiError(res.status, parsed)
+      throw new ForgeApiError(
+        res.status,
+        isErrorResponse(parsed)
+          ? parsed
+          : { error: { code: 'UNKNOWN_ERROR', message: res.statusText || 'Request failed' } },
+      )
     }
 
     if (res.status === 204) return undefined as T
@@ -272,6 +279,19 @@ export class ForgeClient {
   private authHeader(): Record<string, string> {
     return this.token ? { Authorization: `Bearer ${this.token}` } : {}
   }
+}
+
+function isErrorResponse(body: unknown): body is ForgeErrorResponse {
+  if (typeof body !== 'object' || body === null || !('error' in body)) return false
+  const error = body.error
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  )
 }
 
 function pickQuery(q: Record<string, unknown>): Record<string, string | number | boolean> {
