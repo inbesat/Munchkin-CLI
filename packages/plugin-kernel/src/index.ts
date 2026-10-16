@@ -68,6 +68,13 @@ export {
   type PluginSourceDescriptor,
 } from './plugin/loader'
 export {
+  PluginSandbox,
+  type PluginSandboxGrants,
+  type PluginSandboxSection,
+  type SandboxDecision,
+  type SandboxPathMode,
+} from './plugin/sandbox'
+export {
   createPolicyGate,
   feedbackFrom,
   registerToolPolicy,
