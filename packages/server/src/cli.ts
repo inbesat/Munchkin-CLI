@@ -15,6 +15,7 @@ import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@fo
 import { AuthStore } from './auth/store'
 import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
+import { runStatsCommand } from './stats/command'
 
 export type Subcommand = 'serve' | 'rpc' | 'auth' | 'worktree' | 'help' | 'version'
 
@@ -41,6 +42,7 @@ Usage:
   forge rpc [options]
   forge auth <list|create|revoke> [options]
   forge worktree <list|create|merge|remove> [options]
+  forge stats [--json] [--base-dir <path>] [--db <path>]
   forge help
   forge version
 
@@ -65,6 +67,8 @@ Examples:
   forge auth create --name 'ci-deploy' --env ci
   forge auth list
   forge auth revoke <key-id>
+  forge stats                        # usage dashboard (cost, sessions, tools)
+  forge stats --json                 # machine-readable stats
 `
 
 /**
@@ -245,6 +249,11 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   // Phase 135: `forge worktree list|create|merge|remove` - handled by @forge/git.
   if (argv[0] === 'worktree') {
     return runWorktreeCommand(argv.slice(1), { write })
+  }
+  // Phase 143: `forge stats [--json] [--base-dir <d>] [--db <path>]` - local
+  // usage dashboard over the on-disk session store.
+  if (argv[0] === 'stats') {
+    return runStatsCommand(argv, { write })
   }
   // Phase 137/139: `forge -p "prompt"` - one-shot print mode; `--json` emits
   // structured output for automation. Piped stdin combines with the prompt.

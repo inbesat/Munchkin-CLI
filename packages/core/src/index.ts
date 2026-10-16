@@ -153,6 +153,9 @@ export type {
   DailyCostBreakdown,
 } from './cost'
 
+// Stats aggregation (Phase 143)
+export * from './stats'
+
 // Agent Loop (Phase 33)
 export * from './agent'
 
