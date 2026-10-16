@@ -38,3 +38,15 @@ export {
   linuxLandlockProvider,
   type BwrapOptions,
 } from './linux/sandbox'
+
+// Docker/Podman container provider (Phase 129)
+export {
+  DockerSandboxProvider,
+  SANDBOX_DOCKERFILE,
+  SANDBOX_IMAGE,
+  buildDockerRunArgs,
+  detectRuntime,
+  dockerSandboxProvider,
+  type BuildRunOptions,
+  type ContainerRuntime,
+} from './docker/provider'
