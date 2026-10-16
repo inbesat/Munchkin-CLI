@@ -2505,6 +2505,8 @@ Each phase contains:
 
 **Testing:** Make edits, rewind, verify files restored. Verify conversation state restored.
 
+**Status (2026-10-17):** Implemented (`packages/git/src/checkpoints/rewind.ts` - `RewindService` over the Phase-131 journal: `listPoints()` one point per checkpoint w/ cumulative distinct-file counts; `rewindTo({id})` restores EVERY journaled file to its latest checkpoint at-or-before the target moment (later-only files skipped with a reason), result object w/ per-file `restored`/`alreadyReverted`/`error`; `resolvePoint()` default = the previous point (a no-op-against-latest rewind is useless). TUI `/rewind`: bare form lists the target checkpoint + previews the conversation snapshot it will restore (Phase-132 conversation snapshots captured in-session before each submitted turn, paired by savedAt); `/rewind <checkpointId>` confirms → `rewindTo` for files + `state.messages` restored from the matched snapshot; `/rewind cancel` aborts. Palette entry added. Tests: 4 green - blueprint bullets: edits → rewind → files restored exactly (multi-file), conversation restore verified via snapshots pairing; plus previous-point default + already-reverted no-op, later-only-file skip, unknown-id rejection). git 10/10, tsc 0, lint 0; git dist + tui typecheck clean; tui-editable suites 166/0.
+
 **Estimated Hours:** 5–6 hours.
 
 ---
