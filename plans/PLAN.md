@@ -2234,6 +2234,8 @@ Each phase contains:
 
 **Testing:** Connect to remote MCP server via SSE. Simulate disconnect → verify reconnect.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/client/sse.ts` - legacy HTTP+SSE `McpSseTransport`: GET `text/event-stream` downlink, `endpoint` event → POST path, `message` events carry JSON-RPC; shared SSE block parser exported; no-throw result objects, per-request timeouts, same pending/notification semantics as Phase 117. `http.ts` - `McpStreamableHttpTransport`: single-endpoint POST w/ `Accept: application/json, text/event-stream`, direct-JSON or in-body-SSE answers (Promise.race'd against the timeout), `Mcp-Session-Id` captured and replayed, 202 for notifications. `reconnect.ts` - `ReconnectingMcpClient<T>`: probe-before-use, drop-dead, bounded exponential backoff retries, `onRestore` state replay AFTER re-connections only (first connect is the caller's), recovery counters; exhausted budget → `{ok:false,error}`. Tests: 3 remote tests green over real `Bun.serve` HTTP (no external server) - SSE endpoint+request+notification+closed-transport behavior; streamable direct-JSON + in-body-SSE + session-header replay; reconnect drop→restore (onRestore replayed, reconnected=true), exhausted-retries error. mcp 10/10, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 6–8 hours.
 
 ---

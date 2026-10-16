@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 117 - MCP Client Stdio Transport (Complete); Phases 87-117 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-117 - Stages 7-9 closed, Stage 10 (MCP + Connectors, 117-124) in progress
-- **Next action:** Phase 118 - SSE/Streamable-HTTP + Auto-Reconnect (Stage 10)
+- **Current phase:** Phase 118 - SSE/Streamable-HTTP + Auto-Reconnect (Complete); Phases 87-118 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-118 - Stages 7-9 closed, Stage 10 (MCP + Connectors, 117-124) in progress
+- **Next action:** Phase 119 - OAuth Flow for Remote Servers (Stage 10)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
