@@ -29,3 +29,12 @@ export {
   macosSeatbeltProvider,
   type SeatbeltProfileOptions,
 } from './macos/sandbox'
+
+// Linux Landlock provider via bubblewrap (Phase 128)
+export {
+  LINUX_SANDBOX_ID,
+  LandlockProvider,
+  buildBwrapArgs,
+  linuxLandlockProvider,
+  type BwrapOptions,
+} from './linux/sandbox'
