@@ -12,3 +12,11 @@ export {
   type SandboxInfo,
   type SandboxProvider,
 } from './types'
+
+// Windows restricted-token runner (Phase 126)
+export {
+  WINDOWS_SANDBOX_ID,
+  WindowsSandboxProvider,
+  sensitiveDirectories,
+  windowsSandboxProvider,
+} from './windows/runner'
