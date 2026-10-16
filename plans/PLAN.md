@@ -2634,6 +2634,8 @@ Each phase contains:
 
 **Testing:** `forge -p "explain 2+2" --json` → valid JSON output.
 
+**Status (2026-10-17):** Implemented (server cli.ts - `--json` on print mode: the `-p` intercept filters `--json` out of argv and `runPrintMode` gains `opts.json`; JSON mode suppresses the banner + streamed deltas and emits exactly one stdout line - `{prompt, response, ok, turns, usage, error?}` (ok: false + error on failure); non-JSON behaviour unchanged, errors still route stderr + exit 1). Tests: print-mode suite 11/11 (JSON line emission + existing paths). server tsc 0; dist rebuilt; pushed as b98d889 docs / f40c3fc feat / 089c402 ledger.
+
 **Estimated Hours:** 2–3 hours.
 
 ---
@@ -2649,6 +2651,8 @@ Each phase contains:
 **Dependencies:** Phase 80 (RPC mode).
 
 **Testing:** Connect Zed editor to forge via ACP. Send prompt. Receive response.
+
+**Status (2026-10-17):** Implemented (`packages/server/src/acp/` - `AcpServer`: newline-framed JSON-RPC 2.0 stdio loop for editor clients (Zed/Neovim/JetBrains). `initialize` -> protocolVersion 1 + serverInfo{forge}; `session/new` -> sessionId; `session/prompt` runs the Phase-33 `runAgentLoop` streaming `session/update` notifications (agent_message_chunk per text delta, tool_call per call) and replies `{stopReason}` mapped from `LoopStopReason` (complete->end_turn, max-iterations->max_turn_requests, context-overflow->max_tokens, error->refusal; cancel->cancelled); `session/cancel` aborts the session’s AbortController; `session/request_permission` is an outbound request resolved through a pending-response map (outcome selected -> allow; timeout/anything else -> deny); unknown methods -> -32601, unknown session -> -32602; malformed lines and stream errors land in in-memory diagnostics - never throw. `dispatchLine` is public for tests; `index.ts` barrel. Tests: 8 green - initialize handshake; session/new + unknown-session error; prompt streaming (chunk params + prompt reaching the model) + end_turn; cancel -> cancelled; permission round-trip (request emitted, tool_call update, selected executes the tool) + denied variant (tool withheld, prompt still completes); -32601 + malformed-line diagnostics stay no-throw; `serve()` frames chunks split across data events. server suites 211 pass / 3 pre-existing fails (bash-on-Windows x2, EBUSY tmp-dir lock); tsc 0; biome 0; dist rebuilt. Live Zed round-trip = manual editor step.
 
 **Estimated Hours:** 8–10 hours.
 

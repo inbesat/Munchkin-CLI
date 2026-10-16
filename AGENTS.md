@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 137 - `-p` Print Mode (Complete); Phases 87-137 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-137 - Stages 7-12 closed, Stage 13 (Headless/CI/Editors, 137-142) 1/6 done
-- **Next action:** Phase 138 - Piped Stdin/Stdout (Stage 13)
+- **Current phase:** Phase 140 - ACP Server Implementation (Complete); Phases 87-140 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-140 - Stages 7-12 closed, Stage 13 (Headless/CI/Editors, 137-142) 4/6 done
+- **Next action:** Phase 141 - VS Code Extension Skeleton (Stage 13)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
