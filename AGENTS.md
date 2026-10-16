@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 126 - Windows ACL Restricted-Token Runner (Complete; verified live on this Windows machine); Phases 87-126 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-126 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) 2/6 done
-- **Next action:** Phase 127 - macOS Seatbelt Profile (Stage 11)
+- **Current phase:** Phase 127 - macOS Seatbelt Profile (Complete; live verification needs a macOS machine - tests self-skip elsewhere); Phases 87-127 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-127 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) 3/6 done
+- **Next action:** Phase 128 - Linux Landlock + Seccomp (Stage 11)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404

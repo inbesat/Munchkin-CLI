@@ -2409,6 +2409,8 @@ Each phase contains:
 
 **Testing:** Run command in Seatbelt sandbox. Verify restrictions.
 
+**Status (2026-10-17):** Implemented (`packages/sandbox/src/macos/sandbox.ts` - `MacosSeatbeltProvider` (id `macos-seatbelt`): commands run under `sandbox-exec -f profile.sb --` - no Node addon needed, sandbox-exec ships with macOS and validates the generated profile. `buildSeatbeltProfile(options)` deterministically emits `(deny default)` + explicit allows: process-exec, process-fork (toggle), file-read*, sysctl-read, mach-lookup, iokit-open, system-socket, `file-write*` ONLY for scratch/workdir/custom subpaths (quote-escaped), and `network*` ONLY when `allowNetwork` - unlisted operations fail closed. `checkIsolation()` live probes: scratch write must succeed; home + /usr/local writes denied; network call (curl) denied. Tests: 6 green - deny-default profile shape + write subpaths, network/process-fork toggles, quote escaping, provider identity w/ darwin-conditional availability, live seatbelt execute + isolation probes (darwin-only, self-skip elsewhere e.g. this Windows CI box). sandbox 15/15, tsc 0, lint 0; barrel + dist rebuilt. Live seatbelt verification = macOS machine step (self-skipping tests ready).
+
 **Estimated Hours:** 6–8 hours.
 
 ---
