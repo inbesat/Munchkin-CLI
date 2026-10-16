@@ -2687,6 +2687,8 @@ Each phase contains:
 
 **Testing:** Install GitHub App. Create PR with label → agent reviews.
 
+**Status (2026-10-17):** Implemented (`packages/server/src/github/` - GitHub App skeleton: `manifest.ts` app definition + `buildAppManifest()` for the create-from-manifest flow; `webhook.ts` timing-safe HMAC-SHA256 `X-Hub-Signature-256` verification + trigger parsing (`pull_request`/labeled/`forge-review` and `issue_comment`/`/forge review`, both configurable); `auth.ts` RS256 app JWT + installation-token exchange; `app.ts` `GitHubApp.handleWebhook` orchestration (verify -> token -> PR diff via API -> Phase-133 `reviewDiff` -> Phase-136 `formatReviewReport` posted as a PR comment; no-throw outcome objects); `routes.ts` `POST /api/github/webhook`; `env.ts` env wiring. Server: `ServerOptions.githubApp` mounts the route and exempts it from bearer auth (webhooks are HMAC-verified); `forge serve` mounts it when `GITHUB_WEBHOOK_SECRET` is set. Tests: 18 green - signature valid/invalid/missing/tampered; label + comment triggers (incl. custom options); ignored events; e2e label event with mocked GitHub API asserting diff fetch + comment body; RS256 JWT verified against a generated keypair + installation token reuse; no-credentials failure; route 202/401; env construction incl. key path; real-server wiring: signed webhook 202 without bearer token, unsigned 401, other routes still 401. tsc 0; biome 0 (4 pre-existing cli.ts items untouched); server suite 230 pass / 2 fail (known bash-on-Windows). Live app install = manual step (see docs/github-app.md).
+
 **Estimated Hours:** 6–8 hours.
 
 ---
