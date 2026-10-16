@@ -43,6 +43,7 @@
       "name": "@forge/core",
       "version": "0.1.0",
       "dependencies": {
+        "@forge/git": "workspace:*",
         "@sinclair/typebox": "^0.34.0",
         "diff": "^7.0.0",
         "shiki": "^2.1.0",
@@ -166,6 +167,18 @@
         "@types/react": "^18.2.0",
         "typescript": "^5.3.0",
       },
+    },
+    "plugins/forge-format": {
+      "name": "forge-format",
+      "version": "1.0.0",
+    },
+    "plugins/forge-security": {
+      "name": "forge-security",
+      "version": "1.0.0",
+    },
+    "plugins/forge-test": {
+      "name": "forge-test",
+      "version": "1.0.0",
     },
   },
   "overrides": {
@@ -606,6 +619,12 @@
     "find-babel-config": ["find-babel-config@2.1.2", "", { "dependencies": { "json5": "^2.2.3" } }, "sha512-ZfZp1rQyp4gyuxqt1ZqjFGVeVBvmpURMqdIWXbPRfB97Bf6BzdK/xSIbylEINzQ0kB5tlDQfn9HkNXXWsqTqLg=="],
 
     "find-up": ["find-up@3.0.0", "", { "dependencies": { "locate-path": "^3.0.0" } }, "sha512-1yD6RmLI1XBfxugvORwlck6f75tYL+iR0jqwsOrOxMZyGYqUuDhJ0l4AXdO1iX/FTs9cBAMEk1gWSEx1kSbylg=="],
+
+    "forge-format": ["forge-format@workspace:plugins/forge-format"],
+
+    "forge-security": ["forge-security@workspace:plugins/forge-security"],
+
+    "forge-test": ["forge-test@workspace:plugins/forge-test"],
 
     "forwarded": ["forwarded@0.2.0", "", {}, "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="],
 

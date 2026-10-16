@@ -1,0 +1,23 @@
+it('revokes an API key', async () => {
+    const create = await server.getApp().request('/api/auth/keys', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'authorization': authHeader },
+      body: JSON.stringify({ name: 'to-revoke' }),
+    })
+    const { key } = await create.json()
+    const del = await server.getApp().request(`/api/auth/keys/${key.id}`, { method: 'DELETE', headers: { 'authorization': authHeader } })
+    expect(del.status).toBe(200)
+    const get = await server.getApp().request(`/api/auth/keys/${key.id}`)
+    expect(get.status).toBe(404)
+  })
+
+  // ── SSE streaming ──
+
+  it('opens an SSE connection and receives connected event', async () => {
+    const res = await server.getApp().request('/api/sse/events?sessions=', {
+      headers: { 'authorization': authHeader },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/event-stream')
+    const reader = res.body?.getReader()
+    const { va
