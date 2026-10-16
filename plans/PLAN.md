@@ -2709,6 +2709,8 @@ Each phase contains:
 
 **Testing:** Run `forge stats`. Verify accurate data.
 
+**Status (2026-10-17):** Implemented. `packages/core/src/stats/gather.ts` - `gatherSessionStats` (session count, active count, average duration over ended sessions, average events), `gatherToolUsage` (counts `session.tool_call` events across `<baseDir>/sessions/*.jsonl`, sorted by calls then name), `gatherStats` combining those with the existing Phase 15/28 `CostQueries` (`getTotalCost` / `getCostByModel` / `getCostByDay`). `forge stats [--json] [--base-dir <path>] [--db <path>]` (`packages/server/src/stats/command.ts`, dispatched before parseArgs like `auth`/`worktree`) - aligned table by default, `--json` emits the full `ForgeStats` object; a missing database prints an empty report instead of creating files. Tests: 8 green (core 4: session aggregates, tool usage incl. missing dir, combined stats with exact cost/model/day numbers; server 4: table output, JSON shape, missing-data path, dispatcher wiring). Core suite 1320 pass / 0 fail; server suite 234 pass / 2 fail (known bash-on-Windows); tsc 0 both; biome 0 (4 pre-existing cli.ts items untouched); builds clean; built-CLI smoke: `forge stats` and `forge stats --json` both exit 0.
+
 **Estimated Hours:** 4–5 hours.
 
 ---
