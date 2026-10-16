@@ -2288,6 +2288,8 @@ Each phase contains:
 
 **Testing:** `/connect github` → installs and configures GitHub MCP. Verify it works.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/presets/index.ts` - six bundled presets (github, context7, playwright, filesystem, memory, sequential-thinking) each with package command (`npx -y ...`), docs URL, required-env markers, and argument expectations (`filesystem` requires its root dir); `resolveServerSpec` resolves required env from the host at install time (missing variables become warnings, never crashes) and appends user args; `McpPresetsConfig` merges installations into the forge config `mcp-servers.json` (injectable dir, corruption-tolerant). TUI `/connect` command: `/connect` lists all presets with installed/available markers, `/connect <id> [args...]` one-command installs and reports the configured command + warnings; palette entry added. Tests: 5 green - all six presets bundled w/ commands + docs URLs, filesystem required-arg rejection, one-command install round-trip through the config file, env resolution + unset-env warnings, unknown-preset rejection + same-id merge. The blueprint's live-verification (`/connect github` reaching github.com) requires npx + GITHUB_TOKEN at runtime = user environment step; the config write path is fully tested. mcp 25/25, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0.
+
 **Estimated Hours:** 4–5 hours.
 
 ---
