@@ -2669,6 +2669,8 @@ Each phase contains:
 
 **Testing:** Install extension in VS Code. Send prompt. Receive response.
 
+**Status (2026-10-17):** Implemented (`packages/vscode/` - VS Code extension skeleton: activity-bar Forge container + `forge.chat` webview view (`forge.openChat` command), settings `forge.baseUrl` (default http://127.0.0.1:3000) / `forge.token` / `forge.model`. `src/extension.ts` is thin CJS glue (`WebviewViewProvider` + message guard); `src/chat-client.ts` - `ForgeChatSession` sends prompts via plain fetch (the SDK compiles to ESM while the extension host loads CJS; SDK response types imported type-only so the wire contract stays single-sourced) - lazy single server session, no-throw `ChatResult`, bearer token support; `src/webview.ts` - `renderChatHtml()` CSP-nonce-locked chat panel. Tests: 9 green - session create-once + reuse; empty-prompt rejection without network; server-error status + message; unreachable-server message; agent-loop error reason -> failure result; bearer header; CSP nonce matches script+style tags; UI elements + vscode handshake present; fresh nonce per render. tsc 0; biome 0; dist emitted CJS with no @forge/sdk runtime require. Live VS Code install/send = manual editor step.
+
 **Estimated Hours:** 8–10 hours.
 
 ---
