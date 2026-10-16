@@ -244,10 +244,14 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   if (argv[0] === 'worktree') {
     return runWorktreeCommand(argv.slice(1), { write })
   }
-  // Phase 137: `forge -p "prompt"` - one-shot print mode.
+  // Phase 137/139: `forge -p "prompt"` - one-shot print mode; `--json` emits
+  // structured output for automation. Piped stdin combines with the prompt.
   if (argv[0] === '-p' || argv[0] === '--print') {
-    const prompt = argv.slice(1).join(' ').trim()
-    return runPrintMode(prompt, { write, errorWrite: write })
+    const jsonMode = argv.includes('--json')
+    const promptParts = argv.slice(1).filter((arg) => arg !== '--json')
+    const prompt = promptParts.join(' ').trim()
+    const piped = process.stdin.isTTY === true ? undefined : await readPipedStdin()
+    return runPrintMode(prompt, { stdin: piped, json: jsonMode, write, errorWrite: write })
   }
   const parsed = parseArgs(argv, opts)
 
@@ -407,26 +411,70 @@ Usage:
   forge worktree help
 `
 
+/** Phase 138: combine an explicit prompt with optional piped stdin. */
+export function assemblePrintPrompt(
+  prompt: string,
+  stdin?: string,
+): { ok: true; prompt: string } | { ok: false; error: string } {
+  const trimmedPrompt = prompt.trim()
+  const trimmedStdin = stdin?.trim() ?? ''
+  if (trimmedPrompt.length > 0 && trimmedStdin.length > 0) {
+    return { ok: true, prompt: `${trimmedPrompt}\n\n---\n\n${stdin}` }
+  }
+  if (trimmedPrompt.length > 0) return { ok: true, prompt: trimmedPrompt }
+  if (trimmedStdin.length > 0) return { ok: true, prompt: trimmedStdin }
+  return { ok: false, error: 'no prompt provided and stdin is empty' }
+}
+
+/** Phase 138: read all of stdin when it is piped (never blocks a TTY). */
+async function readPipedStdin(): Promise<string | undefined> {
+  if (process.stdin.isTTY === true) return undefined
+  const chunks: Uint8Array[] = []
+  const reader = process.stdin[Symbol.asyncIterator]()
+  // If no data arrives quickly, stdin is an open non-piped handle - bail out
+  // so interactive/automation contexts never hang.
+  const first = await Promise.race([
+    reader.next(),
+    new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 300)),
+  ])
+  if (first === 'timeout' || first.done === true) return undefined
+  chunks.push(first.value)
+  for await (const chunk of reader) {
+    chunks.push(chunk as Uint8Array)
+  }
+  const decoded = new TextDecoder().decode(Buffer.concat(chunks))
+  return decoded.trim().length > 0 ? decoded : undefined
+}
+
 /**
  * Phase 137: one-shot print mode (`forge -p "prompt"`). Runs the agent loop
  * with a resolved model, prints the final response to stdout, exits 0 on
  * success / 1 on error. `opts.model` is injectable for tests.
+ * Phase 138: `opts.stdin` (piped input) is combined with the prompt.
  */
 export async function runPrintMode(
   prompt: string,
   opts: {
     model?: import('@forge/core').AgentModel
     modelId?: string
+    stdin?: string
+    json?: boolean
     write?: (line: string) => void
     errorWrite?: (line: string) => void
   } = {},
 ): Promise<number> {
   const write = opts.write ?? ((line) => process.stdout.write(`${line}\n`))
   const errorWrite = opts.errorWrite ?? ((line) => process.stderr.write(`${line}\n`))
-  if (prompt.length === 0) {
-    errorWrite('error: -p requires a prompt string')
+  const assembled = assemblePrintPrompt(prompt, opts.stdin)
+  if (!assembled.ok) {
+    errorWrite(
+      assembled.error === 'no prompt provided and stdin is empty'
+        ? 'error: -p requires a prompt string or piped input'
+        : `error: ${assembled.error}`,
+    )
     return 1
   }
+  const effectivePrompt = assembled.prompt
 
   const { runAgentLoop } = await import('@forge/core')
   let model = opts.model
@@ -445,15 +493,38 @@ export async function runPrintMode(
     }
   }
 
-  write(`forge: ${prompt}`)
+  if (opts.json !== true) write(`forge: ${prompt}`)
   try {
     const result = await runAgentLoop({
       model,
-      messages: [{ role: 'user', parts: [{ type: 'text', text: prompt }], content: prompt }],
+      messages: [
+        {
+          role: 'user',
+          parts: [{ type: 'text', text: effectivePrompt }],
+          content: effectivePrompt,
+        },
+      ],
       onEvent(event) {
-        if (event.type === 'text') write(event.delta)
+        if (opts.json !== true && event.type === 'text') write(event.delta)
       },
     })
+    if (opts.json === true) {
+      write(
+        JSON.stringify({
+          prompt: effectivePrompt,
+          response: result.response,
+          ok: result.error === undefined,
+          turns: result.turns,
+          usage: result.usage,
+          ...(result.error !== undefined ? { error: String(result.error) } : {}),
+        }),
+      )
+      if (result.error !== undefined) {
+        errorWrite(`error: ${String(result.error)}`)
+        return 1
+      }
+      return 0
+    }
     write('')
     if (result.error !== undefined) {
       errorWrite(
