@@ -72,10 +72,10 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 115 - Docs Site Generator (Complete); Phases 87-115 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-115 (Context Engineering, Subagents & Orchestration, and the first nine Stage 9 phases)
-  - Stages closed: 7 (Context Engineering, 83-92) and 8 (Subagents & Orchestration, 93-102); Stage 9 (Hooks/Skills/Plugins, 103-116) in progress
-- **Next action:** Phase 116 - Ship 3 Flagship Plugins
+- **Current phase:** Phase 116 - Ship 3 Flagship Plugins (Complete); Phases 87-116 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-116 - Stage 9 (Hooks/Skills/Plugins, 103-116) CLOSED, Stage 10 (MCP + Connectors, 117-124) next
+  - Stages closed: 7 (Context Engineering, 83-92), 8 (Subagents & Orchestration, 93-102), 9 (Hooks/Skills/Plugins, 103-116)
+- **Next action:** Phase 117 - MCP Client, Stdio Transport (Stage 10)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404

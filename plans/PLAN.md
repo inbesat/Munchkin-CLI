@@ -2192,6 +2192,8 @@ Each phase contains:
 
 **Testing:** Install each plugin. Verify it works. Verify it doesn't break other plugins.
 
+**Status (2026-10-17):** Implemented (npm workspace packages under repo-root `plugins/` (root workspaces glob extended): `forge-security` - PreToolUse hook `hooks/pre-tool-use.ts` per the Phase-104 command contract (stdin JSON payload, exit 2 = block w/ reason): secret regex set (Anthropic/OpenAI/GitHub/AWS/Slack keys, private-key blocks) + dangerous-command list (rm -rf /, fork bomb, mkfs/dd disk wipe, chmod -R 777 /, curl|sh); fail-closed on unparseable payloads. `forge-format` - PostToolUse hook `hooks/post-tool-use.ts`: extension-based formatter pick (Biome → Prettier, `FORMATTER_CMD` override), always exit 0 (Post = observe; skips for unknown extensions/missing files). `forge-test` - `/test` slash command `commands/test.md` (Phase-108 commands part) with the runner-detect → narrow-scope → classify → report protocol. All three have Phase-108 manifests w/ declared `parts`, package.json (`files` + `publishConfig.access=public`) - npm publish is the human step (`npm publish` per package dir). Tests: 4 green - three load together w/o namespace conflict w/ declared parts; security blocks Anthropic key + `rm -rf /` and allows clean (exit-code contract); format invokes formatter, skips unknown/missing (never blocks); broken sibling isolated while flagships load (fix-up via Phase-109 entry shape). Kernel 84/84, tsc 0, lint 0.
+
 **Estimated Hours:** 8–10 hours.
 
 ---
