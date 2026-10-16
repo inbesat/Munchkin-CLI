@@ -24,6 +24,15 @@ export {
   type McpServersConfig,
   type ResolvedServerSpec,
 } from './presets'
+
+// Connector wizard (Phase 122)
+export {
+  ConnectorWizard,
+  connectSpec,
+  type WizardAnswers,
+  type WizardState,
+  type WizardStep,
+} from './presets/wizard'
 export {
   LazyToolIndex,
   type LazyResult,

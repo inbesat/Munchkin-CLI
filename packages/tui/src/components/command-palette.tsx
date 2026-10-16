@@ -56,7 +56,7 @@ export const defaultCommands: Command[] = [
   {
     id: 'connect',
     title: 'connect',
-    description: 'Install a bundled MCP connector preset (`/connect github`, `/connect list`)',
+    description: 'MCP connector wizard (`/connect github`, prompts via /answer)',
     group: 'builtin',
   },
   { id: 'init', title: 'init', description: 'Generate project configuration', group: 'builtin' },

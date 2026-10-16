@@ -15,7 +15,10 @@ import {
 } from '../../plugin-kernel/dist/index'
 import {
   CONNECTOR_PRESETS,
+  ConnectorWizard,
   McpPresetsConfig,
+  connectSpec,
+  getPreset,
   installPreset,
 } from '../../mcp/dist/index'
 import { ContextGrid } from './components/context-grid'
@@ -84,6 +87,8 @@ export function App() {
   const marketplaceSourceRef = useRef<string | null>(null)
   /** Phase 121: MCP connector presets. */
   const mcpPresetsRef = useRef(new McpPresetsConfig(join(process.cwd(), '.forge')))
+  /** Phase 122: active connector wizard (null when idle). */
+  const wizardRef = useRef<ConnectorWizard | null>(null)
 
   useEffect(() => {
     budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
@@ -206,6 +211,46 @@ export function App() {
         appendSystem(`Goal set: ${argsText} — ends when the agent reports [GOAL_MET].`)
         return
       }
+      if (command === 'answer') {
+        const wizard = wizardRef.current
+        if (wizard === null) {
+          appendSystem('No wizard in progress. Start one with /connect <connector>.')
+          return
+        }
+        if (argsText === 'cancel') {
+          wizardRef.current = null
+          appendSystem('Wizard cancelled.')
+          return
+        }
+        const answered = wizard.answer(argsText)
+        if (!answered.ok) {
+          appendSystem(`wizard: ${answered.error ?? 'invalid answer'}`)
+          return
+        }
+        if (!wizard.isComplete()) {
+          appendSystem(wizard.currentPrompt() ?? '')
+          return
+        }
+        const finished = wizard.finish()
+        if (!finished.ok) {
+          appendSystem(`wizard failed: ${finished.error}`)
+          wizardRef.current = null
+          return
+        }
+        mcpPresetsRef.current.set(wizard.preset, finished.spec)
+        wizardRef.current = null
+        appendSystem(`MCP server '${wizard.preset}' configured. Testing connection...`)
+        void connectSpec(finished.spec)
+          .then((verified) => {
+            appendSystem(
+              verified.ok
+                ? `Connection verified: '${verified.serverName}' answered the MCP handshake.`
+                : `Connection test failed: ${verified.error}`,
+            )
+          })
+          .catch(() => appendSystem('Connection test crashed unexpectedly.'))
+        return
+      }
       if (command === 'connect') {
         if (argsText === '' || argsText === 'list') {
           const installed = mcpPresetsRef.current.installedIds()
@@ -219,6 +264,30 @@ export function App() {
         }
         const presetName = argsText.split(/\s+/)[0] ?? ''
         const extraArgs = argsText.split(/\s+/).slice(1).filter((arg) => arg.length > 0)
+        if (extraArgs[0] === 'cancel') {
+          wizardRef.current = null
+          appendSystem('Wizard cancelled.')
+          return
+        }
+        const preset = getPreset(presetName)
+        if (preset === undefined) {
+          appendSystem(`connect failed: unknown connector preset '${presetName}'`)
+          return
+        }
+        // Wizard path (Phase 122): needed when env secrets are missing from
+        // the host or the preset expects arguments; otherwise 121's direct path.
+        const needsWizard =
+          (preset.requiredEnv ?? []).some((key) => {
+            const value = process.env[key]
+            return value === undefined || value.length === 0
+          }) || (preset.expectsArgs ?? []).length > 0
+        if (needsWizard) {
+          const wizard = new ConnectorWizard(presetName)
+          wizardRef.current = wizard
+          appendSystem(wizard.currentPrompt() ?? '')
+          appendSystem('Answer with /answer <value> - /answer cancel aborts.')
+          return
+        }
         const installed = installPreset(presetName, mcpPresetsRef.current, extraArgs)
         if (!installed.ok) {
           appendSystem(`connect failed: ${installed.error ?? 'unknown error'}`)
