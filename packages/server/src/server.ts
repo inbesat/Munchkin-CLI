@@ -4,11 +4,14 @@ import { type Logger, SessionStore, VERSION, getLogger } from '@forge/core'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { AuthStore } from './auth/store'
+import type { GitHubApp } from './github/app'
+import { createGitHubRoutes } from './github/routes'
 import {
   createAuthMiddleware,
   createCorsMiddleware,
   createErrorHandlerMiddleware,
   createLoggingMiddleware,
+  defaultAllow,
 } from './middleware'
 import { generateOpenAPISpec, openAPIDocsHtml } from './openapi'
 import {
@@ -53,6 +56,11 @@ export interface ServerOptions {
    * Phase 81 replaces this with the proper per-provider auth model.
    */
   authToken?: string
+  /**
+   * Optional GitHub App (Phase 142): mounts POST /api/github/webhook and
+   * exempts it from bearer auth - webhooks are HMAC-signature verified.
+   */
+  githubApp?: GitHubApp
 }
 
 interface ResolvedServerOptions {
@@ -68,6 +76,7 @@ interface ResolvedServerOptions {
   agentExecutor?: AgentExecutor
   authStore?: AuthStore
   authToken?: string
+  githubApp?: GitHubApp
 }
 
 export class ForgeServer {
@@ -114,6 +123,7 @@ export class ForgeServer {
       sseBridge: options.sseBridge,
       authToken: options.authToken,
       authStore: options.authStore,
+      githubApp: options.githubApp,
     }
 
     await fs.mkdir(resolved.baseDir, { recursive: true })
@@ -168,6 +178,13 @@ export class ForgeServer {
       createAuthMiddleware({
         legacyToken: this.options.authToken,
         store: this.authStore,
+        // Phase 142: GitHub webhooks are HMAC-verified, not bearer-gated.
+        ...(this.options.githubApp !== undefined
+          ? {
+              allowAnonymousPaths: (key: string) =>
+                defaultAllow(key) || key === 'POST /api/github/webhook',
+            }
+          : {}),
       }),
     )
     app.use('*', createLoggingMiddleware(this.log))
@@ -201,6 +218,9 @@ export class ForgeServer {
     app.route('/api/sse', createSSERoutes(this.sseHub, this.sessionManager, this.log))
     app.route('/api/auth', createAuthRoutes(this.log))
     app.route('/api/auth', createApiKeyRoutes(this.authStore, this.log))
+    if (this.options.githubApp !== undefined) {
+      app.route('/api/github', createGitHubRoutes(this.options.githubApp))
+    }
 
     const spec = generateOpenAPISpec()
     app.get('/api/openapi.json', (c) => c.json(spec))

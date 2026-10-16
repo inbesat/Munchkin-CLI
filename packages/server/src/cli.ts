@@ -13,6 +13,7 @@ import { join } from 'node:path'
 import { VERSION } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { AuthStore } from './auth/store'
+import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
 
 export type Subcommand = 'serve' | 'rpc' | 'auth' | 'worktree' | 'help' | 'version'
@@ -51,6 +52,7 @@ Options:
   --cors <origin>       Allow a specific CORS origin (repeatable)
   --no-cors             Disable CORS (default allows '*')
   --auth-token <t>      Require a bearer token on every request (serve only)
+  GITHUB_WEBHOOK_SECRET  Mount /api/github/webhook (GitHub App; env)
   --help, -h            Show this help
   --version, -v         Show the version
 
@@ -292,12 +294,18 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   }
 
   // `serve`
-  const server = await createServer(parsed.options)
+  // Phase 142: mount the GitHub App webhook when GITHUB_WEBHOOK_SECRET is set.
+  const githubApp = createGitHubAppFromEnv(process.env)
+  const server = await createServer({
+    ...parsed.options,
+    ...(githubApp !== undefined ? { githubApp } : {}),
+  })
   const port = parsed.options.port ?? 3000
   const host = parsed.options.host ?? '127.0.0.1'
   write(`forge ${VERSION} listening on http://${host}:${port}`)
   write(`  base-dir: ${parsed.options.baseDir ?? '<cwd>/.forge'}`)
   if (parsed.options.authToken) write('  auth: bearer token required')
+  if (githubApp !== undefined) write('  github: webhook mounted at /api/github/webhook')
   if (parsed.options.corsOrigins !== undefined) {
     write(
       `  cors: ${parsed.options.corsOrigins.length === 0 ? 'disabled' : parsed.options.corsOrigins.join(', ')}`,

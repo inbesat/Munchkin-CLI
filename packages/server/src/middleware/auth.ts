@@ -117,7 +117,7 @@ function isMatch(a: string, b: string): boolean {
   return diff === 0
 }
 
-function defaultAllow(key: string): boolean {
+export function defaultAllow(key: string): boolean {
   for (const [m, p] of DEFAULT_ALLOW) {
     if (key === `${m} ${p}` || key === p) return true
   }
