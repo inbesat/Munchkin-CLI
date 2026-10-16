@@ -59,3 +59,9 @@ export {
   assembleMessages,
   type HydrationOptions,
 } from './hydration'
+
+export {
+  buildTrajectory,
+  type TrajectoryStep,
+  type TrajectoryStepKind,
+} from './trajectory'

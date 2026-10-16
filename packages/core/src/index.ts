@@ -134,6 +134,11 @@ export type {
   ProviderMessage,
   HydrationOptions,
 } from './session'
+export {
+  buildTrajectory,
+  type TrajectoryStep,
+  type TrajectoryStepKind,
+} from './session'
 
 // Cost
 export {

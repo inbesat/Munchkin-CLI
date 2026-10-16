@@ -33,6 +33,7 @@ import { SessionManager } from './services/session-manager'
 import { SSEHub } from './services/sse-hub'
 import { createDefaultToolRegistry, toAgentTools } from './services/tool-registry'
 import { SSEBridge } from './sse/bridge'
+import { createTrajectoryRoutes } from './trajectory/routes'
 
 export interface ServerOptions {
   port?: number
@@ -221,6 +222,8 @@ export class ForgeServer {
     if (this.options.githubApp !== undefined) {
       app.route('/api/github', createGitHubRoutes(this.options.githubApp))
     }
+    // Phase 144: server-rendered trajectory browser.
+    app.route('/trajectory', createTrajectoryRoutes(this.sessionManager))
 
     const spec = generateOpenAPISpec()
     app.get('/api/openapi.json', (c) => c.json(spec))
