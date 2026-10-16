@@ -2270,6 +2270,8 @@ Each phase contains:
 
 **Testing:** Connect to MCP server with 100+ tools. Verify only requested tools are loaded into context.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/client/lazy.ts` - `LazyToolIndex`: `buildIndex()` fetches the server catalog once and stores ONLY name+description (full schemas discarded so they never enter context); `search(query, limit)` ranks exact-name > prefix > substring > description-word matches deterministically (no LLM); `loadSchemas(names)` refetches and materializes exactly the requested tools (deduped, repeated loads idempotent, unknown names → `{ok:false,error}` both for not-in-index and server-no-longer-exposes); `stats()` exposes indexSize vs loadedSchemas for the context-budget assertion; loader failures degrade to empty results. Wiring to a live server is one line over the Phase-117 `McpToolClient.listTools` as the `SchemaLoader`). Tests: 5 green - 120-tool catalog indexed w/ zero schemas in context + single loader call, ranked search (and empty-result queries), only-2-of-120 schemas materialized, unknown-name rejection + dedupe, loader-failure degradation. mcp 20/20, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 5–6 hours.
 
 ---
