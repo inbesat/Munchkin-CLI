@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 124 - Ship Our Own MCP Server (Complete); Phases 87-124 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-124 - Stages 7-9 closed, Stage 10 (MCP + Connectors, 117-124) COMPLETE 8/8
-- **Next action:** Stage 11 - Sandboxing & Isolation (Phases 125-130), starting Phase 125
+- **Current phase:** Phase 125 - Local Sandbox Platform Abstraction (Complete); Phases 87-125 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-125 - Stages 7-10 closed, Stage 11 (Sandboxing & Isolation, 125-130) 1/6 done
+- **Next action:** Phase 126 - Windows ACL Restricted-Token Runner (Stage 11)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404

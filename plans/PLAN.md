@@ -2361,7 +2361,19 @@ Each phase contains:
 
 **Dependencies:** None.
 
+## Phase 125: Local Sandbox - Platform Abstraction
+
+**Description:** Define the SandboxProvider interface: a pluggable abstraction for sandboxed command execution. Each platform provides its own implementation. The interface: execute command, check isolation, get sandbox info.
+
+**Deliverables:**
+- `packages/sandbox/src/types.ts` - SandboxProvider interface
+- Tests
+
+**Dependencies:** None.
+
 **Testing:** Define interface. Create mock implementation. Verify it satisfies the interface.
+
+**Status (2026-10-17):** Implemented (`packages/sandbox/src/types.ts` - `SandboxProvider` interface: `execute(request)` → `SandboxExecutionResult` (exitCode/stdout/stderr/timedOut/durationMs, spawn-failure `error` field, no-throw convention), `checkIsolation()` → `IsolationReport` (per-check pass/fail + `isolated` verdict), `info()` → `SandboxInfo` (id/platform/capabilities/available/unsupportedReason), `isAvailable()` probe; `defineSandboxProvider` identity helper for compile-time conformance; `MockSandboxProvider` with a scripted result queue + request recording + configurable isolation report (bundled for downstream platform implementations to stub against). Zero dependencies, zero OS calls in the abstraction. Tests: 3 green - mock satisfies the interface (compile-time via the helper + runtime assertions), scripted execution w/ request recording + queue-exhaustion default, availability/unsupported-reason + failing-check isolation report. sandbox 4/4 (incl. the pre-existing VERSION smoke), tsc 0, lint 0; barrel + dist rebuilt.
 
 **Estimated Hours:** 3–4 hours.
 
