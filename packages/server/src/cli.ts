@@ -10,11 +10,12 @@
  */
 
 import { VERSION } from '@forge/core'
+import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { join } from 'node:path'
 import { AuthStore } from './auth/store'
 import { createServer, type ServerOptions } from './server'
 
-export type Subcommand = 'serve' | 'rpc' | 'auth' | 'help' | 'version'
+export type Subcommand = 'serve' | 'rpc' | 'auth' | 'worktree' | 'help' | 'version'
 
 export interface ParsedArgs {
   command: Subcommand
@@ -38,6 +39,7 @@ Usage:
   forge serve [options]
   forge rpc [options]
   forge auth <list|create|revoke> [options]
+  forge worktree <list|create|merge|remove> [options]
   forge help
   forge version
 
@@ -238,6 +240,10 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   if (argv[0] === 'auth') {
     return runAuthCommand(argv, { write })
   }
+  // Phase 135: `forge worktree list|create|merge|remove` - handled by @forge/git.
+  if (argv[0] === 'worktree') {
+    return runWorktreeCommand(argv.slice(1), { write })
+  }
   const parsed = parseArgs(argv, opts)
 
   if (parsed.errors.length > 0) {
@@ -376,6 +382,91 @@ export async function runAuthCommand(
   write(`error: unknown auth subcommand: ${sub}`)
   write(AUTH_HELP)
   return 1
+}
+
+const WORKTREE_HELP = `forge worktree - manage git worktrees
+
+Usage:
+  forge worktree list
+  forge worktree create <branch> [--path <p>] [--base <ref>]
+  forge worktree merge <branch> [--message <m>]
+  forge worktree remove <branch-or-path> [--delete-branch] [--force]
+  forge worktree help
+`
+
+/** Phase 135: dispatch `forge worktree ...` against the @forge/git handlers. */
+function runWorktreeCommand(
+  argv: string[],
+  opts: { write: (line: string) => void },
+): number {
+  const write = (line: string): void => opts.write(line)
+  const sub = argv[0] ?? 'list'
+  const repoPath = process.cwd()
+
+  switch (sub) {
+    case 'list': {
+      const result = worktreeList(repoPath)
+      if (!result.ok) {
+        write(`error: ${result.output}`)
+        return 1
+      }
+      if (result.worktrees.length === 0) write('(no worktrees)')
+      for (const worktree of result.worktrees) {
+        const branch = worktree.branch ?? (worktree.bare ? '(bare)' : '(detached)')
+        write(`${worktree.path}  [${branch}] ${worktree.head.slice(0, 8)}`)
+      }
+      return 0
+    }
+    case 'create': {
+      const branch = argv[1]
+      if (branch === undefined) {
+        write('usage: forge worktree create <branch> [--path <p>] [--base <ref>]')
+        return 1
+      }
+      const flags = argv.slice(2)
+      const pathFlag = flags.indexOf('--path')
+      const baseFlag = flags.indexOf('--base')
+      const result = worktreeCreate(repoPath, branch, {
+        path: pathFlag !== -1 ? flags[pathFlag + 1] : undefined,
+        baseRef: baseFlag !== -1 ? flags[baseFlag + 1] : undefined,
+      })
+      write(result.output)
+      return result.ok ? 0 : 1
+    }
+    case 'merge': {
+      const branch = argv[1]
+      if (branch === undefined) {
+        write('usage: forge worktree merge <branch> [--message <m>]')
+        return 1
+      }
+      const messageFlag = argv.indexOf('--message')
+      const result = worktreeMerge(repoPath, branch, {
+        message: messageFlag !== -1 ? argv[messageFlag + 1] : undefined,
+      })
+      write(result.output)
+      return result.ok ? 0 : 1
+    }
+    case 'remove': {
+      const target = argv[1]
+      if (target === undefined) {
+        write('usage: forge worktree remove <branch-or-path> [--delete-branch] [--force]')
+        return 1
+      }
+      const result = worktreeRemove(repoPath, target, {
+        deleteBranch: argv.includes('--delete-branch'),
+        force: argv.includes('--force'),
+      })
+      write(result.output)
+      return result.ok ? 0 : 1
+    }
+    case 'help':
+      write(WORKTREE_HELP)
+      return 0
+    default:
+      write(`error: unknown worktree subcommand: ${sub}`)
+      write(WORKTREE_HELP)
+      return 1
+  }
 }
 
 const AUTH_HELP = `forge auth - manage API keys

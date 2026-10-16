@@ -17,6 +17,16 @@ export {
   type RewindResult,
 } from './checkpoints/rewind'
 
+// Worktree manager CLI handlers (Phase 135)
+export {
+  worktreeList,
+  worktreeCreate,
+  worktreeMerge,
+  worktreeRemove,
+  type WorktreeEntry,
+  type WorktreeRun,
+} from './worktree/cli'
+
 // Smart commit/PR tools (Phase 133)
 export {
   SmartCommitTool,
