@@ -27,6 +27,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@forge/git": "workspace:*",
     "zod": "^4.4.3",
     "@sinclair/typebox": "^0.34.0",
     "diff": "^7.0.0",

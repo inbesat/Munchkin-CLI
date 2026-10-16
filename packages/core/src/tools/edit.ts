@@ -71,6 +71,15 @@ export function createEditTool(config?: Partial<FileAccessConfig>): Tool {
 
       const validatedPath = validateFilePath(filePath, fileAccessConfig, 'edit')
 
+      // Phase 131: best-effort shadow snapshot before the edit mutates the
+      // file - a checkpoint failure never blocks the edit.
+      try {
+        const { CheckpointEngine } = await import('@forge/git')
+        void new CheckpointEngine().snapshotBeforeEdit(validatedPath)
+      } catch {
+        // best-effort
+      }
+
       if (!(await fileExists(validatedPath))) {
         throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, `File not found: ${filePath}`, 'edit')
       }
