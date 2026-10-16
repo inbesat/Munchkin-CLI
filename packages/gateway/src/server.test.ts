@@ -3,6 +3,7 @@ import { PrefixRouter } from './router'
 import { createApp } from './server'
 
 const UPSTREAM = { baseURL: 'https://upstream.test/v1', apiKey: 'sk-test' }
+const originalFetch = globalThis.fetch
 
 function makeApp(overrides: { auth?: { mode: 'token'; token: string } } = {}) {
   const router = new PrefixRouter().add('test', UPSTREAM)
@@ -80,7 +81,7 @@ describe('gateway server', () => {
     })
 
     afterEach(() => {
-      ;(globalThis as { fetch?: typeof fetch }).fetch = undefined
+      globalThis.fetch = originalFetch
     })
 
     it('relays a non-stream completion to the routed upstream', async () => {
@@ -170,6 +171,9 @@ describe('gateway server', () => {
   })
 
   describe('token auth', () => {
+    it('restores global fetch after completion tests', () => {
+      expect(globalThis.fetch).toBe(originalFetch)
+    })
     it('rejects requests without a bearer token', async () => {
       const app = makeApp({ auth: { mode: 'token', token: 'secret' } })
       const res = await app.request('/v1/models')

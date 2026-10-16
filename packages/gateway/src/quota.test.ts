@@ -9,6 +9,8 @@ import { SlidingWindowLimiter } from './ratelimit'
 import { PrefixRouter } from './router'
 import { createApp } from './server'
 
+const originalFetch = globalThis.fetch
+
 describe('SlidingWindowLimiter', () => {
   it('allows up to maxRequests within the window', () => {
     const limiter = new SlidingWindowLimiter(10_000, 2)
@@ -113,7 +115,7 @@ describe('killswitch through the proxy', () => {
   const BACKUP = { baseURL: 'https://backup.test/v1', apiKey: 'sk-backup' }
 
   afterEach(() => {
-    ;(globalThis as { fetch?: typeof fetch }).fetch = undefined
+    globalThis.fetch = originalFetch
   })
 
   it('skips a disabled upstream and uses the alternate', async () => {
@@ -188,7 +190,7 @@ describe('server enforcement', () => {
   })
 
   afterEach(() => {
-    ;(globalThis as { fetch?: typeof fetch }).fetch = undefined
+    globalThis.fetch = originalFetch
   })
 
   it('rate limits per IP and attaches Retry-After', async () => {

@@ -15,18 +15,42 @@ export interface Limiter {
  */
 export class SlidingWindowLimiter implements Limiter {
   #hits = new Map<string, number[]>()
+  #cleanup: MapIterator<[string, number[]]> | undefined
   readonly windowMs: number
   readonly maxRequests: number
 
   constructor(windowMs: number, maxRequests: number) {
-    if (windowMs <= 0) throw new Error('windowMs must be positive')
-    if (maxRequests <= 0) throw new Error('maxRequests must be positive')
+    if (!Number.isSafeInteger(windowMs) || windowMs <= 0) {
+      throw new Error('windowMs must be a positive safe integer')
+    }
+    if (!Number.isSafeInteger(maxRequests) || maxRequests <= 0) {
+      throw new Error('maxRequests must be a positive safe integer')
+    }
     this.windowMs = windowMs
     this.maxRequests = maxRequests
   }
 
+  get trackedKeys(): number {
+    return this.#hits.size
+  }
+
+  /** Amortized, bounded cleanup work per check; no timers or full-map scans. */
+  #prune(cutoff: number): void {
+    this.#cleanup ??= this.#hits.entries()
+    for (let i = 0; i < 128; i++) {
+      const entry = this.#cleanup.next()
+      if (entry.done) {
+        this.#cleanup = undefined
+        break
+      }
+      const [key, hits] = entry.value
+      if (hits[hits.length - 1] <= cutoff) this.#hits.delete(key)
+    }
+  }
+
   check(key: string, now = Date.now()): LimitDecision {
     const cutoff = now - this.windowMs
+    this.#prune(cutoff)
     const hits = (this.#hits.get(key) ?? []).filter((t) => t > cutoff)
 
     if (hits.length >= this.maxRequests) {

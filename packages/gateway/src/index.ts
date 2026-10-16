@@ -11,7 +11,13 @@ export type { FreeTierPreset } from './presets'
 export { buildFreeCatalog, summarizeFreeCatalog } from './catalog'
 export type { FreeModelRecord, FreeCatalogOptions, FreeCatalogStats } from './catalog'
 export { createApp, startGateway, QUOTA_KEY_PREFIX } from './server'
-export type { GatewayOptions, GatewayLimits, StartGatewayOptions, HealthBody, MetricsBody } from './server'
+export type {
+  GatewayOptions,
+  GatewayLimits,
+  StartGatewayOptions,
+  HealthBody,
+  MetricsBody,
+} from './server'
 export { clientIp } from './client-ip'
 export type { ClientIp } from './client-ip'
 export { SlidingWindowLimiter } from './ratelimit'

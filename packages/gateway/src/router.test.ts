@@ -8,6 +8,7 @@ import { createApp } from './server'
 const GROQ = { baseURL: 'https://api.groq.com/openai/v1', apiKey: 'sk-groq' }
 const BACKUP = { baseURL: 'https://backup.test/v1', apiKey: 'sk-backup' }
 const NVIDIA = { baseURL: 'https://integrate.api.nvidia.com/v1', apiKey: 'sk-nvidia' }
+const originalFetch = globalThis.fetch
 
 describe('PrefixRouter', () => {
   it('matches by longest prefix', () => {
@@ -77,6 +78,7 @@ describe('relayChatCompletion routing', () => {
 
   afterEach(() => {
     captured = []
+    globalThis.fetch = originalFetch
   })
 
   it('forwards the rewritten outbound model id', async () => {
@@ -202,7 +204,7 @@ describe('buildFreeCatalog', () => {
   })
 
   afterEach(() => {
-    ;(globalThis as { fetch?: typeof fetch }).fetch = undefined
+    globalThis.fetch = originalFetch
   })
 
   it('returns only $0 models from free providers', async () => {

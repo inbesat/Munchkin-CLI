@@ -55,6 +55,15 @@ export class SqliteQuotaEngine implements KillSwitch, KillSwitchAdmin {
   }
 
   addUsage(key: string, add: UsageAdd, date = todayKey()): QuotaState {
+    if (!Number.isSafeInteger(add.tokens) || add.tokens < 0) {
+      throw new Error('tokens must be a nonnegative safe integer')
+    }
+    if (
+      add.costUsd !== undefined &&
+      (typeof add.costUsd !== 'number' || !Number.isFinite(add.costUsd) || add.costUsd < 0)
+    ) {
+      throw new Error('costUsd must be finite and nonnegative')
+    }
     this.#db
       .query(
         'INSERT INTO usage (date, key, tokens, cost) VALUES (?, ?, ?, ?) ON CONFLICT(date, key) DO UPDATE SET tokens = tokens + excluded.tokens, cost = cost + excluded.cost',

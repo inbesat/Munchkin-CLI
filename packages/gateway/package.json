@@ -22,7 +22,7 @@
   "dependencies": {
     "@forge/ai": "workspace:*",
     "@hono/node-server": "^2.0.0",
-    "hono": "^4.0.0"
+    "hono": "^4.13.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",

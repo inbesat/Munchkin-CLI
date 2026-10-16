@@ -29,18 +29,27 @@ export interface UsageInfo {
 
 export function parseUsage(payload: unknown): UsageInfo | null {
   if (!payload || typeof payload !== 'object') return null
-  const usage = (
-    payload as {
-      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
-    }
-  ).usage
+  const usage = (payload as { usage?: Record<string, unknown> }).usage
   if (!usage || typeof usage !== 'object') return null
-  const promptTokens = usage.prompt_tokens ?? 0
-  const completionTokens = usage.completion_tokens ?? 0
+  const counts = [usage.prompt_tokens, usage.completion_tokens, usage.total_tokens]
+  if (counts.every((count) => count === undefined)) return null
+  if (
+    counts.some(
+      (count) =>
+        count !== undefined &&
+        (typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0),
+    )
+  )
+    return null
+  const promptTokens = (usage.prompt_tokens as number | undefined) ?? 0
+  const completionTokens = (usage.completion_tokens as number | undefined) ?? 0
+  const sum = promptTokens + completionTokens
+  const totalTokens = (usage.total_tokens as number | undefined) ?? sum
+  if (!Number.isSafeInteger(sum) || totalTokens < sum) return null
   return {
     promptTokens,
     completionTokens,
-    totalTokens: usage.total_tokens ?? promptTokens + completionTokens,
+    totalTokens,
   }
 }
 
