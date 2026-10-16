@@ -1,7 +1,7 @@
-import { Logger, getLogger } from '@forge/core'
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
+import { type Logger, getLogger } from '@forge/core'
 
 /**
  * API key model (Phase 81).

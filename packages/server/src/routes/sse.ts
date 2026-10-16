@@ -1,7 +1,7 @@
+import { type Logger, type SessionEvent, getLogger } from '@forge/core'
 import { Hono } from 'hono'
-import { Logger, getLogger, type SessionEvent } from '@forge/core'
-import { SSEHub, formatSSE } from '../services/sse-hub'
-import { SessionManager } from '../services/session-manager'
+import type { SessionManager } from '../services/session-manager'
+import { type SSEHub, formatSSE } from '../services/sse-hub'
 
 /**
  * Phase 78: multi-client session attach.
@@ -44,7 +44,7 @@ export function createSSERoutes(hub: SSEHub, sessionManager?: SessionManager, lo
       },
     })
 
-    return new Response(stream, {
+    return new Response(stream.pipeThrough(new TextEncoderStream()), {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -55,11 +55,21 @@ export function createSSERoutes(hub: SSEHub, sessionManager?: SessionManager, lo
   })
 
   app.post('/broadcast', async (c) => {
-    const body = await c.req.json<{ sessionId?: string; event: string; data: unknown; id?: string }>()
+    const body = await c.req.json<{
+      sessionId?: string
+      event: string
+      data: unknown
+      id?: string
+    }>()
     const result = body.id
       ? hub.broadcastSince(body.event, body.data, body.sessionId ?? '', body.id)
       : hub.broadcast(body.event, body.data, body.sessionId)
-    log.info('SSE broadcast', { event: body.event, sessionId: body.sessionId, delivered: result.delivered, failed: result.failed })
+    log.info('SSE broadcast', {
+      event: body.event,
+      sessionId: body.sessionId,
+      delivered: result.delivered,
+      failed: result.failed,
+    })
     return c.json(result)
   })
 
@@ -81,7 +91,10 @@ export function createSSERoutes(hub: SSEHub, sessionManager?: SessionManager, lo
     }
     const ok = hub.attach(clientId, sessionId)
     if (!ok) {
-      return c.json({ error: { code: 'CLIENT_NOT_FOUND', message: 'No active stream with that clientId' } }, 404)
+      return c.json(
+        { error: { code: 'CLIENT_NOT_FOUND', message: 'No active stream with that clientId' } },
+        404,
+      )
     }
     return c.json({ sessionId, clientId, attached: true })
   })
@@ -98,7 +111,10 @@ export function createSSERoutes(hub: SSEHub, sessionManager?: SessionManager, lo
     }
     const ok = hub.detach(clientId, sessionId)
     if (!ok) {
-      return c.json({ error: { code: 'CLIENT_NOT_FOUND', message: 'No active stream with that clientId' } }, 404)
+      return c.json(
+        { error: { code: 'CLIENT_NOT_FOUND', message: 'No active stream with that clientId' } },
+        404,
+      )
     }
     return c.json({ sessionId, clientId, detached: true })
   })
@@ -121,7 +137,10 @@ export function createSSERoutes(hub: SSEHub, sessionManager?: SessionManager, lo
    */
   app.post('/replay', async (c) => {
     if (!sessionManager) {
-      return c.json({ error: { code: 'NO_SESSION_MANAGER', message: 'Session manager not wired' } }, 503)
+      return c.json(
+        { error: { code: 'NO_SESSION_MANAGER', message: 'Session manager not wired' } },
+        503,
+      )
     }
     const body = await c.req.json<{ sessionId?: string; fromIndex?: number; limit?: number }>()
     const sessionId = body.sessionId

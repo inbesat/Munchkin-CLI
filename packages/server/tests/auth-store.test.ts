@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { AuthStore, AUTH_KEY_PREFIX } from '../src/auth/store'
+import { AUTH_KEY_PREFIX, AuthStore } from '../src/auth/store'
 
 let baseDir: string
 let store: AuthStore
@@ -82,7 +82,7 @@ describe('AuthStore (Phase 81)', () => {
     if (!r.ok) expect(r.reason).toBe('rate-limited')
   })
 
-  it('rate-limits independently per key (one key can\'t starve another)', async () => {
+  it("rate-limits independently per key (one key can't starve another)", async () => {
     const a = await store.createKey({ name: 'a', rateLimit: { capacity: 1, refillPerSec: 0.1 } })
     const b = await store.createKey({ name: 'b', rateLimit: { capacity: 1, refillPerSec: 0.1 } })
     expect((await store.validate(a.secret)).ok).toBe(true)

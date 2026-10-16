@@ -1,16 +1,16 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { Readable, Writable } from 'node:stream'
 import {
   RPC_VERSION,
   RpcErrorCodes,
+  type RpcMessage,
   decodeMessage,
   encodeMessage,
+  isNotification,
+  isRequest,
+  isResponse,
   makeError,
   makeSuccess,
-  isRequest,
-  isNotification,
-  isResponse,
-  type RpcMessage,
 } from '../src/rpc/protocol'
 import { RpcServer } from '../src/rpc/server'
 
@@ -135,8 +135,12 @@ describe('RpcServer (stdio JSON-RPC)', () => {
   it('handles multiple requests in a single stream', async () => {
     server.register('add', ({ a, b }: { a: number; b: number }) => a + b)
     const promise = server.serve()
-    streams.pushLine(JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'add', params: { a: 1, b: 2 } }))
-    streams.pushLine(JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'add', params: { a: 10, b: 20 } }))
+    streams.pushLine(
+      JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'add', params: { a: 1, b: 2 } }),
+    )
+    streams.pushLine(
+      JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'add', params: { a: 10, b: 20 } }),
+    )
     await new Promise((r) => setTimeout(r, 20))
     streams.endInput()
     await promise

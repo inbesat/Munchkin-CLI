@@ -1,10 +1,10 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { VERSION } from '@forge/core'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import {
-  sessionCreateSchema,
-  promptSchema,
-  toolExecuteSchema,
   configSchema,
+  promptSchema,
+  sessionCreateSchema,
+  toolExecuteSchema,
 } from './middleware/validation'
 
 // ── Response schemas ─────────────────────────────────────────────
@@ -101,7 +101,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/health',
       tags: ['system'],
       summary: 'Liveness probe',
-      responses: { 200: { description: 'Server is alive', content: { 'application/json': { schema: healthResponse } } } },
+      responses: {
+        200: {
+          description: 'Server is alive',
+          content: { 'application/json': { schema: healthResponse } },
+        },
+      },
     }),
     (c) =>
       c.json(
@@ -125,12 +130,23 @@ export function buildSpecApp(): OpenAPIHono {
       responses: {
         200: {
           description: 'Server ready',
-          content: { 'application/json': { schema: z.object({ ready: z.boolean(), checks: z.record(z.string(), z.boolean()) }) } },
+          content: {
+            'application/json': {
+              schema: z.object({ ready: z.boolean(), checks: z.record(z.string(), z.boolean()) }),
+            },
+          },
         },
-        503: { description: 'Not ready', content: { 'application/json': { schema: errorResponse } } },
+        503: {
+          description: 'Not ready',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
-    (c) => c.json({ ready: true, checks: { sessionStore: true } } satisfies z.infer<typeof readyResponse>, 200),
+    (c) =>
+      c.json(
+        { ready: true, checks: { sessionStore: true } } satisfies z.infer<typeof readyResponse>,
+        200,
+      ),
   )
 
   app.openapi(
@@ -139,7 +155,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/sessions',
       tags: ['sessions'],
       summary: 'List recent sessions',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.array(sessionResponse) } } } },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.array(sessionResponse) } },
+        },
+      },
     }),
     (c) => c.json([] as z.infer<typeof sessionResponse>[], 200),
   )
@@ -150,10 +171,18 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/sessions',
       tags: ['sessions'],
       summary: 'Create a session',
-      request: { body: { required: true, content: { 'application/json': { schema: sessionCreateSchema } } } },
+      request: {
+        body: { required: true, content: { 'application/json': { schema: sessionCreateSchema } } },
+      },
       responses: {
-        201: { description: 'created', content: { 'application/json': { schema: sessionResponse } } },
-        400: { description: 'validation error', content: { 'application/json': { schema: errorResponse } } },
+        201: {
+          description: 'created',
+          content: { 'application/json': { schema: sessionResponse } },
+        },
+        400: {
+          description: 'validation error',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof sessionResponse>, 201),
@@ -168,7 +197,10 @@ export function buildSpecApp(): OpenAPIHono {
       request: { params: z.object({ id: z.string() }) },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: sessionResponse } } },
-        404: { description: 'not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof sessionResponse>, 200),
@@ -183,7 +215,10 @@ export function buildSpecApp(): OpenAPIHono {
       request: { params: z.object({ id: z.string() }) },
       responses: {
         200: { description: 'deleted', content: { 'application/json': { schema: okResponse } } },
-        404: { description: 'not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({ success: true } satisfies z.infer<typeof okResponse>, 200),
@@ -195,8 +230,16 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/sessions/{id}/events',
       tags: ['sessions'],
       summary: 'Replay a session event log',
-      request: { params: z.object({ id: z.string() }), query: z.object({ from: z.string().optional() }) },
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.array(z.record(z.string(), z.unknown())) } } } },
+      request: {
+        params: z.object({ id: z.string() }),
+        query: z.object({ from: z.string().optional() }),
+      },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.array(z.record(z.string(), z.unknown())) } },
+        },
+      },
     }),
     (c) => c.json([] as Record<string, unknown>[], 200),
   )
@@ -208,7 +251,12 @@ export function buildSpecApp(): OpenAPIHono {
       tags: ['sessions'],
       summary: 'Search sessions',
       request: { query: z.object({ q: z.string().optional() }) },
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.array(sessionResponse) } } } },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.array(sessionResponse) } },
+        },
+      },
     }),
     (c) => c.json([] as z.infer<typeof sessionResponse>[], 200),
   )
@@ -225,7 +273,10 @@ export function buildSpecApp(): OpenAPIHono {
       },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: promptResponse } } },
-        404: { description: 'session not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'session not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof promptResponse>, 200),
@@ -237,7 +288,9 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/tools',
       tags: ['tools'],
       summary: 'List available tools',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.array(toolDef) } } } },
+      responses: {
+        200: { description: 'ok', content: { 'application/json': { schema: z.array(toolDef) } } },
+      },
     }),
     (c) => c.json([] as z.infer<typeof toolDef>[], 200),
   )
@@ -251,7 +304,10 @@ export function buildSpecApp(): OpenAPIHono {
       request: { params: z.object({ name: z.string() }) },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: toolDef } } },
-        404: { description: 'not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof toolDef>, 200),
@@ -263,21 +319,41 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/tools/execute',
       tags: ['tools'],
       summary: 'Execute a tool directly',
-      request: { body: { required: true, content: { 'application/json': { schema: toolExecuteSchema } } } },
+      request: {
+        body: { required: true, content: { 'application/json': { schema: toolExecuteSchema } } },
+      },
       responses: {
         200: {
           description: 'ok',
           content: {
             'application/json': {
-              schema: z.object({ result: z.string(), error: z.string().optional(), durationMs: z.number() }),
+              schema: z.object({
+                result: z.string(),
+                error: z.string().optional(),
+                durationMs: z.number(),
+              }),
             },
           },
         },
-        400: { description: 'validation error', content: { 'application/json': { schema: errorResponse } } },
-        500: { description: 'execution error', content: { 'application/json': { schema: errorResponse } } },
+        400: {
+          description: 'validation error',
+          content: { 'application/json': { schema: errorResponse } },
+        },
+        500: {
+          description: 'execution error',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
-    (c) => c.json({ result: '', durationMs: 0 } satisfies { result: string; error?: string; durationMs: number }, 200),
+    (c) =>
+      c.json(
+        { result: '', durationMs: 0 } satisfies {
+          result: string
+          error?: string
+          durationMs: number
+        },
+        200,
+      ),
   )
 
   app.openapi(
@@ -286,7 +362,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/config',
       tags: ['config'],
       summary: 'Get the full merged config',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } } },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } },
+        },
+      },
     }),
     (c) => c.json({} as Record<string, unknown>, 200),
   )
@@ -297,7 +378,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/config/default',
       tags: ['config'],
       summary: 'Get the built-in default config',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } } },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } },
+        },
+      },
     }),
     (c) => c.json({} as Record<string, unknown>, 200),
   )
@@ -311,7 +397,10 @@ export function buildSpecApp(): OpenAPIHono {
       request: { params: z.object({ key: z.string() }) },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: configResponse } } },
-        404: { description: 'not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof configResponse>, 200),
@@ -323,10 +412,15 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/config',
       tags: ['config'],
       summary: 'Set a config value',
-      request: { body: { required: true, content: { 'application/json': { schema: configSchema } } } },
+      request: {
+        body: { required: true, content: { 'application/json': { schema: configSchema } } },
+      },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: configResponse } } },
-        400: { description: 'validation error', content: { 'application/json': { schema: errorResponse } } },
+        400: {
+          description: 'validation error',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({} as z.infer<typeof configResponse>, 200),
@@ -338,10 +432,16 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/config/{key}',
       tags: ['config'],
       summary: 'Delete a config value',
-      request: { params: z.object({ key: z.string() }), query: z.object({ scope: z.string().optional() }) },
+      request: {
+        params: z.object({ key: z.string() }),
+        query: z.object({ scope: z.string().optional() }),
+      },
       responses: {
         200: { description: 'ok', content: { 'application/json': { schema: okResponse } } },
-        404: { description: 'not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({ success: true } satisfies z.infer<typeof okResponse>, 200),
@@ -353,9 +453,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/auth',
       tags: ['auth'],
       summary: 'Provider auth status (no secrets exposed)',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: authResponse } } } },
+      responses: {
+        200: { description: 'ok', content: { 'application/json': { schema: authResponse } } },
+      },
     }),
-    (c) => c.json({ authenticated: false, providers: {} } satisfies z.infer<typeof authResponse>, 200),
+    (c) =>
+      c.json({ authenticated: false, providers: {} } satisfies z.infer<typeof authResponse>, 200),
   )
 
   app.openapi(
@@ -364,7 +467,9 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/sse/stats',
       tags: ['sse'],
       summary: 'SSE hub stats',
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: sseStats } } } },
+      responses: {
+        200: { description: 'ok', content: { 'application/json': { schema: sseStats } } },
+      },
     }),
     (c) => c.json({ clients: 0 } satisfies z.infer<typeof sseStats>, 200),
   )
@@ -380,12 +485,21 @@ export function buildSpecApp(): OpenAPIHono {
           required: true,
           content: {
             'application/json': {
-              schema: z.object({ sessionId: z.string().optional(), event: z.string(), data: z.unknown() }),
+              schema: z.object({
+                sessionId: z.string().optional(),
+                event: z.string(),
+                data: z.unknown(),
+              }),
             },
           },
         },
       },
-      responses: { 200: { description: 'ok', content: { 'application/json': { schema: z.object({ delivered: z.number() }) } } } },
+      responses: {
+        200: {
+          description: 'ok',
+          content: { 'application/json': { schema: z.object({ delivered: z.number() }) } },
+        },
+      },
     }),
     (c) => c.json({ delivered: 0 } satisfies { delivered: number }, 200),
   )
@@ -396,7 +510,12 @@ export function buildSpecApp(): OpenAPIHono {
       path: '/api/sse/events',
       tags: ['sse'],
       summary: 'SSE stream of live server events',
-      responses: { 200: { description: 'text/event-stream', content: { 'text/event-stream': { schema: z.string() } } } },
+      responses: {
+        200: {
+          description: 'text/event-stream',
+          content: { 'text/event-stream': { schema: z.string() } },
+        },
+      },
     }),
     (c) => c.text('', 200),
   )
@@ -421,11 +540,18 @@ export function buildSpecApp(): OpenAPIHono {
           description: 'ok',
           content: {
             'application/json': {
-              schema: z.object({ sessionId: z.string(), clientId: z.string(), attached: z.boolean() }),
+              schema: z.object({
+                sessionId: z.string(),
+                clientId: z.string(),
+                attached: z.boolean(),
+              }),
             },
           },
         },
-        404: { description: 'client or session not found', content: { 'application/json': { schema: errorResponse } } },
+        404: {
+          description: 'client or session not found',
+          content: { 'application/json': { schema: errorResponse } },
+        },
       },
     }),
     (c) => c.json({ sessionId: '', clientId: '', attached: true }, 200),
@@ -449,7 +575,11 @@ export function buildSpecApp(): OpenAPIHono {
           description: 'ok',
           content: {
             'application/json': {
-              schema: z.object({ sessionId: z.string(), clientId: z.string(), detached: z.boolean() }),
+              schema: z.object({
+                sessionId: z.string(),
+                clientId: z.string(),
+                detached: z.boolean(),
+              }),
             },
           },
         },
@@ -470,7 +600,11 @@ export function buildSpecApp(): OpenAPIHono {
           description: 'ok',
           content: {
             'application/json': {
-              schema: z.object({ sessionId: z.string(), clientCount: z.number(), clientIds: z.array(z.string()) }),
+              schema: z.object({
+                sessionId: z.string(),
+                clientCount: z.number(),
+                clientIds: z.array(z.string()),
+              }),
             },
           },
         },
@@ -488,7 +622,9 @@ export function buildSpecApp(): OpenAPIHono {
       responses: {
         200: {
           description: 'ok',
-          content: { 'application/json': { schema: z.object({ activeSessions: z.array(z.string()) }) } },
+          content: {
+            'application/json': { schema: z.object({ activeSessions: z.array(z.string()) }) },
+          },
         },
       },
     }),
@@ -556,7 +692,8 @@ export function generateOpenAPISpec(): ReturnType<OpenAPIHono['getOpenAPIDocumen
     info: {
       title: 'Forge Server API',
       version: VERSION,
-      description: 'HTTP API for the Forge coding agent server (sessions, prompts, tools, config, SSE).',
+      description:
+        'HTTP API for the Forge coding agent server (sessions, prompts, tools, config, SSE).',
     },
     servers: [{ url: '/' }],
   })
@@ -567,7 +704,7 @@ export function openAPIDocsHtml(specUrl = '/api/openapi.json'): string {
   return `<!doctype html>
 <html>
   <head>
-    <title>Forge Server API</title>
+    <title>Forge Server API — Scalar Reference</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>

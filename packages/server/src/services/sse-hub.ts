@@ -1,4 +1,4 @@
-import { Logger, getLogger } from '@forge/core'
+import { type Logger, getLogger } from '@forge/core'
 
 export interface SSEClient {
   id: string
@@ -119,7 +119,12 @@ export class SSEHub {
    *
    * Returns the number of clients the message was enqueued to.
    */
-  broadcastSince(event: string, data: unknown, sessionId: string, fromId?: string): BroadcastResult {
+  broadcastSince(
+    event: string,
+    data: unknown,
+    sessionId: string,
+    fromId?: string,
+  ): BroadcastResult {
     const message = formatSSE({
       event,
       data: JSON.stringify(data),
@@ -212,7 +217,12 @@ export class SSEHub {
   }
 }
 
-export function formatSSE(sse: { event: string; data: string; id?: string; retry?: number }): string {
+export function formatSSE(sse: {
+  event: string
+  data: string
+  id?: string
+  retry?: number
+}): string {
   let out = ''
   if (sse.id) out += `id: ${sse.id}\n`
   if (sse.retry) out += `retry: ${sse.retry}\n`

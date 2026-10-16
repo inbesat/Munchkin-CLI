@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
+import { ForgeError } from '@forge/core'
+import { ErrorCode } from '@forge/core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
-import { createValidationMiddleware } from '../src/middleware/validation'
 import { errorToResponse } from '../src/middleware/error-handler'
-import { ForgeError, ErrorCode } from '@forge/core'
-import { ErrorCode } from '@forge/core'
+import { createValidationMiddleware } from '../src/middleware/validation'
 
 describe('createValidationMiddleware', () => {
   const schema = z.object({ name: z.string().min(1) })
@@ -51,7 +51,9 @@ describe('errorToResponse', () => {
   })
 
   it('maps ForgeError to a 4xx/5xx status', () => {
-    const { response, status } = errorToResponse(new ForgeError(ErrorCode.SESSION_NOT_FOUND, 'missing'))
+    const { response, status } = errorToResponse(
+      new ForgeError(ErrorCode.SESSION_NOT_FOUND, 'missing'),
+    )
     expect(status).toBe(404)
     expect(response.error.code).toBe(ErrorCode.SESSION_NOT_FOUND)
   })

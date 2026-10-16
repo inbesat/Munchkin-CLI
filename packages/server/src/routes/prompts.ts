@@ -1,31 +1,48 @@
+import { type Logger, getLogger } from '@forge/core'
 import { Hono } from 'hono'
-import { AgentExecutor } from '../services/agent-executor'
-import { SessionManager } from '../services/session-manager'
 import { createValidationMiddleware, promptSchema } from '../middleware/validation'
+import type { AgentExecutor } from '../services/agent-executor'
+import type { SessionManager } from '../services/session-manager'
 import type { PromptRequest, PromptResponse } from '../types'
-import { Logger, getLogger } from '@forge/core'
 
-export function createPromptsRoutes(agentExecutor: AgentExecutor, sessionManager: SessionManager, logger?: Logger) {
+export function createPromptsRoutes(
+  agentExecutor: AgentExecutor,
+  sessionManager: SessionManager,
+  logger?: Logger,
+) {
   const log = logger ?? getLogger()
   const app = new Hono()
 
   app.post('/:sessionId', createValidationMiddleware(promptSchema), async (c) => {
     const sessionId = c.req.param('sessionId')
     if (!sessionId) {
-      return c.json<PromptResponse>({ sessionId: '', response: '', usage: { input: 0, output: 0, total: 0 }, turns: 0, reason: 'error', error: 'Missing session id' }, 400)
+      return c.json<PromptResponse>(
+        {
+          sessionId: '',
+          response: '',
+          usage: { input: 0, output: 0, total: 0 },
+          turns: 0,
+          reason: 'error',
+          error: 'Missing session id',
+        },
+        400,
+      )
     }
     const data = c.get('validatedData') as PromptRequest
 
     const session = await sessionManager.getSession(sessionId)
     if (!session) {
-      return c.json<PromptResponse>({
-        sessionId,
-        response: '',
-        usage: { input: 0, output: 0, total: 0 },
-        turns: 0,
-        reason: 'error',
-        error: 'Session not found',
-      }, 404)
+      return c.json<PromptResponse>(
+        {
+          sessionId,
+          response: '',
+          usage: { input: 0, output: 0, total: 0 },
+          turns: 0,
+          reason: 'error',
+          error: 'Session not found',
+        },
+        404,
+      )
     }
 
     const result = await agentExecutor.executePrompt(

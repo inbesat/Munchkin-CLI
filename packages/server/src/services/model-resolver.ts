@@ -1,11 +1,11 @@
-import type { AgentModel } from '@forge/core'
-import { ForgeError } from '@forge/core'
 import {
   createAnthropicPresetModel,
-  createOpenAIPresetModel,
   createGooglePresetModel,
   createOpenAICompatibleModel,
+  createOpenAIPresetModel,
 } from '@forge/ai'
+import type { AgentModel } from '@forge/core'
+import { ForgeError } from '@forge/core'
 import { ErrorCode } from '@forge/core'
 
 /**
@@ -86,7 +86,9 @@ export function createModelResolver(options: ModelResolverOptions = {}): ModelRe
       case 'forge': {
         const key = options.forgeFreeApiKey ?? process.env.FORGE_FREE_API_KEY ?? ''
         const baseUrl =
-          options.forgeFreeBaseUrl ?? process.env.FORGE_FREE_BASE_URL ?? 'https://gateway.forge.dev/v1'
+          options.forgeFreeBaseUrl ??
+          process.env.FORGE_FREE_BASE_URL ??
+          'https://gateway.forge.dev/v1'
         const model = createOpenAICompatibleModel({
           provider: 'forge-free',
           name,

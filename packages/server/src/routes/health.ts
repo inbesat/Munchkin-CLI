@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
 import { VERSION } from '@forge/core'
-import { SessionStore } from '@forge/core'
-import { AgentExecutor } from '../services/agent-executor'
-import { SessionManager } from '../services/session-manager'
+import type { SessionStore } from '@forge/core'
+import { Hono } from 'hono'
+import type { AgentExecutor } from '../services/agent-executor'
+import type { SessionManager } from '../services/session-manager'
 
 interface HealthDependencies {
   sessionStore?: SessionStore

@@ -1,31 +1,35 @@
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
-import { SessionStore, Logger, getLogger, VERSION } from '@forge/core'
-import { SessionManager } from './services/session-manager'
-import { AgentExecutor } from './services/agent-executor'
-import { SSEHub } from './services/sse-hub'
-import { createModelResolver, type ModelResolver, type ModelResolverOptions } from './services/model-resolver'
-import { createDefaultToolRegistry, toAgentTools } from './services/tool-registry'
-import { AuthStore } from './auth/store'
-import { createApiKeyRoutes } from './routes/api-keys'
-import { SSEBridge } from './sse/bridge'
-import {
-  createCorsMiddleware,
-  createLoggingMiddleware,
-  createErrorHandlerMiddleware,
-  createAuthMiddleware,
-} from './middleware'
-import {
-  createSessionsRoutes,
-  createPromptsRoutes,
-  createToolsRoutes,
-  createConfigRoutes,
-  createSSERoutes,
-  createAuthRoutes,
-} from './routes'
-import { generateOpenAPISpec, openAPIDocsHtml } from './openapi'
-import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
+import { type Logger, SessionStore, VERSION, getLogger } from '@forge/core'
+import { serve } from '@hono/node-server'
+import { Hono } from 'hono'
+import { AuthStore } from './auth/store'
+import {
+  createAuthMiddleware,
+  createCorsMiddleware,
+  createErrorHandlerMiddleware,
+  createLoggingMiddleware,
+} from './middleware'
+import { generateOpenAPISpec, openAPIDocsHtml } from './openapi'
+import {
+  createAuthRoutes,
+  createConfigRoutes,
+  createPromptsRoutes,
+  createSSERoutes,
+  createSessionsRoutes,
+  createToolsRoutes,
+} from './routes'
+import { createApiKeyRoutes } from './routes/api-keys'
+import { AgentExecutor } from './services/agent-executor'
+import {
+  type ModelResolver,
+  type ModelResolverOptions,
+  createModelResolver,
+} from './services/model-resolver'
+import { SessionManager } from './services/session-manager'
+import { SSEHub } from './services/sse-hub'
+import { createDefaultToolRegistry, toAgentTools } from './services/tool-registry'
+import { SSEBridge } from './sse/bridge'
 
 export interface ServerOptions {
   port?: number
@@ -41,6 +45,8 @@ export interface ServerOptions {
   sseBridge?: SSEBridge
   /** Pre-built agent executor (tests can inject a mock). */
   agentExecutor?: AgentExecutor
+  /** Inject a custom auth store (tests use isolated key stores). */
+  authStore?: AuthStore
   /**
    * If set, every request must carry `Authorization: Bearer <authToken>`.
    * Applied as a top-level middleware. Phase 77 ships the basic check;
@@ -60,6 +66,7 @@ interface ResolvedServerOptions {
   modelResolver?: ModelResolver
   sseBridge?: SSEBridge
   agentExecutor?: AgentExecutor
+  authStore?: AuthStore
   authToken?: string
 }
 
@@ -104,7 +111,9 @@ export class ForgeServer {
       modelResolverOptions: options.modelResolverOptions ?? {},
       modelResolver: options.modelResolver,
       agentExecutor: options.agentExecutor,
+      sseBridge: options.sseBridge,
       authToken: options.authToken,
+      authStore: options.authStore,
     }
 
     await fs.mkdir(resolved.baseDir, { recursive: true })
@@ -112,10 +121,12 @@ export class ForgeServer {
     await fs.mkdir(path.join(resolved.baseDir, 'logs'), { recursive: true })
     await fs.mkdir(path.join(resolved.baseDir, 'auth'), { recursive: true })
 
-    const authStore = new AuthStore({
-      baseDir: path.join(resolved.baseDir, 'auth'),
-      logger: resolved.logger,
-    })
+    const authStore =
+      options.authStore ??
+      new AuthStore({
+        baseDir: path.join(resolved.baseDir, 'auth'),
+        logger: resolved.logger,
+      })
     await authStore.load()
 
     const sessionStore = new SessionStore(resolved.dbPath, resolved.baseDir)
@@ -152,10 +163,13 @@ export class ForgeServer {
     const app = new Hono()
 
     app.use('*', createErrorHandlerMiddleware(this.log))
-    app.use('*', createAuthMiddleware({
-      legacyToken: this.options.authToken,
-      store: this.authStore,
-    }))
+    app.use(
+      '*',
+      createAuthMiddleware({
+        legacyToken: this.options.authToken,
+        store: this.authStore,
+      }),
+    )
     app.use('*', createLoggingMiddleware(this.log))
     app.use('*', createCorsMiddleware(this.options.corsOrigins))
 
@@ -178,7 +192,10 @@ export class ForgeServer {
     })
 
     app.route('/api/sessions', createSessionsRoutes(this.sessionManager))
-    app.route('/api/prompts', createPromptsRoutes(this.agentExecutor, this.sessionManager, this.log))
+    app.route(
+      '/api/prompts',
+      createPromptsRoutes(this.agentExecutor, this.sessionManager, this.log),
+    )
     app.route('/api/tools', createToolsRoutes(this.log))
     app.route('/api/config', createConfigRoutes(this.log, this.options.baseDir))
     app.route('/api/sse', createSSERoutes(this.sseHub, this.sessionManager, this.log))

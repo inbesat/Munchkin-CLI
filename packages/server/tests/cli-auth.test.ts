@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -28,9 +28,12 @@ describe('CLI - forge auth subcommand (Phase 81)', () => {
 
   it('create → list → revoke works end-to-end', async () => {
     const out1: string[] = []
-    const code1 = await run(['auth', 'create', '--name', 'ci-deploy', '--env', 'ci', '--base-dir', baseDir], {
-      write: (l) => out1.push(l),
-    })
+    const code1 = await run(
+      ['auth', 'create', '--name', 'ci-deploy', '--env', 'ci', '--base-dir', baseDir],
+      {
+        write: (l) => out1.push(l),
+      },
+    )
     expect(code1).toBe(0)
     const created = out1.join('')
     expect(created).toMatch(/secret/)
@@ -57,7 +60,9 @@ describe('CLI - forge auth subcommand (Phase 81)', () => {
     expect(id).toBeDefined()
 
     const out4: string[] = []
-    const code4 = await run(['auth', 'revoke', id!, '--base-dir', baseDir], { write: (l) => out4.push(l) })
+    const code4 = await run(['auth', 'revoke', id!, '--base-dir', baseDir], {
+      write: (l) => out4.push(l),
+    })
     expect(code4).toBe(0)
     expect(out4.join('')).toMatch(/revoked/)
 
@@ -76,7 +81,9 @@ describe('CLI - forge auth subcommand (Phase 81)', () => {
 
   it('revoke of unknown id returns 1 and an error', async () => {
     const out: string[] = []
-    const code = await run(['auth', 'revoke', 'no-such-id', '--base-dir', baseDir], { write: (l) => out.push(l) })
+    const code = await run(['auth', 'revoke', 'no-such-id', '--base-dir', baseDir], {
+      write: (l) => out.push(l),
+    })
     expect(code).toBe(1)
     expect(out.join('')).toMatch(/no such key/)
   })

@@ -50,10 +50,7 @@ describe('parseArgs', () => {
       '--cors',
       'https://admin.example.com',
     ])
-    expect(r.options.corsOrigins).toEqual([
-      'https://app.example.com',
-      'https://admin.example.com',
-    ])
+    expect(r.options.corsOrigins).toEqual(['https://app.example.com', 'https://admin.example.com'])
   })
 
   it('--no-cors sets corsOrigins to [] (disables CORS)', () => {

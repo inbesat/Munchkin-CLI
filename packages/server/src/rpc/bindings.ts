@@ -1,14 +1,10 @@
-import { VERSION, getLogger, type Logger, type LoopEvent } from '@forge/core'
-import { RpcServer, type RpcNotifier, type RpcDispatchRequest } from './server'
-import { SessionManager } from '../services/session-manager'
-import { AgentExecutor } from '../services/agent-executor'
-import { SSEBridge } from '../sse/bridge'
-import { AuthStore } from '../auth/store'
-import {
-  negotiate,
-  type ServerCapabilities,
-  type InitializeResult,
-} from './capabilities'
+import { type Logger, type LoopEvent, VERSION, getLogger } from '@forge/core'
+import type { AuthStore } from '../auth/store'
+import type { AgentExecutor } from '../services/agent-executor'
+import type { SessionManager } from '../services/session-manager'
+import type { SSEBridge } from '../sse/bridge'
+import { type InitializeResult, type ServerCapabilities, negotiate } from './capabilities'
+import type { RpcDispatchRequest, RpcNotifier, RpcServer } from './server'
 
 /**
  * Phase 80: extended RPC surface.
@@ -92,7 +88,10 @@ function toSessionResponse(s: SessionMetaLike): Record<string, unknown> {
   }
 }
 
-export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions): RpcBindingsContext {
+export function registerRpcMethods(
+  server: RpcServer,
+  opts: RpcBindingsOptions,
+): RpcBindingsContext {
   const log = opts.logger ?? getLogger()
   const { sessionManager, agentExecutor } = opts
 
@@ -124,7 +123,12 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
   // Sessions
 
   server.register('sessions.create', async (params) => {
-    const p = (params ?? {}) as { cwd?: string; model?: string; title?: string; parentSessionId?: string }
+    const p = (params ?? {}) as {
+      cwd?: string
+      model?: string
+      title?: string
+      parentSessionId?: string
+    }
     if (!p.cwd) throw { code: -32602, message: 'cwd is required' }
     const session = await sessionManager.createSession(p.cwd, p.model ?? 'auto', p.title)
     return toSessionResponse(session as unknown as SessionMetaLike)
@@ -167,7 +171,14 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
   // Prompts
 
   server.register('prompts.submit', async (params, req: RpcDispatchRequest) => {
-    const p = params as { sessionId: string; prompt: string; model?: string; systemPrompt?: string; tools?: string[]; maxIterations?: number }
+    const p = params as {
+      sessionId: string
+      prompt: string
+      model?: string
+      systemPrompt?: string
+      tools?: string[]
+      maxIterations?: number
+    }
     if (!p?.sessionId) throw { code: -32602, message: 'sessionId is required' }
     if (!p?.prompt) throw { code: -32602, message: 'prompt is required' }
     const session = await sessionManager.getSession(p.sessionId)
@@ -187,9 +198,7 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
         maxIterations: p.maxIterations,
         abortSignal: req.signal,
       },
-      notifier
-        ? (event: LoopEvent) => notifier(loopEventToRpcMethod(event), event)
-        : undefined,
+      notifier ? (event: LoopEvent) => notifier(loopEventToRpcMethod(event), event) : undefined,
     )
 
     return {
@@ -198,11 +207,12 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
       usage: result.usage,
       turns: result.turns,
       reason: result.reason,
-      error: result.error instanceof Error
-        ? result.error.message
-        : result.error
-          ? String(result.error)
-          : undefined,
+      error:
+        result.error instanceof Error
+          ? result.error.message
+          : result.error
+            ? String(result.error)
+            : undefined,
     }
   })
 
@@ -211,16 +221,92 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
   // Tools
 
   const TOOL_CATALOG = [
-    { name: 'read', description: 'Read a file', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
-    { name: 'write', description: 'Write a file', parameters: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
-    { name: 'edit', description: 'Edit a file', parameters: { type: 'object', properties: { path: { type: 'string' }, oldText: { type: 'string' }, newText: { type: 'string' } }, required: ['path', 'oldText', 'newText'] } },
-    { name: 'bash', description: 'Execute a bash command', parameters: { type: 'object', properties: { command: { type: 'string' }, cwd: { type: 'string' } }, required: ['command'] } },
-    { name: 'glob', description: 'Glob pattern matching', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
-    { name: 'grep', description: 'Search with ripgrep', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
-    { name: 'web_fetch', description: 'Fetch a web page', parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] } },
-    { name: 'web_search', description: 'Search the web', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-    { name: 'todo', description: 'Manage todo list', parameters: { type: 'object', properties: { action: { type: 'string' }, items: { type: 'array' } }, required: ['action'] } },
-    { name: 'notebook_edit', description: 'Edit a notebook', parameters: { type: 'object', properties: { path: { type: 'string' }, edits: { type: 'array' } }, required: ['path'] } },
+    {
+      name: 'read',
+      description: 'Read a file',
+      parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] },
+    },
+    {
+      name: 'write',
+      description: 'Write a file',
+      parameters: {
+        type: 'object',
+        properties: { path: { type: 'string' }, content: { type: 'string' } },
+        required: ['path', 'content'],
+      },
+    },
+    {
+      name: 'edit',
+      description: 'Edit a file',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          oldText: { type: 'string' },
+          newText: { type: 'string' },
+        },
+        required: ['path', 'oldText', 'newText'],
+      },
+    },
+    {
+      name: 'bash',
+      description: 'Execute a bash command',
+      parameters: {
+        type: 'object',
+        properties: { command: { type: 'string' }, cwd: { type: 'string' } },
+        required: ['command'],
+      },
+    },
+    {
+      name: 'glob',
+      description: 'Glob pattern matching',
+      parameters: {
+        type: 'object',
+        properties: { pattern: { type: 'string' } },
+        required: ['pattern'],
+      },
+    },
+    {
+      name: 'grep',
+      description: 'Search with ripgrep',
+      parameters: {
+        type: 'object',
+        properties: { pattern: { type: 'string' } },
+        required: ['pattern'],
+      },
+    },
+    {
+      name: 'web_fetch',
+      description: 'Fetch a web page',
+      parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] },
+    },
+    {
+      name: 'web_search',
+      description: 'Search the web',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string' } },
+        required: ['query'],
+      },
+    },
+    {
+      name: 'todo',
+      description: 'Manage todo list',
+      parameters: {
+        type: 'object',
+        properties: { action: { type: 'string' }, items: { type: 'array' } },
+        required: ['action'],
+      },
+    },
+    {
+      name: 'notebook_edit',
+      description: 'Edit a notebook',
+      parameters: {
+        type: 'object',
+        properties: { path: { type: 'string' }, edits: { type: 'array' } },
+        required: ['path'],
+      },
+    },
   ] as const
 
   server.register('tools.list', () => TOOL_CATALOG)
@@ -299,7 +385,11 @@ export function registerRpcMethods(server: RpcServer, opts: RpcBindingsOptions):
       }
       return { result, durationMs: Date.now() - start }
     } catch (err) {
-      return { result: '', error: err instanceof Error ? err.message : 'Tool failed', durationMs: Date.now() - start }
+      return {
+        result: '',
+        error: err instanceof Error ? err.message : 'Tool failed',
+        durationMs: Date.now() - start,
+      }
     }
   })
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,13 +10,18 @@ async function readUntil(
   timeoutMs = 5000,
 ): Promise<string> {
   const reader = res.body!.getReader()
+  const decoder = new TextDecoder()
   let buffer = ''
-  const timer = setTimeout(() => { reader.cancel(); throw new Error('sse read timeout') }, timeoutMs)
+  const timer = setTimeout(() => {
+    reader.cancel()
+    throw new Error('sse read timeout')
+  }, timeoutMs)
   try {
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      buffer += value as string
+      // Server streams UTF-8 bytes; tolerate both chunk kinds for robustness.
+      buffer += typeof value === 'string' ? value : decoder.decode(value, { stream: true })
       if (predicate(buffer)) return buffer
     }
     return buffer
@@ -42,7 +47,11 @@ describe('SSE real-time streaming', () => {
   afterAll(async () => {
     server.close()
     await new Promise((r) => setTimeout(r, 100))
-    try { rmSync(baseDir, { recursive: true, force: true }) } catch { /* best-effort */ }
+    try {
+      rmSync(baseDir, { recursive: true, force: true })
+    } catch {
+      /* best-effort */
+    }
   })
 
   it('streams broadcast events to a connected SSE client in real time', async () => {

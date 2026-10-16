@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'bun:test'
-import { generateOpenAPISpec, buildSpecApp, openAPIDocsHtml } from '../src/openapi'
+import { describe, expect, it } from 'bun:test'
+import { buildSpecApp, generateOpenAPISpec, openAPIDocsHtml } from '../src/openapi'
 
 const EXPECTED_PATHS = [
   '/health',
@@ -46,7 +46,10 @@ describe('openapi spec', () => {
         if (method === 'parameters') continue
         const responses = (op as any).responses ?? {}
         const codes = Object.keys(responses)
-        expect(codes.some((c) => c.startsWith('2')), `${path} ${method} has a 2xx`).toBe(true)
+        expect(
+          codes.some((c) => c.startsWith('2')),
+          `${path} ${method} has a 2xx`,
+        ).toBe(true)
       }
     }
   })

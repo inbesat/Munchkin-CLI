@@ -1,14 +1,9 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { Readable, Writable } from 'node:stream'
-import { RpcServer } from '../src/rpc/server'
-import { registerRpcMethods, type RpcBindingsContext } from '../src/rpc/bindings'
+import { type RpcBindingsContext, registerRpcMethods } from '../src/rpc/bindings'
 import { FORGE_PROTOCOL_VERSION } from '../src/rpc/capabilities'
-import {
-  RPC_VERSION,
-  decodeMessage,
-  type RpcMessage,
-  type RpcRequest,
-} from '../src/rpc/protocol'
+import { RPC_VERSION, type RpcMessage, decodeMessage } from '../src/rpc/protocol'
+import { RpcServer } from '../src/rpc/server'
 
 class TestStreams {
   input: Readable
@@ -98,7 +93,13 @@ describe('Phase 80 — capability handshake (initialize)', () => {
     await new Promise((r) => setTimeout(r, 10))
     streams.endInput()
     await p
-    const out = streams.parseWritten() as Array<{ result: { protocolVersion: string; serverInfo: { name: string; version: string }; capabilities: { streaming: boolean; methods: string[] } } }>
+    const out = streams.parseWritten() as Array<{
+      result: {
+        protocolVersion: string
+        serverInfo: { name: string; version: string }
+        capabilities: { streaming: boolean; methods: string[] }
+      }
+    }>
     expect(out[0]?.result.protocolVersion).toBe(FORGE_PROTOCOL_VERSION)
     expect(out[0]?.result.serverInfo.name).toBe('forge')
     expect(out[0]?.result.capabilities.streaming).toBe(true)
@@ -115,7 +116,9 @@ describe('Phase 80 — capability handshake (initialize)', () => {
     await new Promise((r) => setTimeout(r, 10))
     streams.endInput()
     await p
-    const out = streams.parseWritten() as Array<{ result: { capabilities: { streaming: boolean; cancellation: boolean } } }>
+    const out = streams.parseWritten() as Array<{
+      result: { capabilities: { streaming: boolean; cancellation: boolean } }
+    }>
     expect(out[0]?.result.capabilities.streaming).toBe(false)
     expect(out[0]?.result.capabilities.cancellation).toBe(false)
   })
@@ -141,7 +144,12 @@ describe('Phase 80 — $/cancelRequest', () => {
     const { server } = setup(streams)
     const p = server.serve()
     streams.pushLine(
-      JSON.stringify({ jsonrpc: RPC_VERSION, id: 5, method: '$/cancelRequest', params: { id: 99999 } }),
+      JSON.stringify({
+        jsonrpc: RPC_VERSION,
+        id: 5,
+        method: '$/cancelRequest',
+        params: { id: 99999 },
+      }),
     )
     await new Promise((r) => setTimeout(r, 10))
     streams.endInput()
@@ -180,10 +188,19 @@ describe('Phase 80 — $/cancelRequest', () => {
     })
     const p = server.serve()
     // Start the slow request.
-    streams.pushLine(JSON.stringify({ jsonrpc: RPC_VERSION, id: 10, method: 'slow.echo', params: { x: 1 } }))
+    streams.pushLine(
+      JSON.stringify({ jsonrpc: RPC_VERSION, id: 10, method: 'slow.echo', params: { x: 1 } }),
+    )
     await new Promise((r) => setTimeout(r, 20))
     // Cancel it.
-    streams.pushLine(JSON.stringify({ jsonrpc: RPC_VERSION, id: 11, method: '$/cancelRequest', params: { id: 10 } }))
+    streams.pushLine(
+      JSON.stringify({
+        jsonrpc: RPC_VERSION,
+        id: 11,
+        method: '$/cancelRequest',
+        params: { id: 10 },
+      }),
+    )
     await new Promise((r) => setTimeout(r, 20))
     streams.endInput()
     await p
@@ -241,7 +258,13 @@ describe('Phase 80 — prompts.submit notification fan-out', () => {
         onEvent?: (e: unknown) => void,
       ) => {
         for await (const e of stream) onEvent?.(e)
-        return { reason: 'complete', response: 'hi', messages: [], turns: 1, usage: { input: 0, output: 0, total: 0 } }
+        return {
+          reason: 'complete',
+          response: 'hi',
+          messages: [],
+          turns: 1,
+          usage: { input: 0, output: 0, total: 0 },
+        }
       },
     }
 
@@ -275,7 +298,11 @@ describe('Phase 80 — prompts.submit notification fan-out', () => {
 
     const out = streams.parseWritten() as Array<{ method?: string; result?: unknown }>
     const notifications = out.filter((m) => m.method === '$/progress') as Array<{
-      params: { requestId: number; method: string; params: { type: string; delta?: string; reason?: string } }
+      params: {
+        requestId: number
+        method: string
+        params: { type: string; delta?: string; reason?: string }
+      }
     }>
     const result = out.find((m) => 'result' in m) as { result: { response: string } } | undefined
 

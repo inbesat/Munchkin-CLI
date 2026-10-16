@@ -1,16 +1,16 @@
 import * as readline from 'node:readline'
-import { Writable, Readable } from 'node:stream'
+import type { Readable, Writable } from 'node:stream'
 import {
   RpcErrorCodes,
+  type RpcId,
+  type RpcMessage,
+  type RpcNotification,
+  type RpcRequest,
   decodeMessage,
   encodeMessage,
   isRequest,
   makeError,
   makeSuccess,
-  type RpcId,
-  type RpcMessage,
-  type RpcNotification,
-  type RpcRequest,
 } from './protocol'
 
 /**
@@ -104,15 +104,16 @@ export class RpcServer {
       return
     }
 
-    const rl = readline.createInterface({ input: this.input, crlfDelay: Infinity })
+    const rl = readline.createInterface({ input: this.input, crlfDelay: Number.POSITIVE_INFINITY })
     const abortHandler = () => rl.close()
     this.signal?.addEventListener('abort', abortHandler)
 
     const inflight = new Set<Promise<void>>()
     const onLine = (line: string) => {
       if (line.trim().length === 0) return
-      const task = this.handleLine(line)
-        .catch((err) => this.log(`handleLine error: ${(err as Error).message}`))
+      const task = this.handleLine(line).catch((err) =>
+        this.log(`handleLine error: ${(err as Error).message}`),
+      )
       inflight.add(task)
       task.finally(() => inflight.delete(task))
     }

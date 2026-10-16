@@ -1,11 +1,11 @@
-import { SessionStore, createEvent } from '@forge/core'
-import { Logger, getLogger } from '@forge/core'
+import { randomUUID } from 'node:crypto'
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
+import { type SessionStore, createEvent } from '@forge/core'
+import { type Logger, getLogger } from '@forge/core'
 import type { SessionMeta } from '@forge/core'
 import { SessionLog } from '@forge/core'
 import type { SessionEvent } from '@forge/core'
-import * as path from 'node:path'
-import * as fs from 'node:fs/promises'
-import { randomUUID } from 'node:crypto'
 
 export interface SessionManagerOptions {
   store: SessionStore
@@ -67,6 +67,8 @@ export class SessionManager {
     const sessionDir = path.join(this.baseDir, 'sessions', id)
     try {
       await fs.rm(sessionDir, { recursive: true, force: true })
+      await fs.rm(new SessionLog(this.baseDir, id).getFilePath(), { force: true })
+      await this.store.deleteSession(id)
       this.log.info('Session deleted', { sessionId: id })
       return true
     } catch {

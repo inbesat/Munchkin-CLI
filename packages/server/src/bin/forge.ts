@@ -11,7 +11,9 @@ run(process.argv.slice(2)).then(
     if (code !== 0) process.exit(code)
   },
   (err) => {
-    process.stderr.write(`forge: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`)
+    process.stderr.write(
+      `forge: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`,
+    )
     process.exit(1)
   },
 )

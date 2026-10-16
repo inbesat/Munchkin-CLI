@@ -1,19 +1,94 @@
+import { type Logger, getLogger } from '@forge/core'
 import { Hono } from 'hono'
 import { createValidationMiddleware, toolExecuteSchema } from '../middleware/validation'
 import type { ToolExecuteRequest, ToolExecuteResponse } from '../types'
-import { Logger, getLogger } from '@forge/core'
 
-const availableTools: Record<string, { name: string; description: string; parameters: Record<string, unknown> }> = {
-  read: { name: 'read', description: 'Read a file', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
-  write: { name: 'write', description: 'Write a file', parameters: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
-  edit: { name: 'edit', description: 'Edit a file', parameters: { type: 'object', properties: { path: { type: 'string' }, oldText: { type: 'string' }, newText: { type: 'string' } }, required: ['path', 'oldText', 'newText'] } },
-  bash: { name: 'bash', description: 'Execute a bash command', parameters: { type: 'object', properties: { command: { type: 'string' }, cwd: { type: 'string' } }, required: ['command'] } },
-  glob: { name: 'glob', description: 'Glob pattern matching', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
-  grep: { name: 'grep', description: 'Search with ripgrep', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
-  web_fetch: { name: 'web_fetch', description: 'Fetch a web page', parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] } },
-  web_search: { name: 'web_search', description: 'Search the web', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-  todo: { name: 'todo', description: 'Manage todo list', parameters: { type: 'object', properties: { action: { type: 'string' }, items: { type: 'array' } }, required: ['action'] } },
-  notebook_edit: { name: 'notebook_edit', description: 'Edit a notebook', parameters: { type: 'object', properties: { path: { type: 'string' }, edits: { type: 'array' } }, required: ['path'] } },
+const availableTools: Record<
+  string,
+  { name: string; description: string; parameters: Record<string, unknown> }
+> = {
+  read: {
+    name: 'read',
+    description: 'Read a file',
+    parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] },
+  },
+  write: {
+    name: 'write',
+    description: 'Write a file',
+    parameters: {
+      type: 'object',
+      properties: { path: { type: 'string' }, content: { type: 'string' } },
+      required: ['path', 'content'],
+    },
+  },
+  edit: {
+    name: 'edit',
+    description: 'Edit a file',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: 'string' },
+        oldText: { type: 'string' },
+        newText: { type: 'string' },
+      },
+      required: ['path', 'oldText', 'newText'],
+    },
+  },
+  bash: {
+    name: 'bash',
+    description: 'Execute a bash command',
+    parameters: {
+      type: 'object',
+      properties: { command: { type: 'string' }, cwd: { type: 'string' } },
+      required: ['command'],
+    },
+  },
+  glob: {
+    name: 'glob',
+    description: 'Glob pattern matching',
+    parameters: {
+      type: 'object',
+      properties: { pattern: { type: 'string' } },
+      required: ['pattern'],
+    },
+  },
+  grep: {
+    name: 'grep',
+    description: 'Search with ripgrep',
+    parameters: {
+      type: 'object',
+      properties: { pattern: { type: 'string' } },
+      required: ['pattern'],
+    },
+  },
+  web_fetch: {
+    name: 'web_fetch',
+    description: 'Fetch a web page',
+    parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] },
+  },
+  web_search: {
+    name: 'web_search',
+    description: 'Search the web',
+    parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
+  },
+  todo: {
+    name: 'todo',
+    description: 'Manage todo list',
+    parameters: {
+      type: 'object',
+      properties: { action: { type: 'string' }, items: { type: 'array' } },
+      required: ['action'],
+    },
+  },
+  notebook_edit: {
+    name: 'notebook_edit',
+    description: 'Edit a notebook',
+    parameters: {
+      type: 'object',
+      properties: { path: { type: 'string' }, edits: { type: 'array' } },
+      required: ['path'],
+    },
+  },
 }
 
 export function createToolsRoutes(logger?: Logger) {
@@ -62,7 +137,11 @@ export function createToolsRoutes(logger?: Logger) {
           const content = readFileSync(filePath, 'utf-8')
           const newContent = content.replace(String(data.args.oldText), String(data.args.newText))
           if (newContent === content) {
-            return c.json<ToolExecuteResponse>({ result: '', error: 'Old text not found', durationMs: Date.now() - start })
+            return c.json<ToolExecuteResponse>({
+              result: '',
+              error: 'Old text not found',
+              durationMs: Date.now() - start,
+            })
           }
           writeFileSync(filePath, newContent, 'utf-8')
           result = `Edited ${filePath}`
@@ -109,14 +188,20 @@ export function createToolsRoutes(logger?: Logger) {
           break
         }
         default:
-          return c.json<ToolExecuteResponse>({ result: '', error: `Unknown tool: ${data.name}`, durationMs: Date.now() - start }, 400)
+          return c.json<ToolExecuteResponse>(
+            { result: '', error: `Unknown tool: ${data.name}`, durationMs: Date.now() - start },
+            400,
+          )
       }
 
       return c.json<ToolExecuteResponse>({ result, durationMs: Date.now() - start })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Tool execution failed'
       log.error('Tool execution failed', { tool: data.name, err, message })
-      return c.json<ToolExecuteResponse>({ result: '', error: message, durationMs: Date.now() - start }, 500)
+      return c.json<ToolExecuteResponse>(
+        { result: '', error: message, durationMs: Date.now() - start },
+        500,
+      )
     }
   })
 

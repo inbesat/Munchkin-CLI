@@ -71,7 +71,12 @@ export function makeSuccess(id: RpcId, result: unknown): RpcSuccess {
   return { jsonrpc: RPC_VERSION, id, result }
 }
 
-export function makeError(id: RpcId | null, code: number, message: string, data?: unknown): RpcError {
+export function makeError(
+  id: RpcId | null,
+  code: number,
+  message: string,
+  data?: unknown,
+): RpcError {
   const err: RpcError = { jsonrpc: RPC_VERSION, id, error: { code, message } }
   if (data !== undefined) err.error.data = data
   return err
@@ -99,7 +104,11 @@ export function decodeMessage(line: string): RpcMessage {
   }
   const obj = raw as Record<string, unknown>
   if (obj.jsonrpc !== RPC_VERSION) {
-    throw makeError(null, RpcErrorCodes.InvalidRequest, `Unsupported jsonrpc version: ${String(obj.jsonrpc)}`)
+    throw makeError(
+      null,
+      RpcErrorCodes.InvalidRequest,
+      `Unsupported jsonrpc version: ${String(obj.jsonrpc)}`,
+    )
   }
   return obj as unknown as RpcMessage
 }

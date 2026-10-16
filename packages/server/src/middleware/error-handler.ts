@@ -1,6 +1,6 @@
-import { Context, Next } from 'hono'
+import { ErrorCode, type Logger, getLogger, isForgeError } from '@forge/core'
+import type { Context, Next } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { Logger, getLogger, isForgeError, ErrorCode } from '@forge/core'
 import type { ErrorResponse } from '../types'
 
 export function createErrorHandlerMiddleware(logger?: Logger) {
@@ -93,10 +93,15 @@ function forgeErrorToStatus(code: ErrorCode): number {
   }
 }
 
-export function errorToResponse(err: unknown, _requestId?: string): { response: ErrorResponse; status: number } {
+export function errorToResponse(
+  err: unknown,
+  _requestId?: string,
+): { response: ErrorResponse; status: number } {
   if (err instanceof HTTPException) {
     return {
-      response: { error: { code: 'HTTP_ERROR', message: err.message, details: { status: err.status } } },
+      response: {
+        error: { code: 'HTTP_ERROR', message: err.message, details: { status: err.status } },
+      },
       status: err.status,
     }
   }

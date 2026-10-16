@@ -1,17 +1,19 @@
+import { type Logger, getLogger } from '@forge/core'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { Logger, getLogger } from '@forge/core'
-import { AuthStore, type AuthKeyMetadata, type CreateKeyOptions } from '../auth/store'
+import type { AuthKeyMetadata, AuthStore, CreateKeyOptions } from '../auth/store'
 
 const createKeySchema = z.object({
   name: z.string().min(1).max(120),
   env: z.string().min(1).max(32).optional(),
   scopes: z.array(z.string().min(1)).optional(),
   description: z.string().max(500).optional(),
-  rateLimit: z.object({
-    capacity: z.number().int().positive().max(10_000).optional(),
-    refillPerSec: z.number().positive().max(10_000).optional(),
-  }).optional(),
+  rateLimit: z
+    .object({
+      capacity: z.number().int().positive().max(10_000).optional(),
+      refillPerSec: z.number().positive().max(10_000).optional(),
+    })
+    .optional(),
 })
 
 const idParamSchema = z.object({ id: z.string().min(1).max(64) })

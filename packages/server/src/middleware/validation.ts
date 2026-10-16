@@ -1,7 +1,10 @@
-import { Context, Next } from 'hono'
+import type { Context, Next } from 'hono'
 import { z } from 'zod'
 
-export function createValidationMiddleware<T>(schema: z.ZodSchema<T>, source: 'json' | 'query' | 'param' = 'json') {
+export function createValidationMiddleware<T>(
+  schema: z.ZodSchema<T>,
+  source: 'json' | 'query' | 'param' = 'json',
+) {
   return async (c: Context, next: Next) => {
     try {
       let data: unknown

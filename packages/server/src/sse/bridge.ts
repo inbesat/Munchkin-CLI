@@ -1,5 +1,5 @@
 import type { LoopEvent } from '@forge/core'
-import { SSEHub } from '../services/sse-hub'
+import type { SSEHub } from '../services/sse-hub'
 
 /**
  * Translates raw agent-loop events into typed, named SSE events and fans them out
@@ -55,13 +55,21 @@ export class SSEBridge {
         this.hub.broadcast('agent_error', { sessionId, error: String(event.error) }, sessionId)
         break
       case 'steering-injected':
-        this.hub.broadcast('steering', { sessionId, content: event.content, turn: event.turn }, sessionId)
+        this.hub.broadcast(
+          'steering',
+          { sessionId, content: event.content, turn: event.turn },
+          sessionId,
+        )
         break
     }
   }
 
   /** Direct broadcast passthrough (lifecycle events, /broadcast route). */
-  broadcast(event: string, data: unknown, sessionId?: string): { delivered: number; failed: number; sessionId?: string } {
+  broadcast(
+    event: string,
+    data: unknown,
+    sessionId?: string,
+  ): { delivered: number; failed: number; sessionId?: string } {
     return this.hub.broadcast(event, data, sessionId)
   }
 

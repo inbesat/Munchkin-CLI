@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
+import type { LoopEvent } from '@forge/core'
 import { SSEHub } from '../src/services/sse-hub'
 import { SSEBridge } from '../src/sse/bridge'
-import type { LoopEvent } from '@forge/core'
 
 function makeClient(id: string, sessionIds: string[] = []) {
   const messages: string[] = []
@@ -37,14 +37,16 @@ describe('SSEBridge', () => {
     hub.register(c)
     const bridge = new SSEBridge(hub)
 
-    bridge.emitLoopEvent(
-      's1',
-      { type: 'tool-call', toolCall: { id: 't1', name: 'read', arguments: {}, callId: 't1' } as any } as LoopEvent,
-    )
-    bridge.emitLoopEvent(
-      's1',
-      { type: 'tool-result', toolCallId: 't1', toolName: 'read', durationMs: 5 } as LoopEvent,
-    )
+    bridge.emitLoopEvent('s1', {
+      type: 'tool-call',
+      toolCall: { id: 't1', name: 'read', arguments: {}, callId: 't1' } as any,
+    } as LoopEvent)
+    bridge.emitLoopEvent('s1', {
+      type: 'tool-result',
+      toolCallId: 't1',
+      toolName: 'read',
+      durationMs: 5,
+    } as LoopEvent)
 
     expect(c.messages.some((m) => m.includes('event: tool_call'))).toBe(true)
     expect(c.messages.some((m) => m.includes('event: tool_result'))).toBe(true)
@@ -68,7 +70,10 @@ describe('SSEBridge', () => {
     const bridge = new SSEBridge(hub)
 
     bridge.emitLoopEvent('s1', { type: 'thinking', delta: 'hmm' } as LoopEvent)
-    bridge.emitLoopEvent('s1', { type: 'usage', usage: { input: 1, output: 2, total: 3 } } as LoopEvent)
+    bridge.emitLoopEvent('s1', {
+      type: 'usage',
+      usage: { input: 1, output: 2, total: 3 },
+    } as LoopEvent)
 
     expect(c.messages.some((m) => m.includes('event: thinking_delta'))).toBe(true)
     expect(c.messages.some((m) => m.includes('event: usage'))).toBe(true)

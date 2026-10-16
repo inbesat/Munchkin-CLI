@@ -353,7 +353,7 @@ export async function runAuthCommand(
     write(`  scopes: ${result.metadata.scopes.join(', ')}`)
     write(`  rate:   ${result.metadata.rateLimit.capacity} burst / ${result.metadata.rateLimit.refillPerSec}/s refill`)
     write('')
-    write('  secret (save now — it will NOT be shown again):')
+    write('  secret (save now - it will NOT be shown again):')
     write(`    ${result.secret}`)
     return 0
   }
@@ -378,7 +378,7 @@ export async function runAuthCommand(
   return 1
 }
 
-const AUTH_HELP = `forge auth — manage API keys
+const AUTH_HELP = `forge auth - manage API keys
 
 Usage:
   forge auth list

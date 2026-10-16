@@ -1,5 +1,5 @@
-import { Context, Next } from 'hono'
-import { Logger, getLogger } from '@forge/core'
+import { type Logger, getLogger } from '@forge/core'
+import type { Context, Next } from 'hono'
 
 function generateRequestId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`

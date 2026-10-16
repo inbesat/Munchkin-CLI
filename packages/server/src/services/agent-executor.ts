@@ -1,20 +1,14 @@
-import {
-  runAgentLoop,
-  createEvent,
-  SessionLog,
-  Logger,
-  getLogger,
-} from '@forge/core'
+import { type Logger, SessionLog, createEvent, getLogger, runAgentLoop } from '@forge/core'
 import type {
-  LoopEvent,
-  LoopStopReason,
   AgentLoopOptions,
   AgentRunResult,
   AgentTool,
+  LoopEvent,
+  LoopStopReason,
   Message,
 } from '@forge/core'
-import { ModelResolver } from './model-resolver'
-import { SSEBridge } from '../sse/bridge'
+import type { SSEBridge } from '../sse/bridge'
+import type { ModelResolver } from './model-resolver'
 
 export interface AgentExecutorOptions {
   baseDir: string
@@ -88,7 +82,11 @@ export class AgentExecutor {
       },
     }
 
-    this.log.info('Starting agent loop', { sessionId, model: model.id, promptLength: prompt.length })
+    this.log.info('Starting agent loop', {
+      sessionId,
+      model: model.id,
+      promptLength: prompt.length,
+    })
 
     const result = await runAgentLoop(loopOptions)
     await this.persistResult(sessionId, result)
@@ -120,10 +118,7 @@ export class AgentExecutor {
     this.eventSink?.emitLoopEvent(sessionId, event)
   }
 
-  private async persistResult(
-    sessionId: string,
-    result: AgentRunResult,
-  ): Promise<void> {
+  private async persistResult(sessionId: string, result: AgentRunResult): Promise<void> {
     const log = new SessionLog(this.baseDir, sessionId)
     const text = result.response
     const usage = result.usage

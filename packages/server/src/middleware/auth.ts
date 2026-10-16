@@ -1,5 +1,5 @@
-import { Context, Next } from 'hono'
-import type { AuthStore, AuthKeyMetadata } from '../auth/store'
+import type { Context, Next } from 'hono'
+import type { AuthKeyMetadata, AuthStore } from '../auth/store'
 
 export interface AuthMiddlewareOptions {
   /** Pre-shared single token (Phase 77 compatibility). When set, any request
