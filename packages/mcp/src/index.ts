@@ -33,6 +33,13 @@ export {
   type WizardState,
   type WizardStep,
 } from './presets/wizard'
+
+// Connection manager + health registry (Phase 123)
+export {
+  McpConnectionManager,
+  type McpConnectionState,
+  type McpConnectionStatus,
+} from './client/manager'
 export {
   LazyToolIndex,
   type LazyResult,

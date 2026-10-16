@@ -59,6 +59,12 @@ export const defaultCommands: Command[] = [
     description: 'MCP connector wizard (`/connect github`, prompts via /answer)',
     group: 'builtin',
   },
+  {
+    id: 'mcp',
+    title: 'mcp',
+    description: 'MCP health dashboard (`/mcp`, `/mcp connect <id>`, `/mcp disconnect <id>`)',
+    group: 'builtin',
+  },
   { id: 'init', title: 'init', description: 'Generate project configuration', group: 'builtin' },
   { id: 'review', title: 'review', description: 'Run a code review on the diff', group: 'builtin' },
   { id: 'terminal', title: 'terminal', description: 'Open an interactive shell', group: 'builtin' },

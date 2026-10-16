@@ -16,6 +16,7 @@ import {
 import {
   CONNECTOR_PRESETS,
   ConnectorWizard,
+  McpConnectionManager,
   McpPresetsConfig,
   connectSpec,
   getPreset,
@@ -89,6 +90,8 @@ export function App() {
   const mcpPresetsRef = useRef(new McpPresetsConfig(join(process.cwd(), '.forge')))
   /** Phase 122: active connector wizard (null when idle). */
   const wizardRef = useRef<ConnectorWizard | null>(null)
+  /** Phase 123: live MCP connections for the health dashboard. */
+  const mcpConnectionsRef = useRef(new McpConnectionManager())
 
   useEffect(() => {
     budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
@@ -209,6 +212,57 @@ export function App() {
         }
         setGoal(argsText)
         appendSystem(`Goal set: ${argsText} — ends when the agent reports [GOAL_MET].`)
+        return
+      }
+      if (command === 'mcp') {
+        const mcpArgs = argsText.split(/\s+/).filter((arg) => arg.length > 0)
+        if (mcpArgs[0] === 'disconnect' && mcpArgs[1] !== undefined) {
+          const gone = mcpConnectionsRef.current.disconnect(mcpArgs[1])
+          appendSystem(
+            gone.ok
+              ? `MCP server '${mcpArgs[1]}' disconnected - tool schemas freed.`
+              : `mcp: ${gone.error ?? 'disconnect failed'}`,
+          )
+          return
+        }
+        if (mcpArgs[0] === 'connect' && mcpArgs[1] !== undefined) {
+          const spec = mcpPresetsRef.current.read()[mcpArgs[1]]
+          if (spec === undefined) {
+            appendSystem(
+              `mcp: '${mcpArgs[1]}' is not configured. Install a preset with /connect ${mcpArgs[1]}.`,
+            )
+            return
+          }
+          appendSystem(`Connecting to '${mcpArgs[1]}'...`)
+          void mcpConnectionsRef.current
+            .connect(mcpArgs[1], spec)
+            .then((outcome) => {
+              appendSystem(
+                outcome.ok
+                  ? `MCP '${outcome.status.id}': connected to ${outcome.status.serverName ?? 'server'} - ${outcome.status.toolCount} tools (schemas lazy).`
+                  : `mcp: connection failed - ${outcome.error}`,
+              )
+            })
+            .catch(() => appendSystem('mcp: connection attempt crashed unexpectedly.'))
+          return
+        }
+        const configured = Object.keys(mcpPresetsRef.current.read())
+        const rows = mcpConnectionsRef.current.statuses()
+        const lines = [
+          'MCP servers:',
+          ...rows.map(
+            (row) =>
+              `  ${row.id}: ${row.state} - ${row.toolCount} tools${row.serverName !== undefined ? ` (${row.serverName})` : ``}${row.lastError !== undefined ? ` - last error: ${row.lastError}` : ''}`,
+          ),
+          ...configured
+            .filter((id) => rows.every((row) => row.id !== id))
+            .map((id) => `  ${id}: configured - not connected (use /mcp connect ${id})`),
+        ]
+        if (lines.length === 1) {
+          appendSystem('No MCP servers configured. Install one with /connect <connector>.')
+          return
+        }
+        appendSystem(lines.join('\n'))
         return
       }
       if (command === 'answer') {
