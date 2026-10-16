@@ -2175,6 +2175,8 @@ Each phase contains:
 
 **Testing:** Generate docs from sample plugin. Verify all components documented.
 
+**Status (2026-10-17):** Implemented (`packages/plugin-kernel/src/docs/generator.ts` - `generatePluginDocs` inspects the Phase-108 format: manifest name/version/description, `skills/` frontmatter summaries, and commands/hooks/agents/mcp sections listed from `.md` files or `SKILL.md` directories; `renderPluginPageHtml`/`renderDocsSite`/`writeDocsSite` emit dependency-free static HTML (hand-escaped, no script tags); unreadable parts degrade to empty sections or page error notes, writer returns `{ok,error}`). Site build script `scripts/generate-plugin-docs.ts` walks `marketplace/plugins/*` → `dist-docs/` (verified live: 10 pages from the starter marketplace); GitHub Pages deployment via `.github/workflows/docs-pages.yml` (checkout → bun → generate → upload/deploy pages artifact, push-triggered on marketplace/docs changes + manual dispatch - goes live on GitHub once Pages is enabled in repo settings). Kernel barrel exports the generator. Tests: 3 green - sample plugin w/ all five components documented (blueprint bullet), site index links + files on disk, bare-manifest-only plugin tolerant. Kernel 83/83, tsc 0, lint 0; dist rebuilt.
+
 **Estimated Hours:** 5–6 hours.
 
 ---
