@@ -60,9 +60,17 @@ export type AgentChunk =
   | { readonly type: 'text-delta'; readonly delta: string }
   | { readonly type: 'thinking-delta'; readonly delta: string }
   | { readonly type: 'tool-call'; readonly toolCall: AgentToolCall }
-  | { readonly type: 'tool-call-delta'; readonly toolCallId: string; readonly name?: string; readonly delta: string }
+  | {
+      readonly type: 'tool-call-delta'
+      readonly toolCallId: string
+      readonly name?: string
+      readonly delta: string
+    }
   | { readonly type: 'usage'; readonly usage: AgentUsageChunk }
-  | { readonly type: 'finish'; readonly reason: 'stop' | 'tool-call' | 'length' | 'abort' | 'error' }
+  | {
+      readonly type: 'finish'
+      readonly reason: 'stop' | 'tool-call' | 'length' | 'abort' | 'error'
+    }
 
 export type AgentFinishReason = 'stop' | 'tool-call' | 'length' | 'abort' | 'error'
 

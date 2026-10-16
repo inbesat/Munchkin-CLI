@@ -1,26 +1,35 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { grepTool, createGrepTool, GrepSchema } from './grep'
-import { ToolRegistry, createToolRegistryConfig } from './registry'
-import { writeFile, mkdir, rm } from 'fs/promises'
-import { join } from 'path'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { tmpdir } from 'os'
+import { join } from 'path'
+import { mkdir, rm, writeFile } from 'fs/promises'
+import { GrepSchema, createGrepTool } from './grep'
+import { ToolRegistry, createToolRegistryConfig } from './registry'
 
 const testDir = join(tmpdir(), 'forge-grep-test-' + Date.now())
 
 beforeEach(async () => {
   await mkdir(testDir, { recursive: true })
-  await writeFile(join(testDir, 'a.ts'), `export function hello() {
+  await writeFile(
+    join(testDir, 'a.ts'),
+    `export function hello() {
   console.log("hello world");
   return 42;
-}`)
+}`,
+  )
 
-  await writeFile(join(testDir, 'b.js'), `export function world() {
+  await writeFile(
+    join(testDir, 'b.js'),
+    `export function world() {
   console.log("hello universe");
   return 24;
-}`)
+}`,
+  )
 
-  await writeFile(join(testDir, 'c.ts'), `const greeting = "hello";
-export { greeting };`)
+  await writeFile(
+    join(testDir, 'c.ts'),
+    `const greeting = "hello";
+export { greeting };`,
+  )
 })
 
 afterEach(async () => {
@@ -85,7 +94,9 @@ describe('grepTool', () => {
   })
 
   it('throws on path outside allowed directory', async () => {
-    await expect(tool.execute({ pattern: 'test', path: '/etc' })).rejects.toThrow('Path not allowed')
+    await expect(tool.execute({ pattern: 'test', path: '/etc' })).rejects.toThrow(
+      'Path not allowed',
+    )
   })
 
   it('schema is valid', () => {

@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { FreshnessTracker, FreshnessRecord, checkFreshnessBeforeEdit, recordFileRead, defaultFreshnessTracker } from './freshness'
-import { ToolError, ErrorCode } from '../errors'
-import { writeFileSync, rmSync, mkdirSync } from 'fs'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import {
+  type FreshnessRecord,
+  FreshnessTracker,
+  checkFreshnessBeforeEdit,
+  defaultFreshnessTracker,
+  recordFileRead,
+} from './freshness'
 
 const TEST_DIR = join(__dirname, 'freshness-test')
 const TEST_FILE = join(TEST_DIR, 'test.txt')
@@ -106,7 +111,9 @@ describe('FreshnessTracker', () => {
   })
 
   it('throws on missing file', async () => {
-    await expect(tracker.recordRead(join(TEST_DIR, 'missing.txt'), 's1')).rejects.toThrow('File not found')
+    await expect(tracker.recordRead(join(TEST_DIR, 'missing.txt'), 's1')).rejects.toThrow(
+      'File not found',
+    )
   })
 
   it('different content produces different hash', async () => {
@@ -135,16 +142,18 @@ describe('checkFreshnessBeforeEdit', () => {
   it('throws when blockOnStale is true', async () => {
     await recordFileRead(TEST_FILE, 'session-1')
     writeFileSync(TEST_FILE, 'modified')
-    await expect(checkFreshnessBeforeEdit(TEST_FILE, 'session-1', { blockOnStale: true })).rejects.toThrow(
-      'Stale file edit blocked',
-    )
+    await expect(
+      checkFreshnessBeforeEdit(TEST_FILE, 'session-1', { blockOnStale: true }),
+    ).rejects.toThrow('Stale file edit blocked')
   })
 
   it('uses custom tracker', async () => {
     const customTracker = new FreshnessTracker()
     await recordFileRead(TEST_FILE, 'session-1', customTracker)
     writeFileSync(TEST_FILE, 'modified')
-    const warning = await checkFreshnessBeforeEdit(TEST_FILE, 'session-1', { tracker: customTracker })
+    const warning = await checkFreshnessBeforeEdit(TEST_FILE, 'session-1', {
+      tracker: customTracker,
+    })
     expect(warning).toBeDefined()
   })
 })

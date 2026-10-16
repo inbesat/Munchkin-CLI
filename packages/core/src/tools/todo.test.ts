@@ -1,7 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { todoWriteTool, todoReadTool, createTodoWriteTool, createTodoReadTool, TodoWriteSchema, TodoReadSchema } from './todo'
-import { TaskStore, defaultTaskStore, normalizeTodoItem, isTaskStatus, TASK_STATUSES } from './todo-manager'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
+import {
+  TodoReadSchema,
+  TodoWriteSchema,
+  createTodoReadTool,
+  createTodoWriteTool,
+  todoReadTool,
+  todoWriteTool,
+} from './todo'
+import {
+  TASK_STATUSES,
+  TaskStore,
+  defaultTaskStore,
+  isTaskStatus,
+  normalizeTodoItem,
+} from './todo-manager'
 
 describe('todo-manager', () => {
   let store: TaskStore
@@ -26,7 +39,10 @@ describe('todo-manager', () => {
 
   it('replace overwrites the previous snapshot', () => {
     store.replace(undefined, [{ content: 'a', status: 'pending' }])
-    store.replace(undefined, [{ content: 'b', status: 'pending' }, { content: 'c', status: 'completed' }])
+    store.replace(undefined, [
+      { content: 'b', status: 'pending' },
+      { content: 'c', status: 'completed' },
+    ])
     const tasks = store.getTasks()
     expect(tasks).toHaveLength(2)
     expect(tasks.map((t) => t.content)).toEqual(['b', 'c'])
@@ -89,10 +105,7 @@ describe('todoWriteTool', () => {
 
   it('creates tasks', async () => {
     const result = await tool.execute({
-      todos: [
-        { content: 'implement tool', status: 'in_progress' },
-        { content: 'write tests' },
-      ],
+      todos: [{ content: 'implement tool', status: 'in_progress' }, { content: 'write tests' }],
     })
     expect(result.success).toBe(true)
     expect(result.metadata?.count).toBe(2)

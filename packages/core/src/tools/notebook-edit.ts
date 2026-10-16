@@ -1,14 +1,14 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
-  validateFilePath,
-  readFileWithLines,
-  writeFile,
-  fileExists,
+  type FileAccessConfig,
   createDefaultFileAccessConfig,
-  FileAccessConfig,
+  fileExists,
+  readFileWithLines,
+  validateFilePath,
+  writeFile,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
+import type { Tool, ToolResult } from './types'
 
 /** Notebook cell types. */
 export type NotebookCellType = 'code' | 'markdown' | 'raw'
@@ -57,7 +57,11 @@ export const NotebookEditSchema = Type.Object({
     Type.Union([
       Type.Object({
         op: Type.Literal('create'),
-        cell_type: Type.Union([Type.Literal('code'), Type.Literal('markdown'), Type.Literal('raw')]),
+        cell_type: Type.Union([
+          Type.Literal('code'),
+          Type.Literal('markdown'),
+          Type.Literal('raw'),
+        ]),
         source: Type.Union([Type.String(), Type.Array(Type.String())]),
         index: Type.Optional(Type.Integer({ minimum: 0 })),
       }),
@@ -65,7 +69,9 @@ export const NotebookEditSchema = Type.Object({
         op: Type.Literal('edit'),
         index: Type.Integer({ minimum: 0 }),
         source: Type.Optional(Type.Union([Type.String(), Type.Array(Type.String())])),
-        cell_type: Type.Optional(Type.Union([Type.Literal('code'), Type.Literal('markdown'), Type.Literal('raw')])),
+        cell_type: Type.Optional(
+          Type.Union([Type.Literal('code'), Type.Literal('markdown'), Type.Literal('raw')]),
+        ),
       }),
       Type.Object({
         op: Type.Literal('delete'),
@@ -118,14 +124,26 @@ function createCell(cell_type: NotebookCellType, source: string | string[]): Not
 /** Validate notebook structure. */
 function validateNotebook(nb: unknown): Notebook {
   if (typeof nb !== 'object' || nb === null) {
-    throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Notebook is not a valid JSON object', 'notebookEdit')
+    throw new ToolError(
+      ErrorCode.TOOL_INVALID_INPUT,
+      'Notebook is not a valid JSON object',
+      'notebookEdit',
+    )
   }
   const n = nb as Record<string, unknown>
   if (!Array.isArray(n.cells)) {
-    throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Notebook missing "cells" array', 'notebookEdit')
+    throw new ToolError(
+      ErrorCode.TOOL_INVALID_INPUT,
+      'Notebook missing "cells" array',
+      'notebookEdit',
+    )
   }
   if (typeof n.nbformat !== 'number' || typeof n.nbformat_minor !== 'number') {
-    throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Notebook missing nbformat/nbformat_minor', 'notebookEdit')
+    throw new ToolError(
+      ErrorCode.TOOL_INVALID_INPUT,
+      'Notebook missing nbformat/nbformat_minor',
+      'notebookEdit',
+    )
   }
   return n as unknown as Notebook
 }
@@ -144,20 +162,31 @@ async function readNotebook(path: string, config: FileAccessConfig): Promise<Not
     const rawText = content.lines.map((line) => line.slice(line.indexOf('|') + 2)).join('\n')
     parsed = JSON.parse(rawText)
   } catch (e) {
-    throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, `Invalid JSON in notebook: ${e}`, 'notebookEdit')
+    throw new ToolError(
+      ErrorCode.TOOL_INVALID_INPUT,
+      `Invalid JSON in notebook: ${e}`,
+      'notebookEdit',
+    )
   }
   return validateNotebook(parsed)
 }
 
 /** Write notebook to file. */
-async function writeNotebook(path: string, notebook: Notebook, config: FileAccessConfig): Promise<void> {
+async function writeNotebook(
+  path: string,
+  notebook: Notebook,
+  config: FileAccessConfig,
+): Promise<void> {
   const validatedPath = validateFilePath(path, config, 'write')
   const json = JSON.stringify(notebook, null, 2)
   await writeFile(validatedPath, json)
 }
 
 /** Apply operations to a notebook. */
-function applyOperations(notebook: Notebook, operations: NotebookEditOperation[]): Array<{ op: string; index?: number; success: boolean }> {
+function applyOperations(
+  notebook: Notebook,
+  operations: NotebookEditOperation[],
+): Array<{ op: string; index?: number; success: boolean }> {
   const results: Array<{ op: string; index?: number; success: boolean }> = []
 
   for (const operation of operations) {
@@ -224,7 +253,11 @@ function applyOperations(notebook: Notebook, operations: NotebookEditOperation[]
         }
       }
     } catch (e) {
-      results.push({ op: operation.op, index: 'index' in operation ? operation.index : undefined, success: false })
+      results.push({
+        op: operation.op,
+        index: 'index' in operation ? operation.index : undefined,
+        success: false,
+      })
       throw e
     }
   }
@@ -245,7 +278,10 @@ export function createNotebookEditTool(config?: Partial<FileAccessConfig>): Tool
     scope: 'builtin',
     risk: 'medium',
     requiresPermission: true,
-    async execute(input: Record<string, unknown>, signal?: AbortSignal): Promise<NotebookEditResult> {
+    async execute(
+      input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ): Promise<NotebookEditResult> {
       if (signal?.aborted) {
         throw new ToolError(ErrorCode.CANCELLED, 'NotebookEdit cancelled', 'notebookEdit')
       }

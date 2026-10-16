@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
-  normalizePath,
-  hasPathTraversal,
-  checkPathBoundary,
-  createDefaultBoundaryConfig,
+  type PathBoundaryConfig,
   addAllowedPath,
+  checkPathBoundary,
+  checkPathsBoundary,
+  createDefaultBoundaryConfig,
+  filterAllowedPaths,
+  getCommonAncestor,
+  hasPathTraversal,
+  isSubPath,
+  normalizePath,
   removeAllowedPath,
   validateBoundaryConfig,
-  isSubPath,
-  getCommonAncestor,
-  checkPathsBoundary,
-  filterAllowedPaths,
-  PathBoundaryConfig,
 } from './boundaries'
 
 const TEST_CWD = 'C:\\Users\\test\\project'
@@ -19,7 +19,9 @@ const TEST_CWD = 'C:\\Users\\test\\project'
 describe('Path Boundaries', () => {
   describe('normalizePath', () => {
     it('resolves relative paths', () => {
-      expect(normalizePath('src/index.ts', TEST_CWD)).toBe('C:\\Users\\test\\project\\src\\index.ts')
+      expect(normalizePath('src/index.ts', TEST_CWD)).toBe(
+        'C:\\Users\\test\\project\\src\\index.ts',
+      )
     })
 
     it('handles absolute paths', () => {
@@ -28,7 +30,9 @@ describe('Path Boundaries', () => {
 
     it('normalizes separators', () => {
       // src/../project/file.ts from TEST_CWD: goes to project/project/file.ts because src/.. = project, then project/file.ts
-      expect(normalizePath('src/../project/file.ts', TEST_CWD)).toBe('C:\\Users\\test\\project\\project\\file.ts')
+      expect(normalizePath('src/../project/file.ts', TEST_CWD)).toBe(
+        'C:\\Users\\test\\project\\project\\file.ts',
+      )
     })
 
     it('handles current directory', () => {
@@ -100,7 +104,11 @@ describe('Path Boundaries', () => {
     })
 
     it('allows absolute paths within boundary', () => {
-      const result = checkPathBoundary('C:\\Users\\test\\project\\src\\file.ts', baseConfig, TEST_CWD)
+      const result = checkPathBoundary(
+        'C:\\Users\\test\\project\\src\\file.ts',
+        baseConfig,
+        TEST_CWD,
+      )
       expect(result.allowed).toBe(true)
     })
 
@@ -194,7 +202,9 @@ describe('Path Boundaries', () => {
 
   describe('isSubPath', () => {
     it('identifies subpaths', () => {
-      expect(isSubPath('C:\\Users\\test\\project\\src\\file.ts', 'C:\\Users\\test\\project')).toBe(true)
+      expect(isSubPath('C:\\Users\\test\\project\\src\\file.ts', 'C:\\Users\\test\\project')).toBe(
+        true,
+      )
       expect(isSubPath('C:\\Users\\test\\project', 'C:\\Users\\test\\project')).toBe(true)
     })
 
@@ -211,8 +221,9 @@ describe('Path Boundaries', () => {
 
   describe('getCommonAncestor', () => {
     it('finds common ancestor', () => {
-      expect(getCommonAncestor('C:\\Users\\test\\project\\src', 'C:\\Users\\test\\project\\lib'))
-        .toBe('C:\\Users\\test\\project')
+      expect(
+        getCommonAncestor('C:\\Users\\test\\project\\src', 'C:\\Users\\test\\project\\lib'),
+      ).toBe('C:\\Users\\test\\project')
     })
 
     it('handles root paths', () => {

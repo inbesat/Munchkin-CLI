@@ -1,5 +1,5 @@
-﻿import { createHighlighter, Highlighter } from 'shiki'
-import { DiffResultStructured, formatDiff } from './compute'
+﻿import { type Highlighter, createHighlighter } from 'shiki'
+import { type DiffResultStructured, formatDiff } from './compute'
 
 /** Render options. */
 export interface RenderDiffOptions {
@@ -123,7 +123,9 @@ async function renderHtmlDiff(
 
   for (const hunk of diff.hunks) {
     htmlLines.push(`<div class="diff-hunk">`)
-    htmlLines.push(`<div class="diff-header">@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@</div>`)
+    htmlLines.push(
+      `<div class="diff-header">@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@</div>`,
+    )
 
     for (const line of hunk.lines) {
       const classes = ['diff-line', `diff-${line.type}`]
@@ -132,7 +134,10 @@ async function renderHtmlDiff(
       let content = line.content
       if (content.trim().length > 0) {
         try {
-          content = highlighter.codeToHtml(content, { lang: language, theme } as { lang: string; theme: string })
+          content = highlighter.codeToHtml(content, { lang: language, theme } as {
+            lang: string
+            theme: string
+          })
         } catch {
           // Fallback to escaped text
           content = escapeHtml(content)
@@ -141,8 +146,12 @@ async function renderHtmlDiff(
         content = escapeHtml(content)
       }
 
-      const oldNum = line.oldLineNumber ? `<span class="${numClass}">${line.oldLineNumber}</span>` : ''
-      const newNum = line.newLineNumber ? `<span class="${numClass}">${line.newLineNumber}</span>` : ''
+      const oldNum = line.oldLineNumber
+        ? `<span class="${numClass}">${line.oldLineNumber}</span>`
+        : ''
+      const newNum = line.newLineNumber
+        ? `<span class="${numClass}">${line.newLineNumber}</span>`
+        : ''
 
       htmlLines.push(
         `<div class="${classes.join(' ')}"><span class="diff-old-num">${oldNum}</span><span class="diff-new-num">${newNum}</span>${content}</div>`,
@@ -198,7 +207,7 @@ export function detectLanguage(filePath: string): string {
     toml: 'toml',
     xml: 'xml',
   }
-  return ext ? map[ext] ?? 'text' : 'text'
+  return ext ? (map[ext] ?? 'text') : 'text'
 }
 
 /** Render diff with auto-detected language. */

@@ -1,6 +1,12 @@
-import { PermissionMode, PermissionDecision, ToolCategory, PermissionModeConfig } from './modes'
-import { RiskLevel } from './classifier'
-import { CircuitBreakerResult } from './circuit-breakers'
+import type { CircuitBreakerResult } from './circuit-breakers'
+import type { RiskLevel } from './classifier'
+import type {
+  PermissionDecision,
+  PermissionMode,
+  PermissionModeConfig,
+  PermissionRule,
+  ToolCategory,
+} from './modes'
 
 /** Pre-approved tool specification. */
 export interface PreApprovedTool {
@@ -18,6 +24,10 @@ export interface ProfileConfig {
   mode: 'dontAsk' | 'bypass'
   /** Pre-approved tools for dontAsk mode. */
   preApproved?: PreApprovedTool[]
+  /** Tools explicitly denied by rules (never auto-approved). */
+  denied?: PreApprovedTool[]
+  /** Tools routed to the user even in dontAsk mode. */
+  askRequired?: PreApprovedTool[]
   /** Whether circuit breakers still apply. Default: true. */
   respectCircuitBreakers?: boolean
   /** Whether to log denied actions. Default: true. */
@@ -39,7 +49,11 @@ export interface ProfileCheckResult {
 }
 
 /** Check if a tool matches a pre-approval target. */
-function matchesPreApproval(target: string | ToolCategory, toolName: string, category: ToolCategory): boolean {
+function matchesPreApproval(
+  target: string | ToolCategory,
+  toolName: string,
+  category: ToolCategory,
+): boolean {
   if (typeof target === 'string') {
     return target === toolName || target === category
   }
@@ -71,7 +85,7 @@ export function evaluateDontAskProfile(
   config: ProfileConfig,
   circuitBreakerResult?: CircuitBreakerResult,
 ): ProfileCheckResult {
-  const { preApproved = [], respectCircuitBreakers = true } = config
+  const { preApproved = [], denied = [], askRequired = [], respectCircuitBreakers = true } = config
 
   // Circuit breakers always override
   if (respectCircuitBreakers && circuitBreakerResult?.triggered) {
@@ -80,6 +94,17 @@ export function evaluateDontAskProfile(
       preApproved: false,
       circuitBreakerOverride: circuitBreakerResult,
       reason: `Circuit breaker triggered: ${circuitBreakerResult.breaker?.name}`,
+    }
+  }
+
+  // Explicit deny rules take precedence over any pre-approval.
+  const denyMatch = checkPreApprovals(toolName, category, args, denied)
+  if (denyMatch.matched) {
+    return {
+      decision: 'deny',
+      preApproved: false,
+      matchedApproval: denyMatch.approval,
+      reason: `Denied by rule: ${denyMatch.approval?.description ?? denyMatch.approval?.target}`,
     }
   }
 
@@ -92,6 +117,17 @@ export function evaluateDontAskProfile(
       preApproved: true,
       matchedApproval: approval,
       reason: `Pre-approved: ${approval?.description ?? approval?.target}`,
+    }
+  }
+
+  // Ask rules route to the user instead of being silently approved.
+  const askMatch = checkPreApprovals(toolName, category, args, askRequired)
+  if (askMatch.matched) {
+    return {
+      decision: 'ask',
+      preApproved: false,
+      matchedApproval: askMatch.approval,
+      reason: `Ask required by rule: ${askMatch.approval?.description ?? askMatch.approval?.target}`,
     }
   }
 
@@ -178,6 +214,33 @@ export function createBypassProfile(
   }
 }
 
+/** Common CI command prefixes eligible for automatic pre-approval. */
+const CI_COMMAND_PATTERNS: readonly RegExp[] = [
+  /^npm\s+(?:run|test|build|ci)(?:\s|$)/,
+  /^yarn\s+(?:run|test|build)(?:\s|$)/,
+  /^pnpm\s+(?:run|test|build)(?:\s|$)/,
+  /^make\s/,
+  /^tsc(?:\s|$)/,
+  /^eslint(?:\s|$)/,
+  /^prettier(?:\s|$)/,
+  /^jest(?:\s|$)/,
+  /^vitest(?:\s|$)/,
+  /^cargo\s+(?:test|build|check)(?:\s|$)/,
+  /^go\s+(?:test|build)(?:\s|$)/,
+  /^python\s+-m\s+pytest/,
+  /^pytest(?:\s|$)/,
+]
+
+/**
+ * True only for plain CI commands. Anything with shell separators,
+ * redirection, or substitution must never be auto-approved.
+ */
+function isPlainCiCommand(command: unknown): boolean {
+  if (typeof command !== 'string' || command.trim().length === 0) return false
+  if (/[;&|<>`\n]|\$\(|\$\{/.test(command)) return false
+  return CI_COMMAND_PATTERNS.some((p) => p.test(command))
+}
+
 /** Default pre-approvals for common CI tasks. */
 export const DEFAULT_CI_PRE_APPROVALS: PreApprovedTool[] = [
   // Read-only operations
@@ -210,27 +273,8 @@ export const DEFAULT_CI_PRE_APPROVALS: PreApprovedTool[] = [
   // Safe bash commands
   {
     target: 'bash',
-    condition: (args) => {
-      const cmd = args.command as string
-      // Allow common CI commands
-      const safePatterns = [
-        /^npm\s+(run|test|build|ci)/,
-        /^yarn\s+(run|test|build)/,
-        /^pnpm\s+(run|test|build)/,
-        /^make\s/,
-        /^tsc/,
-        /^eslint/,
-        /^prettier/,
-        /^jest/,
-        /^vitest/,
-        /^cargo\s+(test|build|check)/,
-        /^go\s+(test|build)/,
-        /^python\s+-m\s+pytest/,
-        /^pytest/,
-      ]
-      return safePatterns.some((p) => p.test(cmd))
-    },
-    description: 'Allow common CI build/test commands',
+    condition: (args) => isPlainCiCommand(args.command),
+    description: 'Allow common CI build/test commands (plain commands only)',
   },
 ]
 
@@ -239,14 +283,34 @@ export function isProfileMode(mode: PermissionMode): boolean {
   return mode === 'dontAsk' || mode === 'bypass'
 }
 
-/** Get profile config from mode config. */
-export function getProfileConfig(modeConfig: PermissionModeConfig): ProfileConfig | null {
-  if (modeConfig.mode === 'dontAsk') {
-    return createDontAskProfile(modeConfig.customRules?.map((r) => ({
+/** Map custom rules of one decision kind into profile specs. */
+function filterRules(rules: PermissionRule[], decision: PermissionDecision): PreApprovedTool[] {
+  return rules
+    .filter((r) => r.decision === decision)
+    .map((r) => ({
       target: r.target,
       condition: r.condition,
       description: `Rule: ${r.target} = ${r.decision}`,
-    })) ?? DEFAULT_CI_PRE_APPROVALS)
+    }))
+}
+
+/** Get profile config from mode config. */
+export function getProfileConfig(modeConfig: PermissionModeConfig): ProfileConfig | null {
+  if (modeConfig.mode === 'dontAsk') {
+    const customRules = modeConfig.customRules
+    if (customRules && customRules.length > 0) {
+      // Custom rules keep their decision semantics: only `allow` may
+      // pre-approve; `deny` and `ask` must never become authorization.
+      return {
+        mode: 'dontAsk',
+        preApproved: filterRules(customRules, 'allow'),
+        denied: filterRules(customRules, 'deny'),
+        askRequired: filterRules(customRules, 'ask'),
+        respectCircuitBreakers: true,
+        logDenials: true,
+      }
+    }
+    return createDontAskProfile(DEFAULT_CI_PRE_APPROVALS)
   }
   if (modeConfig.mode === 'bypass') {
     return createBypassProfile()

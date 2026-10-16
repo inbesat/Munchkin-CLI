@@ -1,14 +1,13 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import {
+  type ParallelToolCall,
   Semaphore,
+  createParallelExecutor,
   executeParallel,
   executeParallelWithRegistry,
-  createParallelExecutor,
   summarizeParallelResults,
-  ParallelToolCall,
 } from './parallel'
-import { ToolError, ErrorCode } from '../errors'
-import { ToolResult } from './types'
+import type { ToolResult } from './types'
 
 describe('Semaphore', () => {
   it('allows up to N concurrent permits', async () => {
@@ -41,8 +40,14 @@ describe('Semaphore', () => {
     const sem = new Semaphore(1)
     await sem.acquire()
     const order: number[] = []
-    const p1 = sem.acquire().then(() => { order.push(1); sem.release() })
-    const p2 = sem.acquire().then(() => { order.push(2); sem.release() })
+    const p1 = sem.acquire().then(() => {
+      order.push(1)
+      sem.release()
+    })
+    const p2 = sem.acquire().then(() => {
+      order.push(2)
+      sem.release()
+    })
     sem.release()
     await Promise.all([p1, p2])
     expect(order).toEqual([1, 2])
@@ -66,14 +71,22 @@ describe('executeParallel', () => {
   let callOrder: number[] = []
 
   function createMockExecutor(delay: number, shouldFail?: (name: string) => boolean) {
-    return async (name: string, _input: Record<string, unknown>, signal?: AbortSignal): Promise<ToolResult> => {
+    return async (
+      name: string,
+      _input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ): Promise<ToolResult> => {
       callOrder.push(Number(name.split('-')[1]))
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(resolve, delay)
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout)
-          reject(new Error('Aborted'))
-        }, { once: true })
+        signal?.addEventListener(
+          'abort',
+          () => {
+            clearTimeout(timeout)
+            reject(new Error('Aborted'))
+          },
+          { once: true },
+        )
       })
       if (shouldFail?.(name)) {
         return { success: false, error: `Failed: ${name}` }
@@ -142,7 +155,10 @@ describe('executeParallel', () => {
       { name: 'tool-3', input: {} },
     ]
     const executeFn = createMockExecutor(10, (name) => name === 'tool-fail')
-    const results = await executeParallel(calls, executeFn, { maxConcurrency: 10, continueOnError: true })
+    const results = await executeParallel(calls, executeFn, {
+      maxConcurrency: 10,
+      continueOnError: true,
+    })
 
     expect(results[0].result.success).toBe(true)
     expect(results[1].result.success).toBe(false)
@@ -169,14 +185,22 @@ describe('executeParallel', () => {
       { name: 'tool-1', input: {}, signal: controller.signal },
       { name: 'tool-2', input: {}, signal: controller.signal },
     ]
-    const executeFn = async (_name: string, _input: Record<string, unknown>, signal?: AbortSignal) => {
+    const executeFn = async (
+      _name: string,
+      _input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ) => {
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(resolve, 100)
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout)
-          aborted = true
-          reject(new Error('Aborted'))
-        }, { once: true })
+        signal?.addEventListener(
+          'abort',
+          () => {
+            clearTimeout(timeout)
+            aborted = true
+            reject(new Error('Aborted'))
+          },
+          { once: true },
+        )
       })
       return { success: true, output: 'ok' }
     }
@@ -191,13 +215,21 @@ describe('executeParallel', () => {
 
   it('respects call timeout', async () => {
     const calls: ParallelToolCall[] = [{ name: 'tool-slow', input: {} }]
-    const executeFn = async (_name: string, _input: Record<string, unknown>, signal?: AbortSignal) => {
+    const executeFn = async (
+      _name: string,
+      _input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ) => {
       await new Promise<void>((resolve, reject) => {
-        signal?.addEventListener('abort', () => {
-          const err = new Error('Aborted')
-          err.name = 'AbortError'
-          reject(err)
-        }, { once: true })
+        signal?.addEventListener(
+          'abort',
+          () => {
+            const err = new Error('Aborted')
+            err.name = 'AbortError'
+            reject(err)
+          },
+          { once: true },
+        )
         setTimeout(() => resolve(), 50)
       })
       return { success: true }
@@ -249,7 +281,10 @@ describe('createParallelExecutor', () => {
       execute: async (name: string) => ({ success: true, output: name }),
     }
     const executor = createParallelExecutor(mockRegistry, { maxConcurrency: 5 })
-    const calls: ParallelToolCall[] = [{ name: 'a', input: {} }, { name: 'b', input: {} }]
+    const calls: ParallelToolCall[] = [
+      { name: 'a', input: {} },
+      { name: 'b', input: {} },
+    ]
     const results = await executor.execute(calls)
     expect(results).toHaveLength(2)
   })

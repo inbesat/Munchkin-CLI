@@ -180,6 +180,38 @@ describe('assembleMessages', () => {
 })
 
 describe('hydrateMessages', () => {
+  it('projects successive compactions without resurrecting summarized messages', () => {
+    const events = [
+      createEvent('session.message', 's1', { role: 'user', content: 'old question' }),
+      createEvent('session.message', 's1', { role: 'assistant', content: 'old answer' }),
+      createEvent('session.message', 's1', { role: 'user', content: 'recent question' }),
+      createEvent('session.compaction', 's1', {
+        beforeCount: 3, afterCount: 2, summary: 'first summary', tokensSaved: 1,
+      }),
+      createEvent('session.message', 's1', { role: 'assistant', content: 'recent answer' }),
+      createEvent('session.message', 's1', { role: 'user', content: 'latest question' }),
+      createEvent('session.compaction', 's1', {
+        beforeCount: 4, afterCount: 2, summary: 'second summary', tokensSaved: 1,
+      }),
+    ]
+    const result = hydrateMessages(events, { format: 'openai' })
+    expect(result).toHaveLength(2)
+    expect(result[0].content).toContain('second summary')
+    expect(result[1].content).toBe('latest question')
+    expect(JSON.stringify(result)).not.toContain('old question')
+    expect(JSON.stringify(result)).not.toContain('first summary')
+    expect(assembleMessages(events).some((m) => m.content.includes('old question'))).toBe(true)
+  })
+
+  it('does not apply empty failure compaction markers', () => {
+    const events = makeEvents()
+    const before = hydrateMessages(events, { format: 'openai' })
+    events.push(createEvent('session.compaction', 's1', {
+      beforeCount: 0, afterCount: 0, summary: '', tokensSaved: 0,
+    }))
+    expect(hydrateMessages(events, { format: 'openai' })).toEqual(before)
+  })
+
   it('produces Anthropic format', () => {
     const events = makeEvents()
     const result = hydrateMessages(events, { format: 'anthropic' })

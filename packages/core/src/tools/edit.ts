@@ -1,14 +1,14 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
-  validateFilePath,
-  strReplaceEdit,
-  fileExists,
+  type FileAccessConfig,
   createDefaultFileAccessConfig,
-  FileAccessConfig,
+  fileExists,
+  strReplaceEdit,
+  validateFilePath,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
 import { checkFreshnessBeforeEdit } from './freshness'
+import type { Tool, ToolResult } from './types'
 
 /** Edit tool input schema (str_replace pattern). */
 export const EditSchema = Type.Object({
@@ -21,7 +21,9 @@ export const EditSchema = Type.Object({
     description: 'String to replace old_str with. Can be empty to delete.',
   }),
   sessionId: Type.Optional(Type.String({ description: 'Session ID for freshness tracking' })),
-  blockOnStale: Type.Optional(Type.Boolean({ description: 'Block edit if file is stale', default: false })),
+  blockOnStale: Type.Optional(
+    Type.Boolean({ description: 'Block edit if file is stale', default: false }),
+  ),
 })
 
 /** Edit tool output metadata. */
@@ -42,7 +44,8 @@ export function createEditTool(config?: Partial<FileAccessConfig>): Tool {
 
   return {
     name: 'edit',
-    description: 'Apply precise string replacement (str_replace) to a file. old_str must match exactly once.',
+    description:
+      'Apply precise string replacement (str_replace) to a file. old_str must match exactly once.',
     parameters: EditSchema,
     scope: 'builtin',
     risk: 'high',
@@ -52,7 +55,13 @@ export function createEditTool(config?: Partial<FileAccessConfig>): Tool {
         throw new ToolError(ErrorCode.CANCELLED, 'Edit operation cancelled', 'edit')
       }
 
-      const { path: filePath, old_str, new_str, sessionId, blockOnStale } = input as {
+      const {
+        path: filePath,
+        old_str,
+        new_str,
+        sessionId,
+        blockOnStale,
+      } = input as {
         path: string
         old_str: string
         new_str: string
@@ -63,11 +72,7 @@ export function createEditTool(config?: Partial<FileAccessConfig>): Tool {
       const validatedPath = validateFilePath(filePath, fileAccessConfig, 'edit')
 
       if (!(await fileExists(validatedPath))) {
-        throw new ToolError(
-          ErrorCode.TOOL_INVALID_INPUT,
-          `File not found: ${filePath}`,
-          'edit',
-        )
+        throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, `File not found: ${filePath}`, 'edit')
       }
 
       // Check freshness if sessionId provided

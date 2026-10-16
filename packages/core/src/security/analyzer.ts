@@ -1,5 +1,5 @@
-import { RiskLevel } from '../permissions/classifier'
-import { AgentTool } from '../agent/types'
+import type { AgentTool } from '../agent/types'
+import type { RiskLevel } from '../permissions/classifier'
 
 /** Result of a security analysis. */
 export interface AnalysisResult {
@@ -116,11 +116,12 @@ export class DefaultSecurityAnalyzer implements SecurityAnalyzer {
   }
 
   /** Analyze a bash command. */
-  private async analyzeBashCommand(command: string, permissionMode: string): Promise<AnalysisResult> {
+  private async analyzeBashCommand(
+    command: string,
+    permissionMode: string,
+  ): Promise<AnalysisResult> {
     // Import classifier dynamically to avoid circular dependency
-    const { classifyCommand } = await import(
-      '../permissions/classifier'
-    )
+    const { classifyCommand } = await import('../permissions/classifier')
 
     const classification = classifyCommand(command)
 

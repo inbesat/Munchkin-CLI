@@ -1,2 +1,2 @@
-export * from './compute';
-export * from './render';
+export * from './compute'
+export * from './render'

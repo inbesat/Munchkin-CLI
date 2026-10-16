@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { runAgentLoop, AgentLoopOptions, LoopStopReason, LoopEvent } from './loop'
-import { AgentModel, AgentTool, AgentToolCall, AgentChunk } from './types'
-import { SteeringController } from './steering'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import type {
+  AssistantMessage,
+  ToolCallPart,
+  ToolResultPart,
+  UserMessage,
+} from '../session/message'
 import { InterruptController } from './interrupt'
-import type { Message, UserMessage, AssistantMessage, TextPart, ToolCallPart, ToolResultPart, SystemMessage } from '../session/message'
+import { type AgentLoopOptions, type LoopEvent, runAgentLoop } from './loop'
+import { SteeringController } from './steering'
+import type { AgentChunk, AgentModel, AgentTool, AgentToolCall } from './types'
 
 // ============================================================================
 // Mock Model Implementation
@@ -53,7 +58,12 @@ class MockModel implements AgentModel {
           break
         case 'tool-call-delta':
           if (r.toolCallId)
-            yield { type: 'tool-call-delta', toolCallId: r.toolCallId, name: r.name, delta: r.delta ?? '' }
+            yield {
+              type: 'tool-call-delta',
+              toolCallId: r.toolCallId,
+              name: r.name,
+              delta: r.delta ?? '',
+            }
           break
         case 'finish':
           yield { type: 'finish', reason: r.reason ?? 'stop' }
@@ -107,7 +117,9 @@ const failingTool: AgentTool = {
   name: 'fail',
   description: 'Always fails',
   parameters: { type: 'object', properties: {} },
-  execute: async () => { throw new Error('Tool execution failed') },
+  execute: async () => {
+    throw new Error('Tool execution failed')
+  },
 }
 
 const slowTool: AgentTool = {
@@ -117,10 +129,14 @@ const slowTool: AgentTool = {
   execute: async (args: Record<string, unknown>, signal?: AbortSignal) => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(resolve, args.delay as number)
-      signal?.addEventListener('abort', () => {
-        clearTimeout(timeout)
-        reject(new Error('Aborted'))
-      }, { once: true })
+      signal?.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timeout)
+          reject(new Error('Aborted'))
+        },
+        { once: true },
+      )
     })
     return 'done'
   },
@@ -147,7 +163,9 @@ describe('Agent Loop - Comprehensive Tests', () => {
     model = new MockModel()
     baseOptions = {
       model,
-      messages: [{ role: 'user', content: 'Initial task', parts: [{ type: 'text', text: 'Initial task' }] }],
+      messages: [
+        { role: 'user', content: 'Initial task', parts: [{ type: 'text', text: 'Initial task' }] },
+      ],
       tools: [echoTool],
       maxIterations: 10,
     }
@@ -271,14 +289,14 @@ describe('Agent Loop - Comprehensive Tests', () => {
       const responses: typeof model.responses = []
       for (let i = 0; i < 6; i++) {
         responses.push(
-          { type: 'tool-call' as const, toolCall: { id: `call-${i}`, name: 'echo', args: { text: String(i) } } },
+          {
+            type: 'tool-call' as const,
+            toolCall: { id: `call-${i}`, name: 'echo', args: { text: String(i) } },
+          },
           { type: 'finish' as const, reason: 'tool-call' },
         )
       }
-      responses.push(
-        { type: 'text-delta', delta: 'Done' },
-        { type: 'finish', reason: 'stop' },
-      )
+      responses.push({ type: 'text-delta', delta: 'Done' }, { type: 'finish', reason: 'stop' })
       model.setResponses(responses)
 
       const result = await runAgentLoop({
@@ -475,9 +493,11 @@ describe('Agent Loop - Comprehensive Tests', () => {
       }
 
       // Create a very long message history
-      const longHistory = Array.from({ length: 50 }, (_, i) =>
-        ({ role: 'user' as const, content: `Message ${i}`.repeat(10), parts: [{ type: 'text' as const, text: `Message ${i}`.repeat(10) }] }),
-      )
+      const longHistory = Array.from({ length: 50 }, (_, i) => ({
+        role: 'user' as const,
+        content: `Message ${i}`.repeat(10),
+        parts: [{ type: 'text' as const, text: `Message ${i}`.repeat(10) }],
+      }))
 
       const result = await runAgentLoop({
         ...baseOptions,
@@ -590,9 +610,7 @@ describe('Agent Loop - Comprehensive Tests', () => {
     it('handles interrupt via InterruptController', async () => {
       const interrupt = new InterruptController()
 
-      model.setResponses([
-        { type: 'text-delta', delta: 'Working...' },
-      ])
+      model.setResponses([{ type: 'text-delta', delta: 'Working...' }])
 
       setTimeout(() => interrupt.requestInterrupt('user-cancel'), 5)
 
@@ -697,9 +715,7 @@ describe('Agent Loop - Comprehensive Tests', () => {
 
   describe('Edge Cases', () => {
     it('handles empty tool calls array', async () => {
-      model.setResponses([
-        { type: 'finish', reason: 'stop' },
-      ])
+      model.setResponses([{ type: 'finish', reason: 'stop' }])
 
       const result = await runAgentLoop(baseOptions)
 
@@ -708,9 +724,7 @@ describe('Agent Loop - Comprehensive Tests', () => {
     })
 
     it('handles empty text response', async () => {
-      model.setResponses([
-        { type: 'finish', reason: 'stop' },
-      ])
+      model.setResponses([{ type: 'finish', reason: 'stop' }])
 
       const result = await runAgentLoop(baseOptions)
 
@@ -825,8 +839,7 @@ describe('Agent Loop - Comprehensive Tests', () => {
       })
 
       // Verify tool call IDs are preserved (property is toolCallId)
-      const toolCalls = partialResult.messages
-        .flatMap((m) => (m as any).toolCalls ?? [])
+      const toolCalls = partialResult.messages.flatMap((m) => (m as any).toolCalls ?? [])
       expect(toolCalls.length).toBe(1)
       expect(toolCalls[0].toolCallId).toBe('call-1')
     })

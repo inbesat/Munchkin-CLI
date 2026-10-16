@@ -1,5 +1,5 @@
-import { ToolResult } from './types'
-import { ToolError, ErrorCode } from '../errors'
+import { ErrorCode, ToolError } from '../errors'
+import type { ToolResult } from './types'
 
 /** A tool call to execute in parallel. */
 export interface ParallelToolCall {
@@ -94,7 +94,11 @@ export class Semaphore {
  */
 export async function executeParallel(
   calls: ParallelToolCall[],
-  executeFn: (name: string, input: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolResult>,
+  executeFn: (
+    name: string,
+    input: Record<string, unknown>,
+    signal?: AbortSignal,
+  ) => Promise<ToolResult>,
   options: Partial<ParallelExecutionOptions> = {},
 ): Promise<ParallelToolResult[]> {
   const opts = { ...DEFAULT_OPTIONS, ...options }
@@ -116,7 +120,9 @@ export async function executeParallel(
 
     // Create timeout controller if needed
     const timeoutController = opts.callTimeout ? new AbortController() : null
-    const timeoutId = timeoutController ? setTimeout(() => timeoutController!.abort(), opts.callTimeout) : null
+    const timeoutId = timeoutController
+      ? setTimeout(() => timeoutController!.abort(), opts.callTimeout)
+      : null
 
     // Combine external abort signal with timeout
     const combinedSignal = call.signal
@@ -126,7 +132,7 @@ export async function executeParallel(
           timeoutController?.signal.addEventListener('abort', () => controller.abort())
           return controller.signal
         })()
-      : timeoutController?.signal ?? undefined
+      : (timeoutController?.signal ?? undefined)
 
     try {
       // Check if we should stop due to fatal error
@@ -144,7 +150,8 @@ export async function executeParallel(
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
-      const isAbort = err instanceof Error && (err.name === 'AbortError' || errorMessage.includes('Aborted'))
+      const isAbort =
+        err instanceof Error && (err.name === 'AbortError' || errorMessage.includes('Aborted'))
       results[index] = {
         name: call.name,
         result: {
@@ -155,7 +162,11 @@ export async function executeParallel(
       }
       if (!opts.continueOnError || isAbort) {
         if (!fatalError) {
-          fatalError = isAbort ? new Error('Execution aborted') : (err instanceof Error ? err : new Error(errorMessage))
+          fatalError = isAbort
+            ? new Error('Execution aborted')
+            : err instanceof Error
+              ? err
+              : new Error(errorMessage)
         }
       }
     } finally {
@@ -189,15 +200,31 @@ export async function executeParallel(
  */
 export async function executeParallelWithRegistry(
   calls: ParallelToolCall[],
-  registry: { execute: (name: string, input: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolResult> },
+  registry: {
+    execute: (
+      name: string,
+      input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ) => Promise<ToolResult>
+  },
   options: Partial<ParallelExecutionOptions> = {},
 ): Promise<ParallelToolResult[]> {
-  return executeParallel(calls, (name, input, signal) => registry.execute(name, input, signal), options)
+  return executeParallel(
+    calls,
+    (name, input, signal) => registry.execute(name, input, signal),
+    options,
+  )
 }
 
 /** Create a default parallel executor with the registry. */
 export function createParallelExecutor(
-  registry: { execute: (name: string, input: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolResult> },
+  registry: {
+    execute: (
+      name: string,
+      input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ) => Promise<ToolResult>
+  },
   defaultOptions?: Partial<ParallelExecutionOptions>,
 ) {
   return {

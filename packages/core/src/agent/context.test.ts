@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'bun:test'
-import { assembleContext, estimateTokens, trimMessages, toRequestMessages } from './context'
+import { describe, expect, it } from 'bun:test'
 import type { Message } from '../session/message'
+import { assembleContext, estimateTokens, toRequestMessages, trimMessages } from './context'
 import type { AgentTool } from './types'
 
 function userMsg(content: string): Message {
@@ -10,9 +10,17 @@ function userMsg(content: string): Message {
     content,
   }
 }
-function assistantMsg(content: string, toolCalls?: { name: string; args: Record<string, unknown> }[]): Message {
+function assistantMsg(
+  content: string,
+  toolCalls?: { name: string; args: Record<string, unknown> }[],
+): Message {
   const parts: Message['parts'] = []
-  const toolCallParts: { type: 'tool_call'; toolCallId: string; toolName: string; args: Record<string, unknown> }[] = []
+  const toolCallParts: {
+    type: 'tool_call'
+    toolCallId: string
+    toolName: string
+    args: Record<string, unknown>
+  }[] = []
   if (content) parts.push({ type: 'text', text: content })
   if (toolCalls) {
     for (const tc of toolCalls) {
@@ -64,7 +72,13 @@ describe('toRequestMessages', () => {
       role: 'user',
       parts: [
         { type: 'text', text: '' },
-        { type: 'tool_result', toolCallId: 'tc-1', toolName: 'bash', result: 'ok', error: undefined },
+        {
+          type: 'tool_result',
+          toolCallId: 'tc-1',
+          toolName: 'bash',
+          result: 'ok',
+          error: undefined,
+        },
       ],
       content: '{"result":"ok"}',
     }

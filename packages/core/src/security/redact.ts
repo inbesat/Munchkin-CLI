@@ -181,7 +181,8 @@ const DEFAULT_PATTERNS: RedactionPattern[] = [
   // Private keys (PEM format)
   {
     id: 'private-key-pem',
-    pattern: /-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----[\s\S]*?-----END (RSA |EC |DSA )?PRIVATE KEY-----/g,
+    pattern:
+      /-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----[\s\S]*?-----END (RSA |EC |DSA )?PRIVATE KEY-----/g,
     description: 'PEM-format private key',
   },
   // SSH private keys
@@ -205,7 +206,8 @@ const DEFAULT_PATTERNS: RedactionPattern[] = [
   // Generic key=value patterns for common secret names
   {
     id: 'key-value-secret',
-    pattern: /(api[_-]?key|access[_-]?token|secret[_-]?key|password|passwd|token|auth[_-]?token)\s*[:=]\s*['"]?([a-zA-Z0-9._-]{16,})['"]?/gi,
+    pattern:
+      /(api[_-]?key|access[_-]?token|secret[_-]?key|password|passwd|token|auth[_-]?token)\s*[:=]\s*['"]?([a-zA-Z0-9._-]{16,})['"]?/gi,
     description: 'Key-value pair with secret-like name and value',
   },
 ]
@@ -223,7 +225,10 @@ export function createRedactionConfig(overrides: Partial<RedactionConfig> = {}):
 }
 
 /** Redact secrets from text. */
-export function redact(text: string, config: RedactionConfig = createRedactionConfig()): RedactionResult {
+export function redact(
+  text: string,
+  config: RedactionConfig = createRedactionConfig(),
+): RedactionResult {
   const {
     customPatterns = [],
     redactEnvVars = true,
@@ -233,52 +238,40 @@ export function redact(text: string, config: RedactionConfig = createRedactionCo
   } = config
 
   const allPatterns = [...DEFAULT_PATTERNS, ...customPatterns].filter((p) => p.enabled !== false)
-  const matches: RedactionMatch[] = []
-  let result = text
 
-  // Track replacements to adjust positions
-  let offset = 0
+  /** A single replacement, recorded in original-text coordinates. */
+  interface PendingEdit extends RedactionMatch {
+    replacement: string
+  }
+  const edits: PendingEdit[] = []
+  const overlaps = (start: number, end: number): boolean =>
+    edits.some((e) => e.start < end && e.end > start)
 
   for (const patternDef of allPatterns) {
     const regex = new RegExp(patternDef.pattern.source, patternDef.pattern.flags)
-    let match
-
-    while ((match = regex.exec(text)) !== null) {
+    let match: RegExpExecArray | null = regex.exec(text)
+    while (match !== null) {
       const matchedText = match[0]
-      const start = match.index + offset
+      const start = match.index
       const end = start + matchedText.length
 
-      // Skip if already redacted (overlapping)
-      const alreadyRedacted = matches.some(
-        (m) => m.start < end && m.end > start,
-      )
-      if (alreadyRedacted) {
-        // Prevent infinite loops on zero-width matches
-        if (regex.lastIndex === match.index) {
-          regex.lastIndex++
-        }
-        continue
+      if (!overlaps(start, end)) {
+        edits.push({
+          patternId: patternDef.id,
+          matched: matchedText,
+          start,
+          end,
+          replacement: preserveLength
+            ? replacement.padEnd(matchedText.length, 'X').slice(0, matchedText.length)
+            : replacement,
+        })
       }
 
-      const replacementText = preserveLength
-        ? replacement.padEnd(matchedText.length, 'X').slice(0, matchedText.length)
-        : replacement
-
-      // Replace in result
-      result = result.slice(0, start) + replacementText + result.slice(end)
-      offset += replacementText.length - matchedText.length
-
-      matches.push({
-        patternId: patternDef.id,
-        matched: matchedText,
-        start: match.index,
-        end: match.index + matchedText.length,
-      })
-
-      // Prevent infinite loops
+      // Prevent infinite loops on zero-width matches
       if (regex.lastIndex === match.index) {
         regex.lastIndex++
       }
+      match = regex.exec(text)
     }
   }
 
@@ -286,58 +279,47 @@ export function redact(text: string, config: RedactionConfig = createRedactionCo
   if (redactEnvVars) {
     for (const envVar of secretEnvVars) {
       // Match patterns like: export SECRET_KEY=value, SECRET_KEY=value, SECRET_KEY="value"
-      const envRegex = new RegExp(
-        `\\b${envVar}\\s*[:=]\\s*['"]?([^'"\\s]{8,})['"]?`,
-        'gi',
-      )
-      let match
-
-      while ((match = envRegex.exec(text)) !== null) {
+      const envRegex = new RegExp(`\\b${envVar}\\s*[:=]\\s*['"]?([^'"\\s]{8,})['"]?`, 'gi')
+      let match: RegExpExecArray | null = envRegex.exec(text)
+      while (match !== null) {
         const fullMatch = match[0]
         const secretValue = match[1]
-        const start = match.index + offset
-        const end = start + fullMatch.length
+        if (secretValue) {
+          const valueStart = match.index + fullMatch.indexOf(secretValue)
+          const valueEnd = valueStart + secretValue.length
 
-        const alreadyRedacted = matches.some(
-          (m) => m.start < end && m.end > start,
-        )
-        if (alreadyRedacted) {
-          if (envRegex.lastIndex === match.index) {
-            envRegex.lastIndex++
+          if (!overlaps(valueStart, valueEnd)) {
+            edits.push({
+              patternId: `env-${envVar}`,
+              matched: secretValue,
+              start: valueStart,
+              end: valueEnd,
+              replacement: preserveLength
+                ? replacement.padEnd(secretValue.length, 'X').slice(0, secretValue.length)
+                : replacement,
+            })
           }
-          continue
         }
-
-        // Replace just the secret value part
-        const beforeSecret = fullMatch.indexOf(secretValue)
-        const replacementText = preserveLength
-          ? replacement.padEnd(secretValue.length, 'X').slice(0, secretValue.length)
-          : replacement
-
-        const newFullMatch =
-          fullMatch.slice(0, beforeSecret) + replacementText + fullMatch.slice(beforeSecret + secretValue.length)
-
-        result = result.slice(0, start) + newFullMatch + result.slice(end)
-        offset += newFullMatch.length - fullMatch.length
-
-        matches.push({
-          patternId: `env-${envVar}`,
-          matched: secretValue,
-          start: match.index,
-          end: match.index + fullMatch.length,
-        })
 
         if (envRegex.lastIndex === match.index) {
           envRegex.lastIndex++
         }
+        match = envRegex.exec(text)
       }
     }
   }
 
+  // Apply right-to-left in original coordinates so earlier offsets stay valid.
+  edits.sort((a, b) => b.start - a.start || b.end - a.end)
+  let result = text
+  for (const edit of edits) {
+    result = result.slice(0, edit.start) + edit.replacement + result.slice(edit.end)
+  }
+
   return {
     text: result,
-    count: matches.length,
-    matches,
+    count: edits.length,
+    matches: edits,
   }
 }
 
@@ -360,9 +342,7 @@ export function redactObject<T extends Record<string, unknown>>(
     if (typeof value === 'string') {
       result[key] = redact(value, config).text
     } else if (Array.isArray(value)) {
-      result[key] = value.map((v) =>
-        typeof v === 'string' ? redact(v, config).text : v,
-      )
+      result[key] = value.map((v) => (typeof v === 'string' ? redact(v, config).text : v))
     } else if (value && typeof value === 'object') {
       result[key] = redactObject(value as Record<string, unknown>, config)
     } else {
@@ -374,12 +354,17 @@ export function redactObject<T extends Record<string, unknown>>(
 }
 
 /** Check if text contains potential secrets. */
-export function hasSecrets(text: string, config: RedactionConfig = createRedactionConfig()): boolean {
+export function hasSecrets(
+  text: string,
+  config: RedactionConfig = createRedactionConfig(),
+): boolean {
   return redact(text, config).count > 0
 }
 
 /** Get all patterns (default + custom). */
-export function getAllPatterns(config: RedactionConfig = createRedactionConfig()): RedactionPattern[] {
+export function getAllPatterns(
+  config: RedactionConfig = createRedactionConfig(),
+): RedactionPattern[] {
   return [...DEFAULT_PATTERNS, ...(config.customPatterns ?? [])].filter((p) => p.enabled !== false)
 }
 

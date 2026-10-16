@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { readTool, createReadTool, ReadSchema } from './read'
-import { ToolRegistry, createToolRegistryConfig } from './registry'
-import { Type } from '@sinclair/typebox'
-import { writeFile, mkdir, unlink, rm } from 'fs/promises'
-import { join } from 'path'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { tmpdir } from 'os'
+import { join } from 'path'
+import { mkdir, rm, writeFile } from 'fs/promises'
+import { ReadSchema, createReadTool } from './read'
+import { ToolRegistry, createToolRegistryConfig } from './registry'
 
 const testDir = join(tmpdir(), 'forge-read-test-' + Date.now())
 const testFile = join(testDir, 'test.txt')

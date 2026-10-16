@@ -1,20 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import type { AgentTool } from '../agent/types'
 import {
-  DefaultSecurityAnalyzer,
-  DefaultConfirmationPolicy,
-  createSecurityAnalyzer,
-  createConfirmationPolicy,
+  type AnalysisContext,
+  type AnalysisResult,
   AnalyzerRegistry,
+  DefaultConfirmationPolicy,
+  DefaultSecurityAnalyzer,
+  type RiskLevel,
+  type ToolRiskPattern,
+  createSecurityAnalyzer,
   getAnalyzerRegistry,
   setAnalyzerRegistry,
-  SecurityAnalyzer,
-  ConfirmationPolicy,
-  AnalysisContext,
-  AnalysisResult,
-  RiskLevel,
-  ToolRiskPattern,
 } from './analyzer'
-import { AgentTool } from '../agent/types'
 
 const createMockTool = (name: string): AgentTool => ({
   name,
@@ -51,20 +48,26 @@ describe('Security Analyzer', () => {
 
     it('analyzes read-only tools as low risk', async () => {
       const readTool = createMockTool('readFile')
-      const result = await analyzer.analyze(createContext({ tool: readTool, args: { path: 'file.txt' } }))
+      const result = await analyzer.analyze(
+        createContext({ tool: readTool, args: { path: 'file.txt' } }),
+      )
       expect(result.riskLevel).toBe('low')
       expect(result.confidence).toBeGreaterThan(0.5)
     })
 
     it('analyzes write tools as medium risk', async () => {
       const writeTool = createMockTool('writeFile')
-      const result = await analyzer.analyze(createContext({ tool: writeTool, args: { path: 'file.txt', content: 'hello' } }))
+      const result = await analyzer.analyze(
+        createContext({ tool: writeTool, args: { path: 'file.txt', content: 'hello' } }),
+      )
       expect(result.riskLevel).toBe('medium')
     })
 
     it('analyzes edit tools as medium risk', async () => {
       const editTool = createMockTool('editFile')
-      const result = await analyzer.analyze(createContext({ tool: editTool, args: { path: 'file.txt', oldStr: 'a', newStr: 'b' } }))
+      const result = await analyzer.analyze(
+        createContext({ tool: editTool, args: { path: 'file.txt', oldStr: 'a', newStr: 'b' } }),
+      )
       expect(result.riskLevel).toBe('medium')
     })
 
@@ -91,7 +94,9 @@ describe('Security Analyzer', () => {
     it('analyzes web tools as low risk', async () => {
       for (const toolName of ['webFetch', 'webSearch']) {
         const tool = createMockTool(toolName)
-        const result = await analyzer.analyze(createContext({ tool, args: { url: 'https://example.com' } }))
+        const result = await analyzer.analyze(
+          createContext({ tool, args: { url: 'https://example.com' } }),
+        )
         expect(result.riskLevel).toBe('low')
       }
     })
@@ -111,51 +116,61 @@ describe('Security Analyzer', () => {
     describe('bash command analysis', () => {
       it('analyzes low-risk bash commands', async () => {
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'ls -la' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'ls -la' },
+          }),
+        )
         expect(result.riskLevel).toBe('low')
         expect(result.metadata?.source).toBe('classifier')
       })
 
       it('analyzes medium-risk bash commands', async () => {
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'npm install' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'npm install' },
+          }),
+        )
         expect(result.riskLevel).toBe('medium')
       })
 
       it('analyzes high-risk bash commands', async () => {
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'rm -rf node_modules' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'rm -rf node_modules' },
+          }),
+        )
         expect(result.riskLevel).toBe('high')
       })
 
       it('analyzes critical-risk bash commands', async () => {
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'rm -rf /' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'rm -rf /' },
+          }),
+        )
         expect(result.riskLevel).toBe('critical')
         expect(result.metadata?.source).toBe('circuit-breaker')
       })
 
-it('includes command details in metadata', async () => {
-      const tool = createMockTool('bash')
-      const result = await analyzer.analyze(createContext({
-        tool,
-        args: { command: 'npm install' }, // Medium risk, no circuit breaker
-      }))
-      expect(result.metadata?.baseCommand).toBeDefined()
-      expect(result.metadata?.matchedPatterns).toBeDefined()
-    })
+      it('includes command details in metadata', async () => {
+        const tool = createMockTool('bash')
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'npm install' }, // Medium risk, no circuit breaker
+          }),
+        )
+        expect(result.metadata?.baseCommand).toBeDefined()
+        expect(result.metadata?.matchedPatterns).toBeDefined()
+      })
     })
 
     describe('custom tool patterns', () => {
@@ -169,32 +184,36 @@ it('includes command details in metadata', async () => {
         analyzer.addToolPattern(customPattern)
 
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'safe command' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'safe command' },
+          }),
+        )
         expect(result.riskLevel).toBe('low')
         expect(result.metadata?.source).toBe('custom-pattern')
       })
 
-it('ignores custom patterns when condition fails', async () => {
-      const customPattern: ToolRiskPattern = {
-        target: 'bash',
-        riskLevel: 'low',
-        description: 'Custom: bash is low risk',
-        condition: (args) => (args.command as string).includes('safe'),
-      }
-      analyzer.addToolPattern(customPattern)
+      it('ignores custom patterns when condition fails', async () => {
+        const customPattern: ToolRiskPattern = {
+          target: 'bash',
+          riskLevel: 'low',
+          description: 'Custom: bash is low risk',
+          condition: (args) => (args.command as string).includes('safe'),
+        }
+        analyzer.addToolPattern(customPattern)
 
-      const tool = createMockTool('bash')
-      const result = await analyzer.analyze(createContext({
-        tool,
-        args: { command: 'rm -rf /' }, // This triggers circuit breaker, not low
-      }))
-      // Should trigger circuit breaker (critical), not custom pattern
-      expect(result.riskLevel).toBe('critical')
-      expect(result.metadata?.source).toBe('circuit-breaker')
-    })
+        const tool = createMockTool('bash')
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'rm -rf /' }, // This triggers circuit breaker, not low
+          }),
+        )
+        // Should trigger circuit breaker (critical), not custom pattern
+        expect(result.riskLevel).toBe('critical')
+        expect(result.metadata?.source).toBe('circuit-breaker')
+      })
 
       it('removes custom patterns', async () => {
         const customPattern: ToolRiskPattern = {
@@ -206,10 +225,12 @@ it('ignores custom patterns when condition fails', async () => {
         analyzer.removeToolPattern('bash')
 
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'ls' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'ls' },
+          }),
+        )
         expect(result.riskLevel).toBe('low') // Classifier says low
       })
     })
@@ -217,33 +238,39 @@ it('ignores custom patterns when condition fails', async () => {
     describe('permission mode adjustments', () => {
       it('escalates risk in plan mode', async () => {
         const tool = createMockTool('readFile')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { path: 'file.txt' },
-          permissionMode: 'plan',
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { path: 'file.txt' },
+            permissionMode: 'plan',
+          }),
+        )
         // readFile is low, should escalate to medium in plan mode
         expect(result.riskLevel).toBe('medium')
       })
 
       it('lowers risk in bypass mode', async () => {
         const tool = createMockTool('writeFile')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { path: 'file.txt', content: 'x' },
-          permissionMode: 'bypass',
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { path: 'file.txt', content: 'x' },
+            permissionMode: 'bypass',
+          }),
+        )
         // writeFile is medium, should lower to low in bypass
         expect(result.riskLevel).toBe('low')
       })
 
       it('respects acceptEdits mode', async () => {
         const tool = createMockTool('writeFile')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { path: 'file.txt', content: 'x' },
-          permissionMode: 'acceptEdits',
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { path: 'file.txt', content: 'x' },
+            permissionMode: 'acceptEdits',
+          }),
+        )
         // writeFile is medium, acceptEdits uses high threshold
         expect(result.riskLevel).toBe('medium')
       })
@@ -259,10 +286,12 @@ it('ignores custom patterns when condition fails', async () => {
       it('can disable circuit breakers', async () => {
         analyzer.updateConfig({ useCircuitBreakers: false })
         const tool = createMockTool('bash')
-        const result = await analyzer.analyze(createContext({
-          tool,
-          args: { command: 'rm -rf /' },
-        }))
+        const result = await analyzer.analyze(
+          createContext({
+            tool,
+            args: { command: 'rm -rf /' },
+          }),
+        )
         // Without circuit breakers, falls back to classifier which says critical
         // But without circuit breaker check, it might not be marked as circuit-breaker source
         expect(result.riskLevel).toBe('critical')

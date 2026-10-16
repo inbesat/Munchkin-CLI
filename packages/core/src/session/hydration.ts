@@ -1,4 +1,5 @@
 import type { SessionEvent } from '../events'
+import { recentContextBoundary, summaryMessage } from '../context/projection'
 import type {
   AssistantMessage,
   Message,
@@ -20,7 +21,7 @@ export function hydrateMessages(
   events: SessionEvent[],
   options: HydrationOptions,
 ): ProviderMessage[] {
-  const messages = assembleMessages(events)
+  const messages = assembleContextMessages(events)
   const providerMessages = messages.map((msg) => toProviderFormat(msg, options.format))
 
   if (options.includeSystem && options.systemPrompt) {
@@ -30,9 +31,9 @@ export function hydrateMessages(
   return providerMessages
 }
 
-export function assembleMessages(events: SessionEvent[]): Message[] {
+/** Raw history by default; use assembleContextMessages for model-visible history. */
+export function assembleMessages(events: SessionEvent[], applyCompaction = false): Message[] {
   const messages: Message[] = []
-  const pendingToolCalls = new Map<string, ToolCallPart>()
 
   let currentUserContent: string[] = []
   let currentAssistantContent: string[] = []
@@ -99,6 +100,7 @@ export function assembleMessages(events: SessionEvent[]): Message[] {
       }
 
       case 'session.tool_call': {
+        flushUser()
         const tc: ToolCallPart = {
           type: 'tool_call',
           toolCallId: event.payload.toolCallId,
@@ -106,7 +108,6 @@ export function assembleMessages(events: SessionEvent[]): Message[] {
           args: event.payload.args,
         }
         currentToolCalls.push(tc)
-        pendingToolCalls.set(event.payload.toolCallId, tc)
         break
       }
 
@@ -134,6 +135,17 @@ export function assembleMessages(events: SessionEvent[]): Message[] {
       }
 
       case 'session.compaction': {
+        if (applyCompaction) {
+          flushAssistant()
+          flushUser()
+          const { summary, beforeCount, afterCount } = event.payload
+          if (!summary.trim() || !Number.isInteger(afterCount) || afterCount < 1 ||
+            beforeCount <= afterCount || beforeCount !== messages.length) break
+          const boundary = recentContextBoundary(messages, afterCount - 1)
+          const systems = messages.slice(0, boundary).filter((m) => m.role === 'system')
+          messages.splice(0, boundary, ...systems, summaryMessage(summary))
+          break
+        }
         currentUserContent.push(
           `[System: Conversation compacted from ${event.payload.beforeCount} to ${event.payload.afterCount} messages]`,
         )
@@ -146,6 +158,11 @@ export function assembleMessages(events: SessionEvent[]): Message[] {
   flushUser()
 
   return messages
+}
+
+/** Replay compaction markers only in the model projection, never in the event log. */
+export function assembleContextMessages(events: SessionEvent[]): Message[] {
+  return assembleMessages(events, true)
 }
 
 function toProviderFormat(msg: Message, format: ProviderFormat): ProviderMessage {

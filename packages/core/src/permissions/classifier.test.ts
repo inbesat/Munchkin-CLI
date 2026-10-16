@@ -1,17 +1,16 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
-  extractBaseCommand,
-  hasPipes,
-  hasVariables,
+  type ClassificationResult,
   classifyCommand,
   classifyCommands,
+  extractBaseCommand,
   getHighestRisk,
-  isCircuitBreaker,
-  getRiskDescription,
   getRiskColor,
+  getRiskDescription,
+  hasPipes,
+  hasVariables,
+  isCircuitBreaker,
   meetsRiskThreshold,
-  RiskLevel,
-  ClassificationResult,
 } from './classifier'
 
 describe('Command Risk Classifier', () => {
@@ -333,11 +332,7 @@ describe('Command Risk Classifier', () => {
 
   describe('classifyCommands', () => {
     it('classifies multiple commands', () => {
-      const results = classifyCommands([
-        'ls',
-        'npm install',
-        'rm -rf node_modules',
-      ])
+      const results = classifyCommands(['ls', 'npm install', 'rm -rf node_modules'])
       expect(results.length).toBe(3)
       expect(results[0].level).toBe('low')
       expect(results[1].level).toBe('medium')
@@ -348,32 +343,88 @@ describe('Command Risk Classifier', () => {
   describe('getHighestRisk', () => {
     it('returns critical when present', () => {
       const results: ClassificationResult[] = [
-        { level: 'low', baseCommand: 'ls', matchedPatterns: [], hasPipes: false, hasVariables: false, reason: '' },
-        { level: 'critical', baseCommand: 'rm', matchedPatterns: ['rm -rf /'], hasPipes: false, hasVariables: false, reason: '' },
+        {
+          level: 'low',
+          baseCommand: 'ls',
+          matchedPatterns: [],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
+        {
+          level: 'critical',
+          baseCommand: 'rm',
+          matchedPatterns: ['rm -rf /'],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
       ]
       expect(getHighestRisk(results)).toBe('critical')
     })
 
     it('returns high when no critical', () => {
       const results: ClassificationResult[] = [
-        { level: 'low', baseCommand: 'ls', matchedPatterns: [], hasPipes: false, hasVariables: false, reason: '' },
-        { level: 'high', baseCommand: 'rm', matchedPatterns: ['rm -rf'], hasPipes: false, hasVariables: false, reason: '' },
+        {
+          level: 'low',
+          baseCommand: 'ls',
+          matchedPatterns: [],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
+        {
+          level: 'high',
+          baseCommand: 'rm',
+          matchedPatterns: ['rm -rf'],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
       ]
       expect(getHighestRisk(results)).toBe('high')
     })
 
     it('returns medium when no high/critical', () => {
       const results: ClassificationResult[] = [
-        { level: 'low', baseCommand: 'ls', matchedPatterns: [], hasPipes: false, hasVariables: false, reason: '' },
-        { level: 'medium', baseCommand: 'npm', matchedPatterns: ['npm install'], hasPipes: false, hasVariables: false, reason: '' },
+        {
+          level: 'low',
+          baseCommand: 'ls',
+          matchedPatterns: [],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
+        {
+          level: 'medium',
+          baseCommand: 'npm',
+          matchedPatterns: ['npm install'],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
       ]
       expect(getHighestRisk(results)).toBe('medium')
     })
 
     it('returns low when all low', () => {
       const results: ClassificationResult[] = [
-        { level: 'low', baseCommand: 'ls', matchedPatterns: [], hasPipes: false, hasVariables: false, reason: '' },
-        { level: 'low', baseCommand: 'cat', matchedPatterns: [], hasPipes: false, hasVariables: false, reason: '' },
+        {
+          level: 'low',
+          baseCommand: 'ls',
+          matchedPatterns: [],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
+        {
+          level: 'low',
+          baseCommand: 'cat',
+          matchedPatterns: [],
+          hasPipes: false,
+          hasVariables: false,
+          reason: '',
+        },
       ]
       expect(getHighestRisk(results)).toBe('low')
     })

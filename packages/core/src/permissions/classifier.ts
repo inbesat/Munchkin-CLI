@@ -26,14 +26,38 @@ interface CommandPattern {
 
 /** Patterns ordered by specificity (more specific first). */
 const CRITICAL_PATTERNS: CommandPattern[] = [
-  { pattern: /^rm\s+(-rf|-fr)\s+\/\s*$/, level: 'critical', description: 'rm -rf / (delete root filesystem)' },
-  { pattern: /^rm\s+(-rf|-fr)\s+\/\s*;/, level: 'critical', description: 'rm -rf / followed by more commands' },
-  { pattern: /^rm\s+(-rf|-fr)\s+\/\s*\|\|/, level: 'critical', description: 'rm -rf / with conditional execution' },
-  { pattern: /^rm\s+(-rf|-fr)\s+\/\s*&&/, level: 'critical', description: 'rm -rf / with conditional execution' },
-  { pattern: /^rm\s+(-rf|-fr)\s+~\s*$/, level: 'critical', description: 'rm -rf ~ (delete home directory)' },
+  {
+    pattern: /^rm\s+(-rf|-fr)\s+\/\s*$/,
+    level: 'critical',
+    description: 'rm -rf / (delete root filesystem)',
+  },
+  {
+    pattern: /^rm\s+(-rf|-fr)\s+\/\s*;/,
+    level: 'critical',
+    description: 'rm -rf / followed by more commands',
+  },
+  {
+    pattern: /^rm\s+(-rf|-fr)\s+\/\s*\|\|/,
+    level: 'critical',
+    description: 'rm -rf / with conditional execution',
+  },
+  {
+    pattern: /^rm\s+(-rf|-fr)\s+\/\s*&&/,
+    level: 'critical',
+    description: 'rm -rf / with conditional execution',
+  },
+  {
+    pattern: /^rm\s+(-rf|-fr)\s+~\s*$/,
+    level: 'critical',
+    description: 'rm -rf ~ (delete home directory)',
+  },
   { pattern: /^sudo\s+rm\s+(-rf|-fr)\s+\//, level: 'critical', description: 'sudo rm -rf /' },
   { pattern: /^sudo\s+rm\s+(-rf|-fr)\s+~/, level: 'critical', description: 'sudo rm -rf ~' },
-  { pattern: /^dd\s+if=.*of=\/(dev|dev\/sda)/, level: 'critical', description: 'dd writing to disk device' },
+  {
+    pattern: /^dd\s+if=.*of=\/(dev|dev\/sda)/,
+    level: 'critical',
+    description: 'dd writing to disk device',
+  },
   { pattern: /^mkfs\./, level: 'critical', description: 'Formatting filesystem' },
   { pattern: /^fdisk\s/, level: 'critical', description: 'Disk partitioning' },
   { pattern: /^parted\s/, level: 'critical', description: 'Disk partitioning' },
@@ -41,7 +65,11 @@ const CRITICAL_PATTERNS: CommandPattern[] = [
   { pattern: /^reboot(\s|$)/, level: 'critical', description: 'System reboot' },
   { pattern: /^halt(\s|$)/, level: 'critical', description: 'System halt' },
   { pattern: /^init\s+0/, level: 'critical', description: 'Init 0 (shutdown)' },
-  { pattern: /^systemctl\s+(poweroff|halt|reboot)/, level: 'critical', description: 'Systemctl power management' },
+  {
+    pattern: /^systemctl\s+(poweroff|halt|reboot)/,
+    level: 'critical',
+    description: 'Systemctl power management',
+  },
   { pattern: /^:\(\)\{.*:.*\|.*:.*&.*\}/, level: 'critical', description: 'Fork bomb' },
 ]
 
@@ -58,9 +86,21 @@ const HIGH_PATTERNS: CommandPattern[] = [
   { pattern: /^npm\s+publish/, level: 'high', description: 'Publishing npm package' },
   { pattern: /^yarn\s+publish/, level: 'high', description: 'Publishing yarn package' },
   { pattern: /^pnpm\s+publish/, level: 'high', description: 'Publishing pnpm package' },
-  { pattern: /^docker\s+(rmi|rm)\s+.*-f/, level: 'high', description: 'Force remove Docker images/containers' },
-  { pattern: /^kubectl\s+delete\s+.*--force/, level: 'high', description: 'Force delete Kubernetes resources' },
-  { pattern: /^terraform\s+destroy/, level: 'high', description: 'Terraform destroy infrastructure' },
+  {
+    pattern: /^docker\s+(rmi|rm)\s+.*-f/,
+    level: 'high',
+    description: 'Force remove Docker images/containers',
+  },
+  {
+    pattern: /^kubectl\s+delete\s+.*--force/,
+    level: 'high',
+    description: 'Force delete Kubernetes resources',
+  },
+  {
+    pattern: /^terraform\s+destroy/,
+    level: 'high',
+    description: 'Terraform destroy infrastructure',
+  },
   { pattern: /^truncate\s+-s\s+0/, level: 'high', description: 'Truncate file to zero' },
   { pattern: /^shred\s+/, level: 'high', description: 'Secure file deletion' },
   { pattern: /^wipe(f\s+)?/, level: 'high', description: 'Wipe filesystem' },
@@ -71,36 +111,88 @@ const HIGH_PATTERNS: CommandPattern[] = [
 
 const MEDIUM_PATTERNS: CommandPattern[] = [
   { pattern: /^npm\s+(install|ci|update)/, level: 'medium', description: 'NPM install/update' },
-  { pattern: /^yarn\s+(install|add|upgrade)/, level: 'medium', description: 'Yarn install/add/upgrade' },
-  { pattern: /^pnpm\s+(install|add|update)/, level: 'medium', description: 'PNPM install/add/update' },
+  {
+    pattern: /^yarn\s+(install|add|upgrade)/,
+    level: 'medium',
+    description: 'Yarn install/add/upgrade',
+  },
+  {
+    pattern: /^pnpm\s+(install|add|update)/,
+    level: 'medium',
+    description: 'PNPM install/add/update',
+  },
   { pattern: /^pip\s+install/, level: 'medium', description: 'Pip install' },
   { pattern: /^pip3\s+install/, level: 'medium', description: 'Pip3 install' },
   { pattern: /^cargo\s+(install|update)/, level: 'medium', description: 'Cargo install/update' },
   { pattern: /^go\s+(get|install)/, level: 'medium', description: 'Go get/install' },
   { pattern: /^gem\s+install/, level: 'medium', description: 'Gem install' },
-  { pattern: /^composer\s+(install|update|require)/, level: 'medium', description: 'Composer install/update' },
-  { pattern: /^git\s+(commit|merge|rebase|cherry-pick)/, level: 'medium', description: 'Git commit/merge/rebase' },
-  { pattern: /^git\s+push\s+(?!.*--force)(?!.*-f\s)/, level: 'medium', description: 'Git push (normal)' },
-  { pattern: /^docker\s+(build|run|pull|push)/, level: 'medium', description: 'Docker build/run/pull/push' },
-  { pattern: /^docker-compose\s+(up|build|down)/, level: 'medium', description: 'Docker compose operations' },
-  { pattern: /^kubectl\s+(apply|create|set|rollout)/, level: 'medium', description: 'Kubectl apply/create' },
-  { pattern: /^helm\s+(install|upgrade|rollback)/, level: 'medium', description: 'Helm install/upgrade' },
+  {
+    pattern: /^composer\s+(install|update|require)/,
+    level: 'medium',
+    description: 'Composer install/update',
+  },
+  {
+    pattern: /^git\s+(commit|merge|rebase|cherry-pick)/,
+    level: 'medium',
+    description: 'Git commit/merge/rebase',
+  },
+  {
+    pattern: /^git\s+push\s+(?!.*--force)(?!.*-f\s)/,
+    level: 'medium',
+    description: 'Git push (normal)',
+  },
+  {
+    pattern: /^docker\s+(build|run|pull|push)/,
+    level: 'medium',
+    description: 'Docker build/run/pull/push',
+  },
+  {
+    pattern: /^docker-compose\s+(up|build|down)/,
+    level: 'medium',
+    description: 'Docker compose operations',
+  },
+  {
+    pattern: /^kubectl\s+(apply|create|set|rollout)/,
+    level: 'medium',
+    description: 'Kubectl apply/create',
+  },
+  {
+    pattern: /^helm\s+(install|upgrade|rollback)/,
+    level: 'medium',
+    description: 'Helm install/upgrade',
+  },
   { pattern: /^terraform\s+(apply|plan)/, level: 'medium', description: 'Terraform apply/plan' },
   { pattern: /^ansible-playbook\s+/, level: 'medium', description: 'Ansible playbook execution' },
-  { pattern: /^systemctl\s+(start|stop|restart|enable|disable)/, level: 'medium', description: 'Service management' },
-  { pattern: /^service\s+\w+\s+(start|stop|restart)/, level: 'medium', description: 'Service management (sysv)' },
+  {
+    pattern: /^systemctl\s+(start|stop|restart|enable|disable)/,
+    level: 'medium',
+    description: 'Service management',
+  },
+  {
+    pattern: /^service\s+\w+\s+(start|stop|restart)/,
+    level: 'medium',
+    description: 'Service management (sysv)',
+  },
   { pattern: /^mount\s+/, level: 'medium', description: 'Mount filesystem' },
   { pattern: /^umount\s+/, level: 'medium', description: 'Unmount filesystem' },
   { pattern: /^crontab\s+-e/, level: 'medium', description: 'Edit crontab' },
   { pattern: /^ssh-keygen\s+/, level: 'medium', description: 'Generate SSH keys' },
   { pattern: /^openssl\s+/, level: 'medium', description: 'OpenSSL operations' },
-  { pattern: /^gpg\s+(--gen-key|--encrypt|--sign)/, level: 'medium', description: 'GPG key generation/encryption' },
+  {
+    pattern: /^gpg\s+(--gen-key|--encrypt|--sign)/,
+    level: 'medium',
+    description: 'GPG key generation/encryption',
+  },
   { pattern: /^chmod\s+\+x/, level: 'medium', description: 'Make executable' },
   { pattern: /^chmod\s+-[Rr]/, level: 'medium', description: 'Recursive chmod' },
   { pattern: /^chown\s+/, level: 'medium', description: 'Change ownership' },
   { pattern: /^ln\s+-s/, level: 'medium', description: 'Create symlink' },
   { pattern: /^tar\s+.*[xcf]/, level: 'medium', description: 'Tar extract/create' },
-  { pattern: /^rsync\s+.*(--delete|--remove-source-files)/, level: 'medium', description: 'Rsync with deletion' },
+  {
+    pattern: /^rsync\s+.*(--delete|--remove-source-files)/,
+    level: 'medium',
+    description: 'Rsync with deletion',
+  },
 ]
 
 const LOW_PATTERNS: CommandPattern[] = [
@@ -151,11 +243,19 @@ const LOW_PATTERNS: CommandPattern[] = [
   { pattern: /^tr\s+/, level: 'low', description: 'Translate characters' },
   { pattern: /^xargs\s+/, level: 'low', description: 'Execute from stdin' },
   { pattern: /^tee\s+/, level: 'low', description: 'Tee output' },
-  { pattern: /^git\s+(status|log|diff|show|branch|remote)/, level: 'low', description: 'Git read-only operations' },
+  {
+    pattern: /^git\s+(status|log|diff|show|branch|remote)/,
+    level: 'low',
+    description: 'Git read-only operations',
+  },
   { pattern: /^docker\s+(ps|images|logs|inspect)/, level: 'low', description: 'Docker read-only' },
   { pattern: /^kubectl\s+(get|describe|logs|top)/, level: 'low', description: 'Kubectl read-only' },
   { pattern: /^helm\s+(list|status|get)/, level: 'low', description: 'Helm read-only' },
-  { pattern: /^terraform\s+(show|output|providers)/, level: 'low', description: 'Terraform read-only' },
+  {
+    pattern: /^terraform\s+(show|output|providers)/,
+    level: 'low',
+    description: 'Terraform read-only',
+  },
 ]
 
 /** All patterns combined, ordered by risk level (critical first). */

@@ -1,11 +1,11 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
-  validateFilePath,
+  type FileAccessConfig,
   createDefaultFileAccessConfig,
-  FileAccessConfig,
+  validateFilePath,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
+import type { Tool, ToolResult } from './types'
 
 /** Grep tool input schema. */
 export const GrepSchema = Type.Object({
@@ -13,9 +13,25 @@ export const GrepSchema = Type.Object({
   path: Type.Optional(Type.String({ description: 'Root directory to search from (default: cwd)' })),
   include: Type.Optional(Type.String({ description: 'File pattern to include (e.g., *.ts)' })),
   exclude: Type.Optional(Type.String({ description: 'File pattern to exclude' })),
-  caseSensitive: Type.Optional(Type.Boolean({ default: false, description: 'Case-sensitive search' })),
-  contextLines: Type.Optional(Type.Integer({ minimum: 0, maximum: 10, default: 2, description: 'Context lines around matches' })),
-  maxResults: Type.Optional(Type.Integer({ minimum: 1, maximum: 10000, default: 500, description: 'Maximum number of matches to return' })),
+  caseSensitive: Type.Optional(
+    Type.Boolean({ default: false, description: 'Case-sensitive search' }),
+  ),
+  contextLines: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      maximum: 10,
+      default: 2,
+      description: 'Context lines around matches',
+    }),
+  ),
+  maxResults: Type.Optional(
+    Type.Integer({
+      minimum: 1,
+      maximum: 10000,
+      default: 500,
+      description: 'Maximum number of matches to return',
+    }),
+  ),
 })
 
 /** Individual match result. */
@@ -49,7 +65,8 @@ export function createGrepTool(config?: Partial<FileAccessConfig>): Tool {
 
   return {
     name: 'grep',
-    description: 'Search file contents using ripgrep regex. Returns matches with file paths, line numbers, and context.',
+    description:
+      'Search file contents using ripgrep regex. Returns matches with file paths, line numbers, and context.',
     parameters: GrepSchema,
     scope: 'builtin',
     risk: 'low',
@@ -86,8 +103,10 @@ export function createGrepTool(config?: Partial<FileAccessConfig>): Tool {
         '--with-filename',
         '--color=never',
         '--heading',
-        '--max-count', String(maxResults ?? 500),
-        '--context', String(contextLines ?? 2),
+        '--max-count',
+        String(maxResults ?? 500),
+        '--context',
+        String(contextLines ?? 2),
       ]
 
       if (caseSensitive) {
@@ -135,9 +154,8 @@ export function createGrepTool(config?: Partial<FileAccessConfig>): Tool {
 
         return {
           success: true,
-          output: finalMatches.length > 0
-            ? finalMatches.map(formatMatch).join('\n')
-            : '(no matches)',
+          output:
+            finalMatches.length > 0 ? finalMatches.map(formatMatch).join('\n') : '(no matches)',
           metadata: {
             matches: finalMatches,
             count: finalMatches.length,
@@ -178,7 +196,7 @@ function parseGrepOutput(output: string): GrepMatch[] {
     // Match line: "lineNum:content" or "lineNum-content" for context
     const match = line.match(/^(\d+)([:-])(.*)$/)
     if (match) {
-      const lineNum = parseInt(match[1], 10)
+      const lineNum = Number.parseInt(match[1], 10)
       const separator = match[2]
       const content = match[3]
       const isMatch = separator === ':' // ':' = match, '-' = context
@@ -219,10 +237,17 @@ function formatMatch(match: GrepMatch): string {
   const loc = `${match.file}:${match.line}`
   let out = `${loc}: ${match.content}`
   if (match.context?.before.length) {
-    out = match.context.before.map((l, i) => `${match.file}:${match.line - match.context!.before.length + i}: ${l}`).join('\n') + '\n' + out
+    out =
+      match.context.before
+        .map((l, i) => `${match.file}:${match.line - match.context!.before.length + i}: ${l}`)
+        .join('\n') +
+      '\n' +
+      out
   }
   if (match.context?.after.length) {
-    out += '\n' + match.context.after.map((l, i) => `${match.file}:${match.line + i + 1}: ${l}`).join('\n')
+    out +=
+      '\n' +
+      match.context.after.map((l, i) => `${match.file}:${match.line + i + 1}: ${l}`).join('\n')
   }
   return out
 }

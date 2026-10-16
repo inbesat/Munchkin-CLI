@@ -1,14 +1,14 @@
-import { ToolError, PermissionError, ErrorCode } from '../errors'
+import type { PermissionMode } from '../config/schema'
+import { ErrorCode, PermissionError, ToolError } from '../errors'
 import type {
+  ListToolsResult,
+  RegisterToolOptions,
   Tool,
   ToolDefinition,
+  ToolRegistryConfig,
   ToolResult,
   ToolScope,
-  RegisterToolOptions,
-  ListToolsResult,
-  ToolRegistryConfig,
 } from './types'
-import type { PermissionMode } from '../config/schema'
 
 /**
  * ToolRegistry — scoped, typed registry of all tools the agent can use.
@@ -30,11 +30,7 @@ export class ToolRegistry {
   register(options: RegisterToolOptions): void {
     const { name } = options
     if (this.tools.has(name)) {
-      throw new ToolError(
-        ErrorCode.TOOL_EXECUTION_FAILED,
-        `Tool already registered: ${name}`,
-        name,
-      )
+      throw new ToolError(ErrorCode.TOOL_EXECUTION_FAILED, `Tool already registered: ${name}`, name)
     }
 
     const tool: Tool = {
@@ -95,25 +91,21 @@ export class ToolRegistry {
   ): Promise<ToolResult> {
     const tool = this.tools.get(name)
     if (!tool) {
-      throw new ToolError(
-        ErrorCode.TOOL_NOT_FOUND,
-        `Tool not found: ${name}`,
-        name,
-      )
+      throw new ToolError(ErrorCode.TOOL_NOT_FOUND, `Tool not found: ${name}`, name)
     }
 
     // Check abort signal BEFORE permission check
     if (signal?.aborted) {
-      throw new ToolError(
-        ErrorCode.CANCELLED,
-        `Tool execution cancelled: ${name}`,
-        name,
-      )
+      throw new ToolError(ErrorCode.CANCELLED, `Tool execution cancelled: ${name}`, name)
     }
 
     // Permission check
-    const effectiveMode = options?.permissionMode ?? tool.permissionMode ?? this.config.defaultPermissionMode
-    if (tool.requiresPermission && !this.checkPermission(effectiveMode, tool, options?.userConfirmed)) {
+    const effectiveMode =
+      options?.permissionMode ?? tool.permissionMode ?? this.config.defaultPermissionMode
+    if (
+      tool.requiresPermission &&
+      !this.checkPermission(effectiveMode, tool, options?.userConfirmed)
+    ) {
       throw new PermissionError(
         `Permission denied for tool: ${name} (mode: ${effectiveMode})`,
         name,
@@ -130,12 +122,9 @@ export class ToolRegistry {
         throw err
       }
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new ToolError(
-          ErrorCode.CANCELLED,
-          `Tool execution cancelled: ${name}`,
-          name,
-          { cause: err },
-        )
+        throw new ToolError(ErrorCode.CANCELLED, `Tool execution cancelled: ${name}`, name, {
+          cause: err,
+        })
       }
       throw new ToolError(
         ErrorCode.TOOL_EXECUTION_FAILED,
@@ -198,7 +187,10 @@ export class ToolRegistry {
       return Promise.race([
         promise,
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Tool execution timeout after ${timeoutMs}ms`)), timeoutMs),
+          setTimeout(
+            () => reject(new Error(`Tool execution timeout after ${timeoutMs}ms`)),
+            timeoutMs,
+          ),
         ),
       ])
     }

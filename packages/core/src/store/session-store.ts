@@ -161,6 +161,11 @@ export class SessionStore {
     return result
   }
 
+  async deleteSession(id: string): Promise<boolean> {
+    const result = this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id)
+    return result.changes > 0
+  }
+
   close(): void {
     this.db.close()
   }

@@ -1,17 +1,19 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
-  validateFilePath,
+  type FileAccessConfig,
   createDefaultFileAccessConfig,
-  FileAccessConfig,
+  validateFilePath,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
+import type { Tool, ToolResult } from './types'
 
 /** Glob tool input schema. */
 export const GlobSchema = Type.Object({
   pattern: Type.String({ description: 'Glob pattern to match (e.g., **/*.ts, src/**/*.test.ts)' }),
   path: Type.Optional(Type.String({ description: 'Root directory to search from (default: cwd)' })),
-  caseSensitive: Type.Optional(Type.Boolean({ default: false, description: 'Case-sensitive matching' })),
+  caseSensitive: Type.Optional(
+    Type.Boolean({ default: false, description: 'Case-sensitive matching' }),
+  ),
 })
 
 /** Glob tool output metadata. */
@@ -32,7 +34,8 @@ export function createGlobTool(config?: Partial<FileAccessConfig>): Tool {
 
   return {
     name: 'glob',
-    description: 'Find files matching a glob pattern using ripgrep. Returns sorted list of matching file paths.',
+    description:
+      'Find files matching a glob pattern using ripgrep. Returns sorted list of matching file paths.',
     parameters: GlobSchema,
     scope: 'builtin',
     risk: 'low',
@@ -42,7 +45,11 @@ export function createGlobTool(config?: Partial<FileAccessConfig>): Tool {
         throw new ToolError(ErrorCode.CANCELLED, 'Glob operation cancelled', 'glob')
       }
 
-      const { pattern, path: searchPath, caseSensitive } = input as {
+      const {
+        pattern,
+        path: searchPath,
+        caseSensitive,
+      } = input as {
         pattern: string
         path?: string
         caseSensitive?: boolean

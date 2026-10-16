@@ -1,5 +1,5 @@
 // @ts-ignore - diff has no types available
-import { diffLines, diffChars, diffWords, type Change } from 'diff'
+import { type Change, diffChars, diffLines, diffWords } from 'diff'
 
 /** Diff format options. */
 export type DiffFormat = 'unified' | 'side-by-side' | 'inline'
@@ -185,8 +185,8 @@ function trimHunkContext(hunk: DiffHunk, contextLines: number): DiffHunk {
   if (lines.length <= contextLines * 2) return hunk
 
   // Keep contextLines before first change and after last change
-  let firstChange = lines.findIndex((l) => l.type !== 'context')
-  let lastChange = lines.length - 1 - [...lines].reverse().findIndex((l) => l.type !== 'context')
+  const firstChange = lines.findIndex((l) => l.type !== 'context')
+  const lastChange = lines.length - 1 - [...lines].reverse().findIndex((l) => l.type !== 'context')
 
   if (firstChange === -1) return hunk // No changes, shouldn't happen
 
@@ -215,11 +215,12 @@ function trimHunkContext(hunk: DiffHunk, contextLines: number): DiffHunk {
 }
 
 /** Convert structured diff to unified diff string. */
-export function formatUnifiedDiff(diff: DiffResultStructured, oldName = 'a', newName = 'b'): string {
-  const lines: string[] = [
-    `--- ${oldName}`,
-    `+++ ${newName}`,
-  ]
+export function formatUnifiedDiff(
+  diff: DiffResultStructured,
+  oldName = 'a',
+  newName = 'b',
+): string {
+  const lines: string[] = [`--- ${oldName}`, `+++ ${newName}`]
 
   for (const hunk of diff.hunks) {
     const header = `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`
@@ -237,16 +238,13 @@ export function formatUnifiedDiff(diff: DiffResultStructured, oldName = 'a', new
 /** Convert structured diff to side-by-side string. */
 export function formatSideBySideDiff(diff: DiffResultStructured): string {
   const lines: string[] = []
-  const width = Math.max(
-    80,
-    ...diff.hunks.flatMap((h) =>
-      h.lines.map((l) => l.content.length),
-    ),
-  )
+  const width = Math.max(80, ...diff.hunks.flatMap((h) => h.lines.map((l) => l.content.length)))
   const halfWidth = Math.floor((width - 3) / 2)
 
   for (const hunk of diff.hunks) {
-    lines.push(`--- Old (lines ${hunk.oldStart}-${hunk.oldStart + hunk.oldLines - 1}) --- New (lines ${hunk.newStart}-${hunk.newStart + hunk.newLines - 1}) ---`)
+    lines.push(
+      `--- Old (lines ${hunk.oldStart}-${hunk.oldStart + hunk.oldLines - 1}) --- New (lines ${hunk.newStart}-${hunk.newStart + hunk.newLines - 1}) ---`,
+    )
 
     for (const line of hunk.lines) {
       const oldContent = line.type !== 'add' ? line.content : ''

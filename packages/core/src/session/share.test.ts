@@ -32,7 +32,8 @@ async function createTestSession(sessionId: string) {
     createEvent('session.message', sessionId, {
       role: 'user',
       content:
-        'My API key is sk-abc123def456ghi789jkl0 and my token is ghp_' + '1234567890abcdef1234567890abcdef1234',
+        'My API key is sk-abc123def456ghi789jkl0 and my token is ghp_' +
+        '1234567890abcdef1234567890abcdef1234',
     }),
   )
 

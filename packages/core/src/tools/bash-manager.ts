@@ -1,4 +1,4 @@
-import { ToolError, ErrorCode } from '../errors'
+import { ErrorCode, ToolError } from '../errors'
 
 /** Shell session state. */
 export interface ShellSession {
@@ -221,7 +221,7 @@ export class BashManager {
 
   private evictOldestSession(): void {
     let oldestId: string | null = null
-    let oldestTime = Infinity
+    let oldestTime = Number.POSITIVE_INFINITY
 
     for (const [id, session] of this.sessions) {
       if (session.lastUsedAt < oldestTime) {

@@ -1,5 +1,5 @@
-import { WebSearchProvider, WebSearchResult, WebSearchOptions } from '../web-search'
-import { ToolError, ErrorCode } from '../../errors'
+import { ErrorCode, ToolError } from '../../errors'
+import type { WebSearchOptions, WebSearchProvider, WebSearchResult } from '../web-search'
 
 /** Brave Search API base URL. */
 const BRAVE_API_BASE = 'https://api.search.brave.com/res/v1'
@@ -55,12 +55,15 @@ export class BraveProvider implements WebSearchProvider {
     })
 
     if (recencyDays) {
-      params.set('freshness', recencyDays <= 1 ? 'pd' : recencyDays <= 7 ? 'pw' : recencyDays <= 30 ? 'pm' : 'py')
+      params.set(
+        'freshness',
+        recencyDays <= 1 ? 'pd' : recencyDays <= 7 ? 'pw' : recencyDays <= 30 ? 'pm' : 'py',
+      )
     }
 
     const response = await fetch(`${BRAVE_API_BASE}/web/search?${params}`, {
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'X-Subscription-Token': this.config.apiKey,
       },
     })

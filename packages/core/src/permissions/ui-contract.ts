@@ -1,6 +1,6 @@
-import { PermissionDecision, ToolCategory } from './modes'
-import { AgentTool } from '../agent/types'
-import { ProfileCheckResult } from './profiles'
+import type { AgentTool } from '../agent/types'
+import type { PermissionDecision, ToolCategory } from './modes'
+import type { ProfileCheckResult } from './profiles'
 
 /** Permission request sent to the UI. */
 export interface PermissionRequest {
@@ -193,7 +193,10 @@ export class MockPermissionUI implements PermissionUI {
   }
 
   notifyToolResult(_requestId: string, success: boolean, _result?: unknown, _error?: string): void {
-    this.callLog.push({ request: { id: _requestId } as any, response: { decision: success ? 'allow' : 'deny' } as any })
+    this.callLog.push({
+      request: { id: _requestId } as any,
+      response: { decision: success ? 'allow' : 'deny' } as any,
+    })
   }
 
   getCapabilities(): UICapabilities {
@@ -293,7 +296,12 @@ export abstract class InteractivePermissionUI implements PermissionUI {
     // Default: no-op
   }
 
-  notifyToolResult?(_requestId: string, _success: boolean, _result?: unknown, _error?: string): void {
+  notifyToolResult?(
+    _requestId: string,
+    _success: boolean,
+    _result?: unknown,
+    _error?: string,
+  ): void {
     // Default: no-op
   }
 
@@ -331,7 +339,10 @@ export abstract class InteractivePermissionUI implements PermissionUI {
   protected formatArgs(args: Record<string, unknown>): string {
     if (!args || Object.keys(args).length === 0) return '(no arguments)'
     return Object.entries(args)
-      .map(([k, v]) => `${k}: ${typeof v === 'string' && v.length > 100 ? v.slice(0, 100) + '...' : v}`)
+      .map(
+        ([k, v]) =>
+          `${k}: ${typeof v === 'string' && v.length > 100 ? v.slice(0, 100) + '...' : v}`,
+      )
       .join(', ')
   }
 

@@ -1,5 +1,6 @@
-import { ToolError, ErrorCode } from '../errors'
-import path from 'path'
+import { realpathSync } from 'node:fs'
+import path from 'node:path'
+import { ErrorCode, ToolError } from '../errors'
 
 /** Configuration for file access boundaries. */
 export interface FileAccessConfig {
@@ -18,6 +19,21 @@ export function createDefaultFileAccessConfig(cwd: string = process.cwd()): File
 }
 
 /**
+ * Canonical path that resolves symlinks/junctions in the deepest existing
+ * ancestor, so boundary checks can't be escaped through a link.
+ */
+function canonicalizePath(target: string): string {
+  const resolved = path.resolve(target)
+  try {
+    return realpathSync(resolved)
+  } catch {
+    const parent = path.dirname(resolved)
+    if (parent === resolved) return resolved
+    return path.join(canonicalizePath(parent), path.basename(resolved))
+  }
+}
+
+/**
  * Validate that a file path is within allowed boundaries.
  * Throws ToolError if path is not allowed.
  */
@@ -26,11 +42,13 @@ export function validateFilePath(
   config: FileAccessConfig,
   operation: 'read' | 'write' | 'edit',
 ): string {
-  const normalized = path.resolve(filePath)
+  // Canonicalize before comparison: a lexical prefix check can be escaped by
+  // junctions or symlinks pointing outside the allowed roots.
+  const normalized = canonicalizePath(filePath)
 
   // Check against allowed paths
   const isAllowed = config.allowedPaths.some((allowed) => {
-    const allowedResolved = path.resolve(allowed)
+    const allowedResolved = canonicalizePath(allowed)
     return normalized === allowedResolved || normalized.startsWith(allowedResolved + path.sep)
   })
 
@@ -127,7 +145,7 @@ export async function strReplaceEdit(
     )
   }
 
-  const newContent = content.replace(oldStr, newStr)
+  const newContent = content.replace(oldStr, () => newStr)
   await Bun.write(filePath, newContent)
 
   return { success: true, path: filePath, replacements: 1 }

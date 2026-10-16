@@ -1,4 +1,4 @@
-import { RiskLevel } from './classifier'
+import type { RiskLevel } from './classifier'
 
 /** Circuit breaker action type. */
 export type CircuitBreakerAction = 'prompt' | 'deny' | 'log'
@@ -88,9 +88,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'Fork Bomb',
     description: 'Blocks fork bomb patterns that crash the system',
     riskThreshold: 'critical',
-    patterns: [
-      /^:\(\)\{.*:.*\|.*:.*&.*\}/,
-    ],
+    patterns: [/^:\(\)\{.*:.*\|.*:.*&.*\}/],
     action: 'deny',
     priority: 90,
   },
@@ -145,10 +143,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'Git Force Push (Any Branch)',
     description: 'Prompts for any git push --force',
     riskThreshold: 'high',
-    patterns: [
-      /^git\s+push\s+.*--force/,
-      /^git\s+push\s+.*-f\s/,
-    ],
+    patterns: [/^git\s+push\s+.*--force/, /^git\s+push\s+.*-f\s/],
     condition: (ctx) => ctx.permissionMode !== 'bypass',
     action: 'prompt',
     priority: 70,
@@ -158,10 +153,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'SQL DROP TABLE',
     description: 'Blocks DROP TABLE and DROP DATABASE statements',
     riskThreshold: 'high',
-    patterns: [
-      /\bDROP\s+(TABLE|DATABASE|SCHEMA)\b/i,
-      /\bTRUNCATE\s+TABLE\b/i,
-    ],
+    patterns: [/\bDROP\s+(TABLE|DATABASE|SCHEMA)\b/i, /\bTRUNCATE\s+TABLE\b/i],
     action: 'prompt',
     priority: 65,
   },
@@ -170,10 +162,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'SQL DELETE Without WHERE',
     description: 'Prompts for DELETE statements without WHERE clause',
     riskThreshold: 'high',
-    patterns: [
-      /^DELETE\s+FROM\s+\w+\s*;/i,
-      /^DELETE\s+FROM\s+\w+\s*$/i,
-    ],
+    patterns: [/^DELETE\s+FROM\s+\w+\s*;/i, /^DELETE\s+FROM\s+\w+\s*$/i],
     action: 'prompt',
     priority: 60,
   },
@@ -213,9 +202,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'Terraform Destroy',
     description: 'Prompts for terraform destroy which deletes infrastructure',
     riskThreshold: 'high',
-    patterns: [
-      /^terraform\s+destroy/,
-    ],
+    patterns: [/^terraform\s+destroy/],
     action: 'prompt',
     priority: 45,
   },
@@ -224,10 +211,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'Kubernetes Namespace Deletion',
     description: 'Prompts for kubectl delete namespace',
     riskThreshold: 'high',
-    patterns: [
-      /^kubectl\s+delete\s+namespace/,
-      /^kubectl\s+delete\s+ns\s+/,
-    ],
+    patterns: [/^kubectl\s+delete\s+namespace/, /^kubectl\s+delete\s+ns\s+/],
     action: 'prompt',
     priority: 40,
   },
@@ -236,11 +220,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'NPM Publish',
     description: 'Prompts for npm/yarn/pnpm publish',
     riskThreshold: 'high',
-    patterns: [
-      /^npm\s+publish/,
-      /^yarn\s+publish/,
-      /^pnpm\s+publish/,
-    ],
+    patterns: [/^npm\s+publish/, /^yarn\s+publish/, /^pnpm\s+publish/],
     action: 'prompt',
     priority: 35,
   },
@@ -249,10 +229,7 @@ export const DEFAULT_CIRCUIT_BREAKERS: CircuitBreakerTrigger[] = [
     name: 'Container Destructive Operations',
     description: 'Prompts for force removal of containers/images',
     riskThreshold: 'high',
-    patterns: [
-      /^docker\s+(rmi|rm)\s+.*-f/,
-      /^podman\s+(rmi|rm)\s+.*-f/,
-    ],
+    patterns: [/^docker\s+(rmi|rm)\s+.*-f/, /^podman\s+(rmi|rm)\s+.*-f/],
     action: 'prompt',
     priority: 30,
   },
@@ -331,7 +308,7 @@ export function isCircuitBreakerTriggered(
   command: string,
   riskLevel: RiskLevel,
   permissionMode: string,
-  toolName: string = 'bash',
+  toolName = 'bash',
   toolArgs: Record<string, unknown> = {},
   breakers: CircuitBreakerTrigger[] = DEFAULT_CIRCUIT_BREAKERS,
 ): CircuitBreakerResult {

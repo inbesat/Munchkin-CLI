@@ -2,12 +2,12 @@
 
 /** Reason for interruption. */
 export type InterruptReason =
-  | 'user-cancel'          // User pressed Escape/Ctrl+C
-  | 'timeout'              // Operation exceeded time limit
-  | 'tool-limit'           // Max tool calls exceeded
-  | 'context-overflow'     // Context window exceeded
-  | 'error'                // Unexpected error
-  | 'shutdown'             // System shutdown
+  | 'user-cancel' // User pressed Escape/Ctrl+C
+  | 'timeout' // Operation exceeded time limit
+  | 'tool-limit' // Max tool calls exceeded
+  | 'context-overflow' // Context window exceeded
+  | 'error' // Unexpected error
+  | 'shutdown' // System shutdown
 
 /** Result of an interrupted operation. */
 export interface InterruptResult {
@@ -224,7 +224,9 @@ export class InterruptController {
 }
 
 /** Create a linked abort signal from multiple sources. */
-export function createLinkedAbortSignal(...signals: (AbortSignal | undefined | null)[]): AbortSignal {
+export function createLinkedAbortSignal(
+  ...signals: (AbortSignal | undefined | null)[]
+): AbortSignal {
   const controller = new AbortController()
   const validSignals = signals.filter((s): s is AbortSignal => s != null)
 

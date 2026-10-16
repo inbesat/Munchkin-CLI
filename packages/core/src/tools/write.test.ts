@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { writeTool, createWriteTool, WriteSchema } from './write'
-import { ToolRegistry, createToolRegistryConfig } from './registry'
-import { Type } from '@sinclair/typebox'
-import { readFile, mkdir, rm } from 'fs/promises'
-import { join } from 'path'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { tmpdir } from 'os'
+import { join } from 'path'
+import { mkdir, readFile, rm } from 'fs/promises'
+import { ToolRegistry, createToolRegistryConfig } from './registry'
+import { WriteSchema, createWriteTool } from './write'
 
 const testDir = join(tmpdir(), 'forge-write-test-' + Date.now())
 const newFile = join(testDir, 'new.txt')

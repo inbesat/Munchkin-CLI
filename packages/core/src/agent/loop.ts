@@ -3,10 +3,10 @@ import { assembleContext } from './context'
 import { applySteering } from './steering'
 import type {
   AgentModel,
+  AgentRequestMessage,
   AgentTool,
   AgentToolCall,
   AgentToolDefinition,
-  AgentRequestMessage,
   AgentUsage,
   AgentUsageChunk,
 } from './types'
@@ -22,15 +22,31 @@ import type {
  * cancellation.
  */
 
-export type LoopStopReason = 'complete' | 'max-iterations' | 'cancelled' | 'context-overflow' | 'error'
+export type LoopStopReason =
+  | 'complete'
+  | 'max-iterations'
+  | 'cancelled'
+  | 'context-overflow'
+  | 'error'
 
 export type LoopEvent =
   | { readonly type: 'turn'; readonly turn: number }
   | { readonly type: 'text'; readonly delta: string }
   | { readonly type: 'thinking'; readonly delta: string }
-  | { readonly type: 'tool-call-delta'; readonly toolCallId: string; readonly name?: string; readonly delta: string }
+  | {
+      readonly type: 'tool-call-delta'
+      readonly toolCallId: string
+      readonly name?: string
+      readonly delta: string
+    }
   | { readonly type: 'tool-call'; readonly toolCall: AgentToolCall }
-  | { readonly type: 'tool-result'; readonly toolCallId: string; readonly toolName: string; readonly error?: string; readonly durationMs: number }
+  | {
+      readonly type: 'tool-result'
+      readonly toolCallId: string
+      readonly toolName: string
+      readonly error?: string
+      readonly durationMs: number
+    }
   | { readonly type: 'usage'; readonly usage: AgentUsage }
   | { readonly type: 'finish'; readonly reason: LoopStopReason }
   | { readonly type: 'error'; readonly error: unknown }
@@ -45,7 +61,11 @@ export interface AgentLoopOptions {
   maxIterations?: number
   abortSignal?: AbortSignal
   /** Return false to withhold permission; the tool then receives a denial result. */
-  permissionCheck?: (name: string, args: Record<string, unknown>, tool: AgentTool) => boolean | Promise<boolean>
+  permissionCheck?: (
+    name: string,
+    args: Record<string, unknown>,
+    tool: AgentTool,
+  ) => boolean | Promise<boolean>
   onEvent?: (event: LoopEvent) => void
   /** Optional steering controller for injecting follow-up messages mid-execution. */
   steering?: import('./steering').SteeringController
@@ -218,7 +238,13 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentRunR
       }
 
       // ── Execute tool calls and feed results back ──
-      const toolResults: Array<{ toolCallId: string; toolName: string; result: string; error?: string; durationMs: number }> = []
+      const toolResults: Array<{
+        toolCallId: string
+        toolName: string
+        result: string
+        error?: string
+        durationMs: number
+      }> = []
       for (const call of turn.toolCalls) {
         const tool = (options.tools ?? []).find((t) => t.name === call.name)
         const allowed = tool

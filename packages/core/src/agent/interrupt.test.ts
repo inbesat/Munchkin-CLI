@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import {
   InterruptController,
+  type InterruptReason,
   createLinkedAbortSignal,
+  interruptReasonFromSignal,
   withInterrupt,
   withInterruptIterator,
-  interruptReasonFromSignal,
-  InterruptReason,
 } from './interrupt'
 
 describe('InterruptController', () => {
@@ -192,33 +192,33 @@ describe('InterruptController', () => {
     })
   })
 
-describe('interruptReasonFromSignal', () => {
-  it('extracts known reasons', () => {
-    const c1 = new AbortController()
-    c1.abort('timeout')
-    expect(interruptReasonFromSignal(c1.signal)).toBe('timeout')
+  describe('interruptReasonFromSignal', () => {
+    it('extracts known reasons', () => {
+      const c1 = new AbortController()
+      c1.abort('timeout')
+      expect(interruptReasonFromSignal(c1.signal)).toBe('timeout')
 
-    const c2 = new AbortController()
-    c2.abort('user-cancel')
-    expect(interruptReasonFromSignal(c2.signal)).toBe('user-cancel')
+      const c2 = new AbortController()
+      c2.abort('user-cancel')
+      expect(interruptReasonFromSignal(c2.signal)).toBe('user-cancel')
 
-    const c3 = new AbortController()
-    c3.abort('context-overflow')
-    expect(interruptReasonFromSignal(c3.signal)).toBe('context-overflow')
+      const c3 = new AbortController()
+      c3.abort('context-overflow')
+      expect(interruptReasonFromSignal(c3.signal)).toBe('context-overflow')
+    })
+
+    it('defaults to user-cancel for unknown reasons', () => {
+      const controller = new AbortController()
+      controller.abort('unknown-reason')
+      expect(interruptReasonFromSignal(controller.signal)).toBe('user-cancel')
+    })
+
+    it('defaults to user-cancel when no reason', () => {
+      const controller = new AbortController()
+      controller.abort()
+      expect(interruptReasonFromSignal(controller.signal)).toBe('user-cancel')
+    })
   })
-
-  it('defaults to user-cancel for unknown reasons', () => {
-    const controller = new AbortController()
-    controller.abort('unknown-reason')
-    expect(interruptReasonFromSignal(controller.signal)).toBe('user-cancel')
-  })
-
-  it('defaults to user-cancel when no reason', () => {
-    const controller = new AbortController()
-    controller.abort()
-    expect(interruptReasonFromSignal(controller.signal)).toBe('user-cancel')
-  })
-})
 })
 
 describe('createLinkedAbortSignal', () => {

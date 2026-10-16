@@ -161,3 +161,7 @@ export * from './tools'
 
 // Diff Rendering Pipeline (Phase 42)
 export * from './diff'
+
+// Context budget, compaction, and model-visible history projection
+export * from './context'
+export { assembleContextMessages } from './session/hydration'

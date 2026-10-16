@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { notebookEditTool, createNotebookEditTool, NotebookEditSchema, Notebook, NotebookCell } from './notebook-edit'
-import { ToolRegistry, createToolRegistryConfig } from './registry'
-import { writeFileSync, rmSync, mkdirSync } from 'fs'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import { type Notebook, NotebookEditSchema, createNotebookEditTool } from './notebook-edit'
+import { ToolRegistry, createToolRegistryConfig } from './registry'
 
 const TEST_DIR = join(__dirname, 'notebook-edit-test')
 const TEST_NOTEBOOK = join(TEST_DIR, 'test.ipynb')
@@ -11,10 +11,19 @@ function createTestNotebook(overrides: Partial<Notebook> = {}): Notebook {
   return {
     nbformat: 4,
     nbformat_minor: 5,
-    metadata: { kernelspec: { name: 'python3', display_name: 'Python 3' }, language_info: { name: 'python' } },
+    metadata: {
+      kernelspec: { name: 'python3', display_name: 'Python 3' },
+      language_info: { name: 'python' },
+    },
     cells: [
       { cell_type: 'markdown', source: ['# Test Notebook\n'], metadata: {} },
-      { cell_type: 'code', source: ['print("hello")\n'], metadata: {}, outputs: [], execution_count: 1 },
+      {
+        cell_type: 'code',
+        source: ['print("hello")\n'],
+        metadata: {},
+        outputs: [],
+        execution_count: 1,
+      },
     ],
     ...overrides,
   }
@@ -163,7 +172,10 @@ describe('notebookEditTool', () => {
 
   it('rejects invalid create index', async () => {
     await expect(
-      tool.execute({ path: TEST_NOTEBOOK, operations: [{ op: 'create', cell_type: 'code', source: 'x', index: 999 }] }),
+      tool.execute({
+        path: TEST_NOTEBOOK,
+        operations: [{ op: 'create', cell_type: 'code', source: 'x', index: 999 }],
+      }),
     ).rejects.toThrow('out of bounds')
   })
 
@@ -181,7 +193,10 @@ describe('notebookEditTool', () => {
 
   it('rejects invalid reorder indices', async () => {
     await expect(
-      tool.execute({ path: TEST_NOTEBOOK, operations: [{ op: 'reorder', fromIndex: 0, toIndex: 999 }] }),
+      tool.execute({
+        path: TEST_NOTEBOOK,
+        operations: [{ op: 'reorder', fromIndex: 0, toIndex: 999 }],
+      }),
     ).rejects.toThrow('out of bounds')
   })
 
@@ -208,7 +223,9 @@ describe('notebookEditTool', () => {
   it('respects abort signal', async () => {
     const controller = new AbortController()
     controller.abort()
-    await expect(tool.execute({ path: TEST_NOTEBOOK, operations: [{ op: 'read' }] }, controller.signal)).rejects.toThrow('cancelled')
+    await expect(
+      tool.execute({ path: TEST_NOTEBOOK, operations: [{ op: 'read' }] }, controller.signal),
+    ).rejects.toThrow('cancelled')
   })
 
   it('normalizes source strings with newlines', async () => {
@@ -224,11 +241,20 @@ describe('notebookEditTool', () => {
     writeTestNotebook(
       createTestNotebook({
         cells: [
-          { cell_type: 'code', source: ['x=1\n'], metadata: { tags: ['important'] }, outputs: [], execution_count: 1 },
+          {
+            cell_type: 'code',
+            source: ['x=1\n'],
+            metadata: { tags: ['important'] },
+            outputs: [],
+            execution_count: 1,
+          },
         ],
       }),
     )
-    await tool.execute({ path: TEST_NOTEBOOK, operations: [{ op: 'edit', index: 0, source: 'y=2' }] })
+    await tool.execute({
+      path: TEST_NOTEBOOK,
+      operations: [{ op: 'edit', index: 0, source: 'y=2' }],
+    })
     const nb = readTestNotebook()
     expect(nb.cells[0].metadata).toEqual({ tags: ['important'] })
   })

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
-import { webFetchTool, createWebFetchTool, htmlToMarkdown, WebFetchSchema } from './web-fetch'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
+import { WebFetchSchema, createWebFetchTool, htmlToMarkdown, webFetchTool } from './web-fetch'
 
 describe('htmlToMarkdown', () => {
   it('converts headers', () => {
@@ -31,7 +31,9 @@ describe('htmlToMarkdown', () => {
   })
 
   it('converts links', () => {
-    expect(htmlToMarkdown('<a href="https://example.com">link</a>')).toBe('[link](https://example.com)')
+    expect(htmlToMarkdown('<a href="https://example.com">link</a>')).toBe(
+      '[link](https://example.com)',
+    )
   })
 
   it('converts images', () => {
@@ -72,7 +74,7 @@ describe('htmlToMarkdown', () => {
     expect(md).toContain('*italic*')
   })
 
-it('decodes common entities', () => {
+  it('decodes common entities', () => {
     expect(htmlToMarkdown('&')).toBe('&')
     expect(htmlToMarkdown('<')).toBe('<')
     expect(htmlToMarkdown('>')).toBe('>')
@@ -172,13 +174,15 @@ describe('webFetchTool', () => {
   })
 
   it('handles non-existent domain', async () => {
-    await expect(webFetchTool.execute({ url: 'http://this-domain-does-not-exist-12345.com' })).rejects.toThrow()
+    await expect(
+      webFetchTool.execute({ url: 'http://this-domain-does-not-exist-12345.com' }),
+    ).rejects.toThrow()
   })
 
   it('respects custom timeout', async () => {
-    await expect(
-      webFetchTool.execute({ url: `${baseUrl}/slow`, timeout: 100 }),
-    ).rejects.toThrow('timed out')
+    await expect(webFetchTool.execute({ url: `${baseUrl}/slow`, timeout: 100 })).rejects.toThrow(
+      'timed out',
+    )
   })
 
   it('respects abort signal', async () => {

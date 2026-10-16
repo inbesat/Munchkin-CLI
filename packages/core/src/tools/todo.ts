@@ -1,7 +1,7 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
-import { TaskStore, TodoItem, TaskList, defaultTaskStore } from './todo-manager'
-import { ToolError, ErrorCode } from '../errors'
+import { ErrorCode, ToolError } from '../errors'
+import { type TaskList, type TaskStore, type TodoItem, defaultTaskStore } from './todo-manager'
+import type { Tool, ToolResult } from './types'
 
 /** Max tasks a TodoWrite call can set, to keep tool responses bounded. */
 const MAX_TODOS = 100
@@ -23,12 +23,16 @@ export const TodoWriteSchema = Type.Object({
       completedForm: Type.Optional(Type.String({ description: 'Past-tense label once complete' })),
     }),
   ),
-  sessionId: Type.Optional(Type.String({ description: 'Session to write tasks for (default: current)' })),
+  sessionId: Type.Optional(
+    Type.String({ description: 'Session to write tasks for (default: current)' }),
+  ),
 })
 
 /** TodoRead input schema. */
 export const TodoReadSchema = Type.Object({
-  sessionId: Type.Optional(Type.String({ description: 'Session to read tasks for (default: current)' })),
+  sessionId: Type.Optional(
+    Type.String({ description: 'Session to read tasks for (default: current)' }),
+  ),
 })
 
 /** TodoWrite output metadata. */
@@ -117,7 +121,8 @@ export function createTodoWriteTool(store: TaskStore = defaultTaskStore): Tool {
 export function createTodoReadTool(store: TaskStore = defaultTaskStore): Tool {
   return {
     name: 'todoRead',
-    description: 'Read the current task list with completion status. Returned tasks persist across turns.',
+    description:
+      'Read the current task list with completion status. Returned tasks persist across turns.',
     parameters: TodoReadSchema,
     scope: 'builtin',
     risk: 'low',

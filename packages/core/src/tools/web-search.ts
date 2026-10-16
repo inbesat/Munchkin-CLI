@@ -1,8 +1,8 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
-import { ToolError, ErrorCode } from '../errors'
-import { createExaProvider } from './web-search-providers/exa'
+import { ErrorCode, ToolError } from '../errors'
+import type { Tool, ToolResult } from './types'
 import { createBraveProvider } from './web-search-providers/brave'
+import { createExaProvider } from './web-search-providers/exa'
 
 /** Provider identifier. */
 export type WebSearchProviderName = 'exa' | 'brave'
@@ -52,7 +52,10 @@ export interface WebSearchConfig {
 }
 
 /** Create a provider instance from config. */
-export function createProvider(name: WebSearchProviderName, config: WebSearchConfig): WebSearchProvider {
+export function createProvider(
+  name: WebSearchProviderName,
+  config: WebSearchConfig,
+): WebSearchProvider {
   switch (name) {
     case 'exa':
       if (!config.exaApiKey) {
@@ -65,7 +68,11 @@ export function createProvider(name: WebSearchProviderName, config: WebSearchCon
       }
       return createBraveProvider(config.braveApiKey)
     default:
-      throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, `Unknown search provider: ${name}`, 'webSearch')
+      throw new ToolError(
+        ErrorCode.TOOL_INVALID_INPUT,
+        `Unknown search provider: ${name}`,
+        'webSearch',
+      )
   }
 }
 
@@ -73,10 +80,14 @@ export function createProvider(name: WebSearchProviderName, config: WebSearchCon
 export const WebSearchSchema = Type.Object({
   query: Type.String({ description: 'Search query' }),
   provider: Type.Optional(Type.Union([Type.Literal('exa'), Type.Literal('brave')])),
-  maxResults: Type.Optional(Type.Integer({ minimum: 1, maximum: 50, description: 'Maximum results to return' })),
+  maxResults: Type.Optional(
+    Type.Integer({ minimum: 1, maximum: 50, description: 'Maximum results to return' }),
+  ),
   includeDomains: Type.Optional(Type.Array(Type.String(), { description: 'Domains to include' })),
   excludeDomains: Type.Optional(Type.Array(Type.String(), { description: 'Domains to exclude' })),
-  recencyDays: Type.Optional(Type.Integer({ minimum: 1, maximum: 365, description: 'Only results from last N days' })),
+  recencyDays: Type.Optional(
+    Type.Integer({ minimum: 1, maximum: 365, description: 'Only results from last N days' }),
+  ),
 })
 
 /** WebSearch output metadata. */
@@ -106,12 +117,22 @@ export function createWebSearchTool(config: WebSearchConfig = defaultWebSearchCo
     scope: 'builtin',
     risk: 'medium',
     requiresPermission: true,
-    async execute(input: Record<string, unknown>, signal?: AbortSignal): Promise<WebSearchResultMeta> {
+    async execute(
+      input: Record<string, unknown>,
+      signal?: AbortSignal,
+    ): Promise<WebSearchResultMeta> {
       if (signal?.aborted) {
         throw new ToolError(ErrorCode.CANCELLED, 'WebSearch cancelled', 'webSearch')
       }
 
-      const { query, provider, maxResults = 10, includeDomains, excludeDomains, recencyDays } = input as {
+      const {
+        query,
+        provider,
+        maxResults = 10,
+        includeDomains,
+        excludeDomains,
+        recencyDays,
+      } = input as {
         query: string
         provider?: WebSearchProviderName
         maxResults?: number
@@ -121,7 +142,11 @@ export function createWebSearchTool(config: WebSearchConfig = defaultWebSearchCo
       }
 
       if (!query || query.trim() === '') {
-        throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Search query cannot be empty', 'webSearch')
+        throw new ToolError(
+          ErrorCode.TOOL_INVALID_INPUT,
+          'Search query cannot be empty',
+          'webSearch',
+        )
       }
 
       const searchProvider = provider ?? config.defaultProvider
@@ -139,7 +164,9 @@ export function createWebSearchTool(config: WebSearchConfig = defaultWebSearchCo
         output:
           results.length === 0
             ? '(no results)'
-            : results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join('\n\n'),
+            : results
+                .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+                .join('\n\n'),
         metadata: {
           query,
           provider: searchProvider,

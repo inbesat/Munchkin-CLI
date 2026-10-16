@@ -1,4 +1,4 @@
-import { AgentTool, AgentModel } from './types'
+import type { AgentModel, AgentTool } from './types'
 
 /** Configuration for code mode execution. */
 export interface CodeModeOptions {
@@ -234,7 +234,10 @@ async function generateProgram(
 /** Clean the model's output to extract the main function. */
 function cleanProgram(raw: string): string {
   // Remove markdown code fences if present
-  let cleaned = raw.replace(/^```typescript\s*/, '').replace(/```$/, '').trim()
+  const cleaned = raw
+    .replace(/^```typescript\s*/, '')
+    .replace(/```$/, '')
+    .trim()
 
   // If it contains a main function, extract it (match up to closing brace)
   const mainMatch = cleaned.match(/async function main\(\)\s*\{[\s\S]*?\}/)
@@ -283,10 +286,7 @@ function injectToolImplementations(
   }
 
   // Replace the main function
-  full = full.replace(
-    /async function main\(\) \{[\s\S]*?\n\}/,
-    program,
-  )
+  full = full.replace(/async function main\(\) \{[\s\S]*?\n\}/, program)
 
   return full
 }
@@ -304,10 +304,13 @@ async function executeProgram(
     const toolRegistry = new Map<string, (args: Record<string, unknown>) => Promise<unknown>>()
 
     // Create a function that has access to toolRegistry
-    const fn = new Function('toolRegistry', `
+    const fn = new Function(
+      'toolRegistry',
+      `
 ${program}
 return main()
-`)
+`,
+    )
 
     const result = await Promise.race([
       fn(toolRegistry),
@@ -334,10 +337,4 @@ function extractToolCalls(_execution: { success: boolean; output?: unknown }): C
   return []
 }
 
-export {
-  buildCodeGenerationPrompt,
-  cleanProgram,
-  capitalize,
-  jsonSchemaToTS,
-  generateArgsType,
-}
+export { buildCodeGenerationPrompt, cleanProgram, capitalize, jsonSchemaToTS, generateArgsType }

@@ -16,14 +16,14 @@ export interface ShareResult {
 }
 
 const SENSITIVE_PATTERNS = [
-  /(?:api[_-]?key|apikey)\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
-  /(?:token|auth|bearer)\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
-  /(?:secret|password|passwd|pwd)\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
+  /(?:api[_-]?key|apikey)["']?\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
+  /(?:token|auth|bearer)["']?\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
+  /(?:secret|password|passwd|pwd)["']?\s*[:=]\s*["']?[A-Za-z0-9\-_.]+["']?/gi,
   /sk-[A-Za-z0-9]{20,}/g,
   /ghp_[A-Za-z0-9]{36}/g,
   /gho_[A-Za-z0-9]{36}/g,
   /xox[baprs]-[A-Za-z0-9\-]{10,}/g,
-  /(?:AWS|aws)[_-]?(?:ACCESS|SECRET)[_-]?(?:KEY|ID)\s*[:=]\s*["']?[A-Za-z0-9/+=\-_.]+["']?/gi,
+  /(?:AWS|aws)[_-]?(?:ACCESS|SECRET)[_-]?(?:KEY|ID)["']?\s*[:=]\s*["']?[A-Za-z0-9/+=\-_.]+["']?/gi,
 ]
 
 const CONTEXT_STRIP_PATTERNS = [/(?:\/home\/|\/Users\/)[^\s\/]+/g, /(?:C:\\Users\\|C:\\)[^\s\\]+/g]
@@ -62,7 +62,8 @@ export function sanitizeEvents(events: SessionEvent[], anonymize = true): Sessio
       try {
         args = JSON.parse(sanitized)
       } catch {
-        // If sanitization breaks JSON, return original args
+        // Sanitization must fail closed: never hand back unsanitized arguments.
+        args = { redacted: true }
       }
       return {
         ...event,

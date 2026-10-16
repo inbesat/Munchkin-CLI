@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
+import { ErrorCode, ToolError } from '../errors'
 import { fileExists } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
 
 /** Stored freshness record for a file. */
 export interface FreshnessRecord {

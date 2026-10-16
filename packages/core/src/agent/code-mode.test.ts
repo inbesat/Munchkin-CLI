@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
-  generateSDK,
+  type CodeModeToolCall,
   buildCodeGenerationPrompt,
-  cleanProgram,
   capitalize,
-  jsonSchemaToTS,
+  cleanProgram,
   generateArgsType,
-  CodeModeToolCall,
+  generateSDK,
+  jsonSchemaToTS,
 } from './code-mode'
-import { AgentTool } from './types'
+import type { AgentTool } from './types'
 
 const mockTools: readonly AgentTool[] = [
   {

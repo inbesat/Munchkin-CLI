@@ -1,6 +1,13 @@
-import { describe, it, expect, beforeAll } from 'bun:test'
-import { webSearchTool, createWebSearchTool, createProvider, WebSearchSchema, WebSearchConfig, WebSearchProvider, WebSearchResult } from './web-search'
+import { beforeAll, describe, expect, it } from 'bun:test'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
+import {
+  type WebSearchConfig,
+  type WebSearchProvider,
+  type WebSearchResult,
+  WebSearchSchema,
+  createProvider,
+  createWebSearchTool,
+} from './web-search'
 
 const TEST_EXA_KEY = 'test-exa-key'
 const TEST_BRAVE_KEY = 'test-brave-key'
@@ -53,11 +60,15 @@ describe('createProvider', () => {
   })
 
   it('throws on missing Exa key', () => {
-    expect(() => createProvider('exa', { ...testConfig, exaApiKey: undefined })).toThrow('Exa API key not configured')
+    expect(() => createProvider('exa', { ...testConfig, exaApiKey: undefined })).toThrow(
+      'Exa API key not configured',
+    )
   })
 
   it('throws on missing Brave key', () => {
-    expect(() => createProvider('brave', { ...testConfig, braveApiKey: undefined })).toThrow('Brave API key not configured')
+    expect(() => createProvider('brave', { ...testConfig, braveApiKey: undefined })).toThrow(
+      'Brave API key not configured',
+    )
   })
 
   it('throws on unknown provider', () => {
@@ -88,8 +99,20 @@ describe('webSearchTool with mocked providers', () => {
 
   it('searches with Exa provider', async () => {
     mockExa.setResponse('test query', [
-      { title: 'Result 1', url: 'https://example.com/1', snippet: 'Snippet 1', score: 0.9, index: 0 },
-      { title: 'Result 2', url: 'https://example.com/2', snippet: 'Snippet 2', score: 0.8, index: 1 },
+      {
+        title: 'Result 1',
+        url: 'https://example.com/1',
+        snippet: 'Snippet 1',
+        score: 0.9,
+        index: 0,
+      },
+      {
+        title: 'Result 2',
+        url: 'https://example.com/2',
+        snippet: 'Snippet 2',
+        score: 0.8,
+        index: 1,
+      },
     ])
 
     const mockCreateProvider = (name: 'exa' | 'brave') => (name === 'exa' ? mockExa : mockBrave)
@@ -105,14 +128,28 @@ describe('webSearchTool with mocked providers', () => {
       const { query, provider, maxResults = 10 } = input as any
       if (!query?.trim()) {
         const { ToolError, ErrorCode } = await import('../errors')
-        throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Search query cannot be empty', 'webSearch')
+        throw new ToolError(
+          ErrorCode.TOOL_INVALID_INPUT,
+          'Search query cannot be empty',
+          'webSearch',
+        )
       }
       const searchProvider = mockCreateProvider(provider ?? testConfig.defaultProvider)
       const results = await searchProvider.search(query, { maxResults })
       return {
         success: true,
-        output: results.length === 0 ? '(no results)' : results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join('\n\n'),
-        metadata: { query, provider: provider ?? testConfig.defaultProvider, count: results.length, results },
+        output:
+          results.length === 0
+            ? '(no results)'
+            : results
+                .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+                .join('\n\n'),
+        metadata: {
+          query,
+          provider: provider ?? testConfig.defaultProvider,
+          count: results.length,
+          results,
+        },
       }
     }
 
@@ -126,7 +163,13 @@ describe('webSearchTool with mocked providers', () => {
 
   it('searches with Brave provider when specified', async () => {
     mockBrave.setResponse('brave query', [
-      { title: 'Brave Result', url: 'https://brave.com/1', snippet: 'Brave snippet', score: 0.95, index: 0 },
+      {
+        title: 'Brave Result',
+        url: 'https://brave.com/1',
+        snippet: 'Brave snippet',
+        score: 0.95,
+        index: 0,
+      },
     ])
 
     const testTool = createWebSearchTool(testConfig)
@@ -138,14 +181,28 @@ describe('webSearchTool with mocked providers', () => {
       const { query, provider, maxResults = 10 } = input as any
       if (!query?.trim()) {
         const { ToolError, ErrorCode } = await import('../errors')
-        throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, 'Search query cannot be empty', 'webSearch')
+        throw new ToolError(
+          ErrorCode.TOOL_INVALID_INPUT,
+          'Search query cannot be empty',
+          'webSearch',
+        )
       }
       const searchProvider = provider === 'brave' ? mockBrave : mockExa
       const results = await searchProvider.search(query, { maxResults })
       return {
         success: true,
-        output: results.length === 0 ? '(no results)' : results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join('\n\n'),
-        metadata: { query, provider: provider ?? testConfig.defaultProvider, count: results.length, results },
+        output:
+          results.length === 0
+            ? '(no results)'
+            : results
+                .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+                .join('\n\n'),
+        metadata: {
+          query,
+          provider: provider ?? testConfig.defaultProvider,
+          count: results.length,
+          results,
+        },
       }
     }
 
@@ -169,7 +226,12 @@ describe('webSearchTool with mocked providers', () => {
       const results = await mockExa.search(query, { maxResults })
       return {
         success: true,
-        output: results.length === 0 ? '(no results)' : results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join('\n\n'),
+        output:
+          results.length === 0
+            ? '(no results)'
+            : results
+                .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+                .join('\n\n'),
         metadata: { query, provider: 'exa', count: results.length, results },
       }
     }
@@ -187,7 +249,12 @@ describe('webSearchTool with mocked providers', () => {
       const results = await mockExa.search(query, {})
       return {
         success: true,
-        output: results.length === 0 ? '(no results)' : results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join('\n\n'),
+        output:
+          results.length === 0
+            ? '(no results)'
+            : results
+                .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+                .join('\n\n'),
         metadata: { query, provider: 'exa', count: results.length, results },
       }
     }
@@ -211,11 +278,17 @@ describe('webSearchTool with mocked providers', () => {
         const { ToolError, ErrorCode } = await import('../errors')
         throw new ToolError(ErrorCode.CANCELLED, 'WebSearch cancelled', 'webSearch')
       }
-      return { success: true, output: '', metadata: { query: '', provider: '', count: 0, results: [] } }
+      return {
+        success: true,
+        output: '',
+        metadata: { query: '', provider: '', count: 0, results: [] },
+      }
     }
     const controller = new AbortController()
     controller.abort()
-    await expect(testTool.execute({ query: 'test' }, controller.signal)).rejects.toThrow('cancelled')
+    await expect(testTool.execute({ query: 'test' }, controller.signal)).rejects.toThrow(
+      'cancelled',
+    )
   })
 })
 

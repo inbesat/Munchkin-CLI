@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'bun:test'
-import { computeDiff, formatUnifiedDiff, formatSideBySideDiff, formatInlineDiff, DiffResultStructured } from './compute'
-import { renderDiff, renderDiffAuto, detectLanguage } from './render'
+import { describe, expect, it } from 'bun:test'
+import { computeDiff, formatInlineDiff, formatSideBySideDiff, formatUnifiedDiff } from './compute'
+import { detectLanguage, renderDiff, renderDiffAuto } from './render'
 
 const OLD_CODE = `function hello() {
   console.log("hello")
@@ -75,7 +75,7 @@ describe('diff/compute', () => {
     // Identical files may produce empty hunks or no hunks depending on algorithm
     expect(diff.hunks.length).toBeLessThanOrEqual(1)
     if (diff.hunks.length > 0) {
-      expect(diff.hunks[0].lines.every(l => l.type === 'context')).toBe(true)
+      expect(diff.hunks[0].lines.every((l) => l.type === 'context')).toBe(true)
     }
   })
 
@@ -130,11 +130,13 @@ describe('diff/render', () => {
     expect(detectLanguage('test')).toBe('text')
   })
 
-  
-
   it('renders diff with highlighting', async () => {
     const diff = computeDiff(OLD_CODE, NEW_CODE, { format: 'unified' })
-    const rendered = await renderDiff(diff, { language: 'typescript', theme: 'github-dark', format: 'ansi' })
+    const rendered = await renderDiff(diff, {
+      language: 'typescript',
+      theme: 'github-dark',
+      format: 'ansi',
+    })
     expect(typeof rendered).toBe('string')
     expect(rendered.length).toBeGreaterThan(0)
   })
@@ -147,14 +149,22 @@ describe('diff/render', () => {
 
   it('renders HTML format', async () => {
     const diff = computeDiff(OLD_CODE, NEW_CODE, { format: 'unified' })
-    const rendered = await renderDiff(diff, { language: 'typescript', theme: 'github-dark', format: 'html' })
+    const rendered = await renderDiff(diff, {
+      language: 'typescript',
+      theme: 'github-dark',
+      format: 'html',
+    })
     expect(rendered).toContain('<pre class="diff">')
     expect(rendered).toContain('diff-hunk')
   })
 
   it('handles special characters in HTML', async () => {
     const diff = computeDiff('<div>hello</div>', '<div>world</div>', { format: 'unified' })
-    const rendered = await renderDiff(diff, { language: 'html', theme: 'github-dark', format: 'html' })
+    const rendered = await renderDiff(diff, {
+      language: 'html',
+      theme: 'github-dark',
+      format: 'html',
+    })
     expect(rendered).toContain('div')
     expect(rendered).toContain('hello')
     expect(rendered).toContain('world')
@@ -173,7 +183,11 @@ console.log(x + y)
 console.log("done")
 `
     const diff = computeDiff(oldFile, newFile, { format: 'unified', contextLines: 2 })
-    const rendered = await renderDiff(diff, { language: 'typescript', theme: 'github-dark', format: 'ansi' })
+    const rendered = await renderDiff(diff, {
+      language: 'typescript',
+      theme: 'github-dark',
+      format: 'ansi',
+    })
     expect(rendered).toContain('const y = 2')
     expect(rendered).toContain('const y = 3')
     expect(rendered).toContain('console.log("done")')
@@ -183,7 +197,11 @@ console.log("done")
     const oldFile = 'line\n'.repeat(100)
     const newFile = 'line\n'.repeat(50) + 'CHANGED\n' + 'line\n'.repeat(49)
     const diff = computeDiff(oldFile, newFile, { format: 'unified', contextLines: 3 })
-    const rendered = await renderDiff(diff, { language: 'text', theme: 'github-dark', format: 'ansi' })
+    const rendered = await renderDiff(diff, {
+      language: 'text',
+      theme: 'github-dark',
+      format: 'ansi',
+    })
     expect(rendered).toContain('CHANGED')
   })
 })

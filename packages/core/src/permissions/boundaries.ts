@@ -127,7 +127,11 @@ export function createDefaultBoundaryConfig(cwd?: string): PathBoundaryConfig {
 }
 
 /** Add an allowed path to config. */
-export function addAllowedPath(config: PathBoundaryConfig, newPath: string, cwd?: string): PathBoundaryConfig {
+export function addAllowedPath(
+  config: PathBoundaryConfig,
+  newPath: string,
+  cwd?: string,
+): PathBoundaryConfig {
   const base = cwd ?? process.cwd()
   const normalized = normalizePath(newPath, base)
   return {
@@ -137,7 +141,11 @@ export function addAllowedPath(config: PathBoundaryConfig, newPath: string, cwd?
 }
 
 /** Remove an allowed path from config. */
-export function removeAllowedPath(config: PathBoundaryConfig, pathToRemove: string, cwd?: string): PathBoundaryConfig {
+export function removeAllowedPath(
+  config: PathBoundaryConfig,
+  pathToRemove: string,
+  cwd?: string,
+): PathBoundaryConfig {
   const base = cwd ?? process.cwd()
   const normalized = normalizePath(pathToRemove, base)
   return {
@@ -147,7 +155,10 @@ export function removeAllowedPath(config: PathBoundaryConfig, pathToRemove: stri
 }
 
 /** Validate that a config has at least one allowed path. */
-export function validateBoundaryConfig(config: PathBoundaryConfig): { valid: boolean; error?: string } {
+export function validateBoundaryConfig(config: PathBoundaryConfig): {
+  valid: boolean
+  error?: string
+} {
   if (!config.allowedPaths || config.allowedPaths.length === 0) {
     return { valid: false, error: 'At least one allowed path must be configured' }
   }
@@ -161,7 +172,9 @@ export function isSubPath(child: string, parent: string): boolean {
 
   if (childResolved === parentResolved) return true
 
-  const parentPrefix = parentResolved.endsWith(path.sep) ? parentResolved : parentResolved + path.sep
+  const parentPrefix = parentResolved.endsWith(path.sep)
+    ? parentResolved
+    : parentResolved + path.sep
   return childResolved.startsWith(parentPrefix)
 }
 

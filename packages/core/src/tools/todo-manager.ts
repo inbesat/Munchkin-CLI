@@ -19,7 +19,12 @@ export interface TaskList {
 }
 
 /** All valid task statuses, in canonical order. */
-export const TASK_STATUSES: readonly TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled']
+export const TASK_STATUSES: readonly TaskStatus[] = [
+  'pending',
+  'in_progress',
+  'completed',
+  'cancelled',
+]
 
 /** Guard: is the given value a valid TaskStatus? */
 export function isTaskStatus(value: unknown): value is TaskStatus {

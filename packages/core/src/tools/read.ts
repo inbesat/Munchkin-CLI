@@ -1,21 +1,23 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
-  validateFilePath,
-  readFileWithLines,
+  type FileAccessConfig,
+  createDefaultFileAccessConfig,
   fileExists,
   getFileSize,
-  createDefaultFileAccessConfig,
-  FileAccessConfig,
+  readFileWithLines,
+  validateFilePath,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
 import { recordFileRead } from './freshness'
+import type { Tool, ToolResult } from './types'
 
 /** Read tool input schema. */
 export const ReadSchema = Type.Object({
   path: Type.String({ description: 'Absolute path to the file to read' }),
   offset: Type.Optional(Type.Integer({ minimum: 0, description: 'Line offset (0-indexed)' })),
-  limit: Type.Optional(Type.Integer({ minimum: 1, description: 'Maximum number of lines to read' })),
+  limit: Type.Optional(
+    Type.Integer({ minimum: 1, description: 'Maximum number of lines to read' }),
+  ),
   sessionId: Type.Optional(Type.String({ description: 'Session ID for freshness tracking' })),
 })
 
@@ -49,7 +51,12 @@ export function createReadTool(config?: Partial<FileAccessConfig>): Tool {
         throw new ToolError(ErrorCode.CANCELLED, 'Read operation cancelled', 'read')
       }
 
-      const { path: filePath, offset, limit, sessionId } = input as {
+      const {
+        path: filePath,
+        offset,
+        limit,
+        sessionId,
+      } = input as {
         path: string
         offset?: number
         limit?: number
@@ -61,11 +68,7 @@ export function createReadTool(config?: Partial<FileAccessConfig>): Tool {
 
       // Check file exists
       if (!(await fileExists(validatedPath))) {
-        throw new ToolError(
-          ErrorCode.TOOL_INVALID_INPUT,
-          `File not found: ${filePath}`,
-          'read',
-        )
+        throw new ToolError(ErrorCode.TOOL_INVALID_INPUT, `File not found: ${filePath}`, 'read')
       }
 
       // Check abort signal again before reading

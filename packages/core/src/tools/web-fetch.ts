@@ -1,6 +1,6 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
-import { ToolError, ErrorCode } from '../errors'
+import { ErrorCode, ToolError } from '../errors'
+import type { Tool, ToolResult } from './types'
 
 /** Default timeout for web fetch (30 seconds). */
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -11,8 +11,16 @@ const DEFAULT_MAX_LENGTH = 500_000
 /** WebFetch input schema. */
 export const WebFetchSchema = Type.Object({
   url: Type.String({ format: 'uri', description: 'URL to fetch' }),
-  timeout: Type.Optional(Type.Integer({ minimum: 1000, maximum: 120_000, description: 'Timeout in milliseconds' })),
-  maxLength: Type.Optional(Type.Integer({ minimum: 1000, maximum: 5_000_000, description: 'Max response bytes before truncation' })),
+  timeout: Type.Optional(
+    Type.Integer({ minimum: 1000, maximum: 120_000, description: 'Timeout in milliseconds' }),
+  ),
+  maxLength: Type.Optional(
+    Type.Integer({
+      minimum: 1000,
+      maximum: 5_000_000,
+      description: 'Max response bytes before truncation',
+    }),
+  ),
 })
 
 /** WebFetch output metadata. */
@@ -69,16 +77,31 @@ export function htmlToMarkdown(html: string): string {
 
   // Lists
   md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_m: string, inner: string) => {
-    return inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m: string, content: string) => `- ${content}\n`) + '\n'
+    return (
+      inner.replace(
+        /<li[^>]*>([\s\S]*?)<\/li>/gi,
+        (_m: string, content: string) => `- ${content}\n`,
+      ) + '\n'
+    )
   })
   md = md.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m: string, inner: string) => {
     let i = 0
-    return inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m: string, content: string) => `${++i}. ${content}\n`) + '\n'
+    return (
+      inner.replace(
+        /<li[^>]*>([\s\S]*?)<\/li>/gi,
+        (_m: string, content: string) => `${++i}. ${content}\n`,
+      ) + '\n'
+    )
   })
 
   // Blockquotes
   md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_m: string, inner: string) => {
-    return inner.split('\n').map((l: string) => `> ${l.trim()}`).join('\n') + '\n\n'
+    return (
+      inner
+        .split('\n')
+        .map((l: string) => `> ${l.trim()}`)
+        .join('\n') + '\n\n'
+    )
   })
 
   // Horizontal rule
@@ -126,7 +149,11 @@ export function createWebFetchTool(): Tool {
     risk: 'medium',
     requiresPermission: true,
     async execute(input: Record<string, unknown>, signal?: AbortSignal): Promise<WebFetchResult> {
-      const { url, timeout = DEFAULT_TIMEOUT_MS, maxLength = DEFAULT_MAX_LENGTH } = input as {
+      const {
+        url,
+        timeout = DEFAULT_TIMEOUT_MS,
+        maxLength = DEFAULT_MAX_LENGTH,
+      } = input as {
         url: string
         timeout?: number
         maxLength?: number
@@ -166,7 +193,8 @@ export function createWebFetchTool(): Tool {
         }
 
         const contentType = response.headers.get('content-type') ?? 'unknown'
-        const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml')
+        const isHtml =
+          contentType.includes('text/html') || contentType.includes('application/xhtml')
 
         // Read body with length limit
         const reader = response.body?.getReader()

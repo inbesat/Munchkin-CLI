@@ -1,18 +1,16 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
-  evaluateCircuitBreakers,
-  isCircuitBreakerTriggered,
+  type CircuitBreakerContext,
+  type CircuitBreakerTrigger,
+  DEFAULT_CIRCUIT_BREAKERS,
   addCircuitBreaker,
+  evaluateCircuitBreakers,
+  getEnabledCircuitBreakers,
+  isCircuitBreakerTriggered,
+  previewCircuitBreakers,
   removeCircuitBreaker,
   setCircuitBreakerEnabled,
-  getEnabledCircuitBreakers,
   shouldOverrideBypass,
-  previewCircuitBreakers,
-  DEFAULT_CIRCUIT_BREAKERS,
-  CircuitBreakerTrigger,
-  CircuitBreakerContext,
-  RiskLevel,
-  CircuitBreakerAction,
 } from './circuit-breakers'
 
 const createContext = (overrides: Partial<CircuitBreakerContext> = {}): CircuitBreakerContext => ({
@@ -226,11 +224,7 @@ describe('Circuit Breakers', () => {
 
   describe('isCircuitBreakerTriggered', () => {
     it('convenience function works', () => {
-      const result = isCircuitBreakerTriggered(
-        'rm -rf /',
-        'critical',
-        'default',
-      )
+      const result = isCircuitBreakerTriggered('rm -rf /', 'critical', 'default')
       expect(result.triggered).toBe(true)
     })
   })

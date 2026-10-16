@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'bun:test'
-import { runAgentLoop, type LoopEvent, type AgentModel, type AgentTool, type AgentRunResult } from './loop'
-import type { AgentChunk, AgentToolCall } from './types'
+import { describe, expect, it } from 'bun:test'
 import type { Message } from '../session/message'
+import { type AgentModel, type AgentTool, type LoopEvent, runAgentLoop } from './loop'
+import type { AgentChunk } from './types'
 
 function userMsg(content: string): Message {
   return { role: 'user', parts: [{ type: 'text', text: content }], content }
@@ -19,7 +19,7 @@ function systemMsg(content: string): Message {
  */
 function createMockModel(
   chunksPerTurn: AgentChunk[][],
-  opts?: { contextWindow?: number; maxTokens?: number }
+  opts?: { contextWindow?: number; maxTokens?: number },
 ): AgentModel {
   const id = opts?.id ?? 'test-model'
   const provider = opts?.provider ?? 'test'
@@ -41,7 +41,10 @@ function createMockModel(
   }
 }
 
-function tool(name: string, impl: (args: Record<string, unknown>) => Promise<string> = async () => 'ok'): AgentTool {
+function tool(
+  name: string,
+  impl: (args: Record<string, unknown>) => Promise<string> = async () => 'ok',
+): AgentTool {
   return { name, description: '', execute: impl }
 }
 
@@ -119,7 +122,9 @@ describe('runAgentLoop', () => {
     expect(res.reason).toBe('complete')
     expect(res.turns).toBe(2)
     const toolCalls = events.filter((e) => e.type === 'tool-call')
-    expect(toolCalls.some((e) => e.toolCall.name === 'bash' && e.toolCall.args.cmd === 'ls')).toBe(true)
+    expect(toolCalls.some((e) => e.toolCall.name === 'bash' && e.toolCall.args.cmd === 'ls')).toBe(
+      true,
+    )
   })
 
   it('cancellation with pre-aborted signal', async () => {
@@ -161,7 +166,11 @@ describe('runAgentLoop', () => {
     const res = await runAgentLoop({
       model,
       messages: [userMsg('crash')],
-      tools: [tool('bash', async () => { throw new Error('kaboom') })],
+      tools: [
+        tool('bash', async () => {
+          throw new Error('kaboom')
+        }),
+      ],
       onEvent: (e) => events.push(e),
     })
     expect(res.reason).toBe('complete')

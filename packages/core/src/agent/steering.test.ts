@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { SteeringController, steeringToMessage, applySteering, SteeringMessage } from './steering'
-import { AgentLoopOptions, runAgentLoop, LoopStopReason, LoopEvent } from './loop'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import type { TextPart } from '../session/message'
+import { type AgentLoopOptions, type LoopEvent, runAgentLoop } from './loop'
+import {
+  SteeringController,
+  type SteeringMessage,
+  applySteering,
+  steeringToMessage,
+} from './steering'
 import type { AgentModel } from './types'
-import type { Message, UserMessage, TextPart } from '../session/message'
 
 describe('SteeringController', () => {
   let controller: SteeringController
@@ -157,7 +162,7 @@ describe('Agent loop with steering', () => {
   it('injects steering message mid-loop', async () => {
     // First turn: model returns some text
     // Second turn: after steering injection, model finishes
-    let turn = 0
+    const turn = 0
     model.setResponses([
       { type: 'text-delta', delta: 'Working on it...' },
       { type: 'finish', reason: 'stop' },
@@ -224,7 +229,7 @@ describe('Agent loop with steering', () => {
   })
 
   it('injects steering before next turn when pushed during turn', async () => {
-    let turnCount = 0
+    const turnCount = 0
     // First turn: model calls a tool (doesn't finish)
     // Second turn: after steering, model finishes
     model.setResponses([

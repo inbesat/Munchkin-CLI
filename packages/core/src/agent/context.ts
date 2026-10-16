@@ -1,10 +1,5 @@
-import type { Message, AssistantMessage, UserMessage } from '../session/message'
-import type {
-  AgentRequestMessage,
-  AgentTool,
-  AgentToolCall,
-  AgentToolDefinition,
-} from './types'
+import type { AssistantMessage, Message, UserMessage } from '../session/message'
+import type { AgentRequestMessage, AgentTool, AgentToolCall, AgentToolDefinition } from './types'
 
 /**
  * Context assembly for each agent turn: turns core `Message`s (Phase 14) into
@@ -94,7 +89,7 @@ export function trimMessages(
   messages: readonly Message[],
   budget: number,
 ): { messages: Message[]; trimmed: boolean } {
-  let out = [...messages]
+  const out = [...messages]
   let trimmed = false
   while (out.length > 1 && estimateTokens(toRequestMessages(out)) > budget) {
     // Find first non-system that is NOT the last message

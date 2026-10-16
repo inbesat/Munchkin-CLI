@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { bashTool, createBashTool, BashSchema, createShellSession } from './bash'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { BashSchema, createBashTool, createShellSession } from './bash'
 import { BashManager } from './bash-manager'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
@@ -96,10 +96,12 @@ describe('bashTool', () => {
   })
 
   it('throws on non-existent session', async () => {
-    await expect(tool.execute({
-      command: 'echo hello',
-      sessionId: 'nonexistent-session-id',
-    })).rejects.toThrow('Shell session not found')
+    await expect(
+      tool.execute({
+        command: 'echo hello',
+        sessionId: 'nonexistent-session-id',
+      }),
+    ).rejects.toThrow('Shell session not found')
   })
 
   it.skipIf(!hasBash)('creates new session when newShell=true', async () => {

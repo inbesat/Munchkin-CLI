@@ -1,23 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import type { CircuitBreakerResult } from './circuit-breakers'
+import type { PermissionMode, ToolCategory } from './modes'
 import {
-  evaluateDontAskProfile,
-  evaluateBypassProfile,
-  evaluateProfile,
-  createDontAskProfile,
-  createBypassProfile,
   DEFAULT_CI_PRE_APPROVALS,
-  isProfileMode,
-  getProfileConfig,
   PermissionProfileEngine,
-  getProfileEngine,
-  setProfileEngine,
+  type ProfileConfig,
   clearProfileEngine,
-  ProfileConfig,
-  ProfileCheckResult,
-  PreApprovedTool,
+  createBypassProfile,
+  createDontAskProfile,
+  evaluateBypassProfile,
+  evaluateDontAskProfile,
+  evaluateProfile,
+  getProfileConfig,
+  getProfileEngine,
+  isProfileMode,
+  setProfileEngine,
 } from './profiles'
-import { ToolCategory, PermissionMode } from './modes'
-import { CircuitBreakerResult } from './circuit-breakers'
 
 describe('Permission Profiles', () => {
   let profileEngine: PermissionProfileEngine
@@ -33,9 +31,7 @@ describe('Permission Profiles', () => {
 
   describe('createDontAskProfile', () => {
     it('creates profile with pre-approvals', () => {
-      const config = createDontAskProfile([
-        { target: 'read', description: 'Allow reads' },
-      ])
+      const config = createDontAskProfile([{ target: 'read', description: 'Allow reads' }])
       expect(config.mode).toBe('dontAsk')
       expect(config.preApproved?.length).toBe(1)
       expect(config.respectCircuitBreakers).toBe(true)
@@ -92,7 +88,11 @@ describe('Permission Profiles', () => {
   describe('evaluateDontAskProfile', () => {
     const baseConfig: ProfileConfig = createDontAskProfile([
       { target: 'read', description: 'Allow reads' },
-      { target: 'write', condition: (args) => (args.path as string)?.startsWith('dist/'), description: 'Allow dist writes' },
+      {
+        target: 'write',
+        condition: (args) => (args.path as string)?.startsWith('dist/'),
+        description: 'Allow dist writes',
+      },
     ])
 
     it('allows pre-approved read tools', () => {
@@ -103,13 +103,23 @@ describe('Permission Profiles', () => {
     })
 
     it('allows pre-approved write to dist/', () => {
-      const result = evaluateDontAskProfile('writeFile', 'write', { path: 'dist/output.js' }, baseConfig)
+      const result = evaluateDontAskProfile(
+        'writeFile',
+        'write',
+        { path: 'dist/output.js' },
+        baseConfig,
+      )
       expect(result.decision).toBe('allow')
       expect(result.preApproved).toBe(true)
     })
 
     it('denies write to non-approved paths', () => {
-      const result = evaluateDontAskProfile('writeFile', 'write', { path: 'src/file.ts' }, baseConfig)
+      const result = evaluateDontAskProfile(
+        'writeFile',
+        'write',
+        { path: 'src/file.ts' },
+        baseConfig,
+      )
       expect(result.decision).toBe('deny')
       expect(result.preApproved).toBe(false)
       expect(result.reason).toContain('not pre-approved')
@@ -127,7 +137,13 @@ describe('Permission Profiles', () => {
         action: 'deny',
         breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
       }
-      const result = evaluateDontAskProfile('bash', 'bash', { command: 'rm -rf /' }, baseConfig, cbResult)
+      const result = evaluateDontAskProfile(
+        'bash',
+        'bash',
+        { command: 'rm -rf /' },
+        baseConfig,
+        cbResult,
+      )
       expect(result.decision).toBe('deny')
       expect(result.circuitBreakerOverride).toBeDefined()
     })
@@ -138,7 +154,13 @@ describe('Permission Profiles', () => {
         action: 'prompt',
         breaker: { id: 'git-force-push-main', name: 'Git Force Push' } as any,
       }
-      const result = evaluateDontAskProfile('bash', 'bash', { command: 'git push --force' }, baseConfig, cbResult)
+      const result = evaluateDontAskProfile(
+        'bash',
+        'bash',
+        { command: 'git push --force' },
+        baseConfig,
+        cbResult,
+      )
       expect(result.decision).toBe('ask')
       expect(result.circuitBreakerOverride).toBeDefined()
     })
@@ -150,7 +172,13 @@ describe('Permission Profiles', () => {
         action: 'deny',
         breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
       }
-      const result = evaluateDontAskProfile('bash', 'bash', { command: 'rm -rf /' }, config, cbResult)
+      const result = evaluateDontAskProfile(
+        'bash',
+        'bash',
+        { command: 'rm -rf /' },
+        config,
+        cbResult,
+      )
       // Without circuit breaker, falls to pre-approval check which denies
       expect(result.decision).toBe('deny')
     })
@@ -161,7 +189,8 @@ describe('Permission Profiles', () => {
 
     it('allows all tools by default', () => {
       for (const tool of ['readFile', 'writeFile', 'editFile', 'bash', 'glob', 'grep']) {
-        const category = tool === 'bash' ? 'bash' : tool.replace('File', '').toLowerCase() as ToolCategory
+        const category =
+          tool === 'bash' ? 'bash' : (tool.replace('File', '').toLowerCase() as ToolCategory)
         const result = evaluateBypassProfile(tool, category, {}, baseConfig)
         expect(result.decision).toBe('allow')
         expect(result.reason).toContain('bypass mode')
@@ -174,7 +203,13 @@ describe('Permission Profiles', () => {
         action: 'deny',
         breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
       }
-      const result = evaluateBypassProfile('bash', 'bash', { command: 'rm -rf /' }, baseConfig, cbResult)
+      const result = evaluateBypassProfile(
+        'bash',
+        'bash',
+        { command: 'rm -rf /' },
+        baseConfig,
+        cbResult,
+      )
       expect(result.decision).toBe('deny')
       expect(result.circuitBreakerOverride).toBeDefined()
     })
@@ -185,7 +220,13 @@ describe('Permission Profiles', () => {
         action: 'prompt',
         breaker: { id: 'git-force-push-main', name: 'Git Force Push' } as any,
       }
-      const result = evaluateBypassProfile('bash', 'bash', { command: 'git push --force' }, baseConfig, cbResult)
+      const result = evaluateBypassProfile(
+        'bash',
+        'bash',
+        { command: 'git push --force' },
+        baseConfig,
+        cbResult,
+      )
       expect(result.decision).toBe('ask')
     })
 
@@ -196,7 +237,13 @@ describe('Permission Profiles', () => {
         action: 'deny',
         breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
       }
-      const result = evaluateBypassProfile('bash', 'bash', { command: 'rm -rf /' }, config, cbResult)
+      const result = evaluateBypassProfile(
+        'bash',
+        'bash',
+        { command: 'rm -rf /' },
+        config,
+        cbResult,
+      )
       expect(result.decision).toBe('allow')
     })
   })
@@ -289,9 +336,9 @@ describe('Permission Profiles', () => {
     })
 
     it('evaluates with active profile', async () => {
-      profileEngine.setProfile(createDontAskProfile([
-        { target: 'read', description: 'Allow reads' },
-      ]))
+      profileEngine.setProfile(
+        createDontAskProfile([{ target: 'read', description: 'Allow reads' }]),
+      )
 
       const result = await profileEngine.evaluate('readFile', 'read', { path: 'file.ts' })
       expect(result?.decision).toBe('allow')
@@ -372,7 +419,12 @@ describe('Permission Profiles', () => {
 
     it('approves write to dist/', async () => {
       const config = createDontAskProfile(DEFAULT_CI_PRE_APPROVALS)
-      const result = evaluateDontAskProfile('writeFile', 'write', { path: 'dist/bundle.js' }, config)
+      const result = evaluateDontAskProfile(
+        'writeFile',
+        'write',
+        { path: 'dist/bundle.js' },
+        config,
+      )
       expect(result.decision).toBe('allow')
     })
 

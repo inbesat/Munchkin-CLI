@@ -1,5 +1,5 @@
-import { WebSearchProvider, WebSearchResult, WebSearchOptions } from '../web-search'
-import { ToolError, ErrorCode } from '../../errors'
+import { ErrorCode, ToolError } from '../../errors'
+import type { WebSearchOptions, WebSearchProvider, WebSearchResult } from '../web-search'
 
 /** Exa API base URL. */
 const EXA_API_BASE = 'https://api.exa.ai'
@@ -53,7 +53,10 @@ export class ExaProvider implements WebSearchProvider {
 
     if (includeDomains?.length) body.includeDomains = includeDomains
     if (excludeDomains?.length) body.excludeDomains = excludeDomains
-    if (recencyDays) body.startPublishedDate = new Date(Date.now() - recencyDays * 86400000).toISOString().split('T')[0]
+    if (recencyDays)
+      body.startPublishedDate = new Date(Date.now() - recencyDays * 86400000)
+        .toISOString()
+        .split('T')[0]
 
     const response = await fetch(`${EXA_API_BASE}/search`, {
       method: 'POST',

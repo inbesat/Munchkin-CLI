@@ -1,4 +1,4 @@
-import { PermissionDecision, ToolCategory } from './modes'
+import type { PermissionDecision, ToolCategory } from './modes'
 
 /** Rule target: tool name, category, or '*' for all. */
 export type RuleTarget = string | ToolCategory | '*'

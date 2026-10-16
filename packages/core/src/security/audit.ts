@@ -228,12 +228,7 @@ export class AuditLog {
   }
 
   /** Log a mode change. */
-  logModeChange(
-    sessionId: string,
-    actor: string,
-    oldMode: string,
-    newMode: string,
-  ): AuditEntry {
+  logModeChange(sessionId: string, actor: string, oldMode: string, newMode: string): AuditEntry {
     return this.addEntry({
       type: 'mode_change',
       severity: 'info',
@@ -482,7 +477,10 @@ export class AuditLog {
 
   /** Import entries from JSONL (verifies chain). */
   importJSONL(jsonl: string): { imported: number; errors: string[] } {
-    const lines = jsonl.trim().split('\n').filter((l) => l)
+    const lines = jsonl
+      .trim()
+      .split('\n')
+      .filter((l) => l)
     let imported = 0
     const errors: string[] = []
 

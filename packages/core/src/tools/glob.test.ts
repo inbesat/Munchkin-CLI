@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { globTool, createGlobTool, GlobSchema } from './glob'
-import { ToolRegistry, createToolRegistryConfig } from './registry'
-import { writeFile, mkdir, rm } from 'fs/promises'
-import { join } from 'path'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { tmpdir } from 'os'
+import { join } from 'path'
+import { mkdir, rm, writeFile } from 'fs/promises'
+import { GlobSchema, createGlobTool } from './glob'
+import { ToolRegistry, createToolRegistryConfig } from './registry'
 
 const testDir = join(tmpdir(), 'forge-glob-test-' + Date.now())
 

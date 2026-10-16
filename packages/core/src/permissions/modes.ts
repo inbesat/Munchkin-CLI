@@ -1,16 +1,10 @@
-import { AgentTool } from '../agent/types'
+import type { AgentTool } from '../agent/types'
 
 /** Permission decision for a tool call. */
 export type PermissionDecision = 'allow' | 'ask' | 'deny'
 
 /** Available permission modes. */
-export type PermissionMode =
-  | 'default'
-  | 'acceptEdits'
-  | 'plan'
-  | 'auto'
-  | 'dontAsk'
-  | 'bypass'
+export type PermissionMode = 'default' | 'acceptEdits' | 'plan' | 'auto' | 'dontAsk' | 'bypass'
 
 /** Tool category for permission grouping. */
 export type ToolCategory =
@@ -238,14 +232,7 @@ function matchRule(
 
 /** Cycle to the next permission mode. */
 export function cycleMode(current: PermissionMode): PermissionMode {
-  const modes: PermissionMode[] = [
-    'default',
-    'acceptEdits',
-    'plan',
-    'auto',
-    'dontAsk',
-    'bypass',
-  ]
+  const modes: PermissionMode[] = ['default', 'acceptEdits', 'plan', 'auto', 'dontAsk', 'bypass']
   const idx = modes.indexOf(current)
   return modes[(idx + 1) % modes.length]
 }
@@ -278,12 +265,5 @@ export function getModeLabel(mode: PermissionMode): string {
 
 /** Validate a permission mode string. */
 export function isValidMode(mode: string): mode is PermissionMode {
-  return [
-    'default',
-    'acceptEdits',
-    'plan',
-    'auto',
-    'dontAsk',
-    'bypass',
-  ].includes(mode)
+  return ['default', 'acceptEdits', 'plan', 'auto', 'dontAsk', 'bypass'].includes(mode)
 }

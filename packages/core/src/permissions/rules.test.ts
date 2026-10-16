@@ -1,18 +1,17 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
-  globToRegex,
+  type CompiledRule,
+  DEFAULT_RULES,
+  type PermissionRuleDSL,
+  type RuleCondition,
   compileCondition,
   compileRule,
   compileRules,
-  matchTarget,
+  globToRegex,
   matchRule,
   matchRules,
+  matchTarget,
   parseRuleString,
-  PermissionRuleDSL,
-  CompiledRule,
-  ToolCategory,
-  RuleCondition,
-  DEFAULT_RULES,
 } from './rules'
 
 describe('Rules DSL', () => {
@@ -295,13 +294,19 @@ describe('Rules DSL', () => {
       const readAllow = DEFAULT_RULES.find((r) => r.target === 'read' && r.decision === 'allow')
       expect(readAllow).toBeDefined()
 
-      const rmDeny = DEFAULT_RULES.find((r) =>
-        r.target === 'bash' && r.decision === 'deny' && r.conditions?.some((c) => c.pattern.includes('rm'))
+      const rmDeny = DEFAULT_RULES.find(
+        (r) =>
+          r.target === 'bash' &&
+          r.decision === 'deny' &&
+          r.conditions?.some((c) => c.pattern.includes('rm')),
       )
       expect(rmDeny).toBeDefined()
 
-      const sensitiveDeny = DEFAULT_RULES.find((r) =>
-        r.target === 'write' && r.decision === 'deny' && r.conditions?.some((c) => c.pattern.includes('secret'))
+      const sensitiveDeny = DEFAULT_RULES.find(
+        (r) =>
+          r.target === 'write' &&
+          r.decision === 'deny' &&
+          r.conditions?.some((c) => c.pattern.includes('secret')),
       )
       expect(sensitiveDeny).toBeDefined()
     })
@@ -334,7 +339,9 @@ describe('Rules DSL', () => {
       })
 
       expect(matchRule(rule, 'writeFile', 'write', { path: 'src/index.ts' }).matched).toBe(true)
-      expect(matchRule(rule, 'writeFile', 'write', { path: 'src/components/Button.tsx' }).matched).toBe(true)
+      expect(
+        matchRule(rule, 'writeFile', 'write', { path: 'src/components/Button.tsx' }).matched,
+      ).toBe(true)
       expect(matchRule(rule, 'writeFile', 'write', { path: 'dist/index.js' }).matched).toBe(false)
       expect(matchRule(rule, 'writeFile', 'write', { path: 'package.json' }).matched).toBe(false)
     })

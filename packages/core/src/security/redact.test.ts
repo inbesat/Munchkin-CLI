@@ -1,16 +1,15 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import {
+  type RedactionPattern,
+  addPattern,
+  createRedactionConfig,
+  getAllPatterns,
+  hasSecrets,
   redact,
   redactAll,
   redactObject,
-  hasSecrets,
-  createRedactionConfig,
-  addPattern,
   removePattern,
   setPatternEnabled,
-  getAllPatterns,
-  RedactionConfig,
-  RedactionPattern,
 } from './redact'
 
 describe('Secret Redaction', () => {
@@ -168,7 +167,8 @@ describe('Secret Redaction', () => {
 
   describe('redact - Bearer tokens', () => {
     it('redacts Bearer tokens in headers', () => {
-      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+      const token =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
       const text = `Authorization: Bearer ${token}`
       const result = redact(text, defaultConfig)
       expect(result.text).toContain('[REDACTED]')
@@ -177,7 +177,8 @@ describe('Secret Redaction', () => {
 
   describe('redact - JWT tokens', () => {
     it('redacts JWT tokens', () => {
-      const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+      const jwt =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
       const text = `token: ${jwt}`
       const result = redact(text, defaultConfig)
       expect(result.text).toContain('[REDACTED]')
@@ -236,7 +237,8 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 
   describe('redact - Key-value patterns', () => {
     it('redacts api_key=value', () => {
-      const text = `api_key = "sk-ant-` + `api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv"`
+      const text =
+        `api_key = "sk-ant-` + `api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv"`
       const result = redact(text, defaultConfig)
       expect(result.text).toContain('[REDACTED]')
     })
@@ -262,19 +264,23 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 
   describe('redact - Environment variables', () => {
     it('redacts export SECRET_KEY=value', () => {
-      const text = 'export API_KEY=sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
+      const text =
+        'export API_KEY=sk-ant-' +
+        'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
       const result = redact(text, defaultConfig)
       expect(result.text).toContain('[REDACTED]')
     })
 
     it('redacts SECRET=value without export', () => {
-      const text = 'API_KEY=sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
+      const text =
+        'API_KEY=sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
       const result = redact(text, defaultConfig)
       expect(result.count).toBe(1)
     })
 
     it('redacts SECRET="value" with quotes', () => {
-      const text = 'API_KEY="sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv"'
+      const text =
+        'API_KEY="sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv"'
       const result = redact(text, defaultConfig)
       expect(result.count).toBe(1)
     })
@@ -382,7 +388,8 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 
   describe('hasSecrets', () => {
     it('returns true for text with secrets', () => {
-      const text = 'key: sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
+      const text =
+        'key: sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuv'
       expect(hasSecrets(text, defaultConfig)).toBe(true)
     })
 
@@ -474,7 +481,8 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 
     it('handles overlapping patterns', () => {
       // A JWT that might also match bearer token pattern
-      const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+      const jwt =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
       const text = `Bearer ${jwt}`
       const result = redact(text, defaultConfig)
       // Should only count once despite matching multiple patterns

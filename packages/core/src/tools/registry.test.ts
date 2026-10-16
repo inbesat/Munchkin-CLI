@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import { type Static, Type } from '@sinclair/typebox'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
-import type { Tool, ToolScope, ToolRiskLevel, PermissionMode } from './types'
-import { Type, Static } from '@sinclair/typebox'
+import type { PermissionMode, Tool, ToolRiskLevel, ToolScope } from './types'
 
 // Test schemas
 const ReadSchema = Type.Object({
@@ -132,9 +132,7 @@ describe('ToolRegistry', () => {
 
   describe('execute', () => {
     it('executes a tool and returns result', async () => {
-      registry.register(
-        makeTool('read', ReadSchema, { permissionMode: 'allow' }),
-      )
+      registry.register(makeTool('read', ReadSchema, { permissionMode: 'allow' }))
       const result = await registry.execute('read', { path: '/test.txt' })
       expect(result.success).toBe(true)
       expect(result.output).toContain('Executed read')
@@ -146,9 +144,7 @@ describe('ToolRegistry', () => {
 
     it('throws PermissionError in ask mode without confirmation', async () => {
       registry.register(makeTool('bash', BashSchema, { permissionMode: 'ask' }))
-      await expect(registry.execute('bash', { command: 'ls' })).rejects.toThrow(
-        'Permission denied',
-      )
+      await expect(registry.execute('bash', { command: 'ls' })).rejects.toThrow('Permission denied')
     })
 
     it('allows execution in ask mode with userConfirmed=true', async () => {
@@ -167,9 +163,7 @@ describe('ToolRegistry', () => {
 
     it('denies execution in deny mode', async () => {
       registry.register(makeTool('bash', BashSchema, { permissionMode: 'deny' }))
-      await expect(registry.execute('bash', { command: 'ls' })).rejects.toThrow(
-        'Permission denied',
-      )
+      await expect(registry.execute('bash', { command: 'ls' })).rejects.toThrow('Permission denied')
     })
 
     it('auto-approves low/medium risk in auto mode', async () => {

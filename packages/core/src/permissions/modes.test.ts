@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
+import type { AgentTool } from '../agent/types'
 import {
-  PermissionMode,
-  PermissionDecision,
-  ToolCategory,
-  getToolCategory,
-  getModeRules,
+  type PermissionDecision,
+  type PermissionMode,
+  type ToolCategory,
   checkPermission,
   cycleMode,
   getModeDescription,
   getModeLabel,
+  getModeRules,
+  getToolCategory,
   isValidMode,
 } from './modes'
-import { AgentTool } from '../agent/types'
 
 const mockReadTool: AgentTool = {
   name: 'readFile',
@@ -232,10 +232,14 @@ describe('Permission Modes', () => {
       const customRules = [
         { target: 'write' as ToolCategory, decision: 'allow' as PermissionDecision },
       ]
-      const result = checkPermission(mockWriteTool, {}, {
-        mode: 'default',
-        customRules,
-      })
+      const result = checkPermission(
+        mockWriteTool,
+        {},
+        {
+          mode: 'default',
+          customRules,
+        },
+      )
       expect(result.decision).toBe('allow')
       expect(result.explicit).toBe(true)
     })
@@ -248,27 +252,37 @@ describe('Permission Modes', () => {
           condition: (args) => !String(args.command).includes('rm'),
         },
       ]
-      const allowResult = checkPermission(mockBashTool, { command: 'ls' }, {
-        mode: 'default',
-        customRules,
-      })
+      const allowResult = checkPermission(
+        mockBashTool,
+        { command: 'ls' },
+        {
+          mode: 'default',
+          customRules,
+        },
+      )
       expect(allowResult.decision).toBe('allow')
 
-      const denyResult = checkPermission(mockBashTool, { command: 'rm -rf /' }, {
-        mode: 'default',
-        customRules,
-      })
+      const denyResult = checkPermission(
+        mockBashTool,
+        { command: 'rm -rf /' },
+        {
+          mode: 'default',
+          customRules,
+        },
+      )
       expect(denyResult.decision).toBe('ask') // Falls back to mode default
     })
 
     it('matches by tool name when specified', () => {
-      const customRules = [
-        { target: 'bash', decision: 'allow' as PermissionDecision },
-      ]
-      const result = checkPermission(mockBashTool, {}, {
-        mode: 'default',
-        customRules,
-      })
+      const customRules = [{ target: 'bash', decision: 'allow' as PermissionDecision }]
+      const result = checkPermission(
+        mockBashTool,
+        {},
+        {
+          mode: 'default',
+          customRules,
+        },
+      )
       expect(result.decision).toBe('allow')
     })
 
@@ -276,10 +290,14 @@ describe('Permission Modes', () => {
       const customRules = [
         { target: 'write' as ToolCategory, decision: 'allow' as PermissionDecision },
       ]
-      const result = checkPermission(mockWriteTool, {}, {
-        mode: 'default',
-        customRules,
-      })
+      const result = checkPermission(
+        mockWriteTool,
+        {},
+        {
+          mode: 'default',
+          customRules,
+        },
+      )
       expect(result.explicit).toBe(true)
     })
 

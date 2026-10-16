@@ -1,14 +1,14 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
+import { ErrorCode, ToolError } from '../errors'
 import {
+  type FileAccessConfig,
+  createDefaultFileAccessConfig,
+  fileExists,
   validateFilePath,
   writeFile,
-  fileExists,
-  createDefaultFileAccessConfig,
-  FileAccessConfig,
 } from './file-utils'
-import { ToolError, ErrorCode } from '../errors'
 import { recordFileRead } from './freshness'
+import type { Tool, ToolResult } from './types'
 
 /** Write tool input schema. */
 export const WriteSchema = Type.Object({
@@ -44,7 +44,11 @@ export function createWriteTool(config?: Partial<FileAccessConfig>): Tool {
         throw new ToolError(ErrorCode.CANCELLED, 'Write operation cancelled', 'write')
       }
 
-      const { path: filePath, content, sessionId } = input as {
+      const {
+        path: filePath,
+        content,
+        sessionId,
+      } = input as {
         path: string
         content: string
         sessionId?: string

@@ -1,29 +1,25 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import type { AgentTool } from '../agent/types'
 import {
-  PermissionUI,
-  PermissionRequest,
-  PermissionResponse,
-  PermissionDecision,
-  UICapabilities,
-  UIConfig,
-  MockPermissionUI,
   AutoApproveUI,
   AutoDenyUI,
+  type BatchPermissionRequest,
+  type BatchPermissionResponse,
   DefaultPermissionUIFactory,
+  type HeadlessUIConfig,
+  InteractivePermissionUI,
+  MockPermissionUI,
+  type PermissionDecision,
+  type PermissionRequest,
+  type PermissionResponse,
+  type PermissionUI,
+  type SDKUIConfig,
+  createPermissionRequest,
   getUIFactory,
+  hasCustomRule,
   setUIFactory,
   shouldRemember,
-  hasCustomRule,
-  createPermissionRequest,
-  HeadlessUIConfig,
-  SDKUIConfig,
-  BatchPermissionRequest,
-  BatchPermissionResponse,
-  BatchPermissionUI,
-  InteractivePermissionUI,
 } from './ui-contract'
-import { AgentTool } from '../agent/types'
-import { ToolCategory } from './modes'
 
 const createMockTool = (name: string): AgentTool => ({
   name,
@@ -247,7 +243,9 @@ describe('Permission UI Contract', () => {
     })
 
     it('hasCustomRule detects custom rule', () => {
-      expect(hasCustomRule({ requestId: '1', decision: 'allow', customRule: { target: 'bash' } })).toBe(true)
+      expect(
+        hasCustomRule({ requestId: '1', decision: 'allow', customRule: { target: 'bash' } }),
+      ).toBe(true)
       expect(hasCustomRule({ requestId: '1', decision: 'allow' })).toBe(false)
     })
   })
@@ -255,10 +253,16 @@ describe('Permission UI Contract', () => {
   describe('createPermissionRequest', () => {
     it('creates request with all fields', async () => {
       const tool = createMockTool('bash')
-      const request = await createPermissionRequest(tool, { command: 'ls' }, 'session-1', 'default', {
-        riskLevel: 'low',
-        riskReason: 'Safe command',
-      })
+      const request = await createPermissionRequest(
+        tool,
+        { command: 'ls' },
+        'session-1',
+        'default',
+        {
+          riskLevel: 'low',
+          riskReason: 'Safe command',
+        },
+      )
       expect(request.tool).toBe(tool)
       expect(request.args).toEqual({ command: 'ls' })
       expect(request.sessionId).toBe('session-1')
@@ -269,7 +273,12 @@ describe('Permission UI Contract', () => {
 
     it('infers category from tool', async () => {
       const tool = createMockTool('readFile')
-      const request = await createPermissionRequest(tool, { path: 'file.txt' }, 'session-1', 'default')
+      const request = await createPermissionRequest(
+        tool,
+        { path: 'file.txt' },
+        'session-1',
+        'default',
+      )
       expect(request.category).toBe('read')
     })
   })

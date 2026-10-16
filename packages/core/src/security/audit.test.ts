@@ -1,14 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import {
-  AuditLog,
+  type AuditLog,
+  clearGlobalAuditLog,
   createAuditLog,
   getGlobalAuditLog,
   setGlobalAuditLog,
-  clearGlobalAuditLog,
-  AuditEventType,
-  AuditSeverity,
-  AuditEntry,
-  AuditQuery,
 } from './audit'
 
 describe('Audit Log', () => {
@@ -36,14 +32,30 @@ describe('Audit Log', () => {
     })
 
     it('logs tool results', () => {
-      const entry = auditLog.logToolResult('session-1', 'agent', 'bash', true, 'output', undefined, 'call-1')
+      const entry = auditLog.logToolResult(
+        'session-1',
+        'agent',
+        'bash',
+        true,
+        'output',
+        undefined,
+        'call-1',
+      )
       expect(entry.type).toBe('tool_result')
       expect(entry.data.success).toBe(true)
       expect(entry.data.result).toBe('output')
     })
 
     it('logs failed tool results', () => {
-      const entry = auditLog.logToolResult('session-1', 'agent', 'bash', false, undefined, 'command not found', 'call-1')
+      const entry = auditLog.logToolResult(
+        'session-1',
+        'agent',
+        'bash',
+        false,
+        undefined,
+        'command not found',
+        'call-1',
+      )
       expect(entry.type).toBe('tool_result')
       expect(entry.data.success).toBe(false)
       expect(entry.data.error).toBe('command not found')
@@ -51,31 +63,51 @@ describe('Audit Log', () => {
     })
 
     it('logs permission decisions', () => {
-      const entry = auditLog.logPermissionDecision('session-1', 'agent', 'bash', 'allow', 'default mode', 'default')
+      const entry = auditLog.logPermissionDecision(
+        'session-1',
+        'agent',
+        'bash',
+        'allow',
+        'default mode',
+        'default',
+      )
       expect(entry.type).toBe('permission_decision')
       expect(entry.data.decision).toBe('allow')
       expect(entry.data.reason).toBe('default mode')
     })
 
     it('logs permission denials as warning', () => {
-      const entry = auditLog.logPermissionDecision('session-1', 'agent', 'bash', 'deny', 'circuit breaker', 'bypass')
+      const entry = auditLog.logPermissionDecision(
+        'session-1',
+        'agent',
+        'bash',
+        'deny',
+        'circuit breaker',
+        'bypass',
+      )
       expect(entry.severity).toBe('warning')
     })
 
     it('logs hook executions', () => {
-      const entry = auditLog.logHookExecution('session-1', 'agent', 'pre_tool', true, { modified: true })
+      const entry = auditLog.logHookExecution('session-1', 'agent', 'pre_tool', true, {
+        modified: true,
+      })
       expect(entry.type).toBe('hook_execution')
       expect(entry.data.hookName).toBe('pre_tool')
     })
 
     it('logs session events', () => {
-      const start = auditLog.logSessionEvent('session_start', 'session-1', 'agent', { cwd: '/project' })
+      const start = auditLog.logSessionEvent('session_start', 'session-1', 'agent', {
+        cwd: '/project',
+      })
       expect(start.type).toBe('session_start')
 
       const end = auditLog.logSessionEvent('session_end', 'session-1', 'agent', { duration: 1000 })
       expect(end.type).toBe('session_end')
 
-      const resume = auditLog.logSessionEvent('session_resume', 'session-1', 'agent', { previousSession: 'session-0' })
+      const resume = auditLog.logSessionEvent('session_resume', 'session-1', 'agent', {
+        previousSession: 'session-0',
+      })
       expect(resume.type).toBe('session_resume')
     })
 
@@ -95,7 +127,14 @@ describe('Audit Log', () => {
     })
 
     it('logs circuit breaker triggers', () => {
-      const entry = auditLog.logCircuitBreaker('session-1', 'agent', 'rm-rf-root', 'Delete Root', 'rm -rf /', 'prompt')
+      const entry = auditLog.logCircuitBreaker(
+        'session-1',
+        'agent',
+        'rm-rf-root',
+        'Delete Root',
+        'rm -rf /',
+        'prompt',
+      )
       expect(entry.type).toBe('circuit_breaker')
       expect(entry.severity).toBe('critical')
       expect(entry.data.breakerId).toBe('rm-rf-root')
@@ -180,7 +219,14 @@ describe('Audit Log', () => {
       auditLog.logToolCall('session-2', 'agent', 'read', { path: 'file.txt' }, 'call-3')
       auditLog.logPermissionDecision('session-1', 'agent', 'bash', 'allow', 'default mode')
       auditLog.logPermissionDecision('session-1', 'agent', 'write', 'deny', 'circuit breaker')
-      auditLog.logCircuitBreaker('session-1', 'agent', 'rm-rf-root', 'Delete Root', 'rm -rf /', 'deny')
+      auditLog.logCircuitBreaker(
+        'session-1',
+        'agent',
+        'rm-rf-root',
+        'Delete Root',
+        'rm -rf /',
+        'deny',
+      )
       auditLog.logError('session-1', 'agent', new Error('Test error'))
     })
 
@@ -234,8 +280,9 @@ describe('Audit Log', () => {
     it('returns newest first', () => {
       const result = auditLog.query({ limit: 10 })
       for (let i = 1; i < result.entries.length; i++) {
-        expect(new Date(result.entries[i - 1].timestamp).getTime())
-          .toBeGreaterThanOrEqual(new Date(result.entries[i].timestamp).getTime())
+        expect(new Date(result.entries[i - 1].timestamp).getTime()).toBeGreaterThanOrEqual(
+          new Date(result.entries[i].timestamp).getTime(),
+        )
       }
     })
 

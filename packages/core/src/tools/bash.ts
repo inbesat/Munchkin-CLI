@@ -1,17 +1,32 @@
-import { Tool, ToolResult } from './types'
 import { Type } from '@sinclair/typebox'
-import { BashManager, ShellSession, CreateSessionOptions } from './bash-manager'
-import { ToolError, ErrorCode } from '../errors'
+import { ErrorCode, ToolError } from '../errors'
+import { BashManager, type CreateSessionOptions, type ShellSession } from './bash-manager'
+import type { Tool, ToolResult } from './types'
 
 /** Bash tool input schema. */
 export const BashSchema = Type.Object({
   command: Type.String({ description: 'Shell command to execute' }),
-  sessionId: Type.Optional(Type.String({ description: 'Shell session ID (new session created if omitted)' })),
-  timeout: Type.Optional(Type.Integer({ minimum: 1000, maximum: 300_000, default: 120_000, description: 'Timeout in milliseconds' })),
+  sessionId: Type.Optional(
+    Type.String({ description: 'Shell session ID (new session created if omitted)' }),
+  ),
+  timeout: Type.Optional(
+    Type.Integer({
+      minimum: 1000,
+      maximum: 300_000,
+      default: 120_000,
+      description: 'Timeout in milliseconds',
+    }),
+  ),
   cwd: Type.Optional(Type.String({ description: 'Working directory (overrides session cwd)' })),
-  env: Type.Optional(Type.Record(Type.String(), Type.String(), { description: 'Additional environment variables' })),
-  background: Type.Optional(Type.Boolean({ default: false, description: 'Run in background (non-blocking)' })),
-  newShell: Type.Optional(Type.Boolean({ default: false, description: 'Force creation of a new shell session' })),
+  env: Type.Optional(
+    Type.Record(Type.String(), Type.String(), { description: 'Additional environment variables' }),
+  ),
+  background: Type.Optional(
+    Type.Boolean({ default: false, description: 'Run in background (non-blocking)' }),
+  ),
+  newShell: Type.Optional(
+    Type.Boolean({ default: false, description: 'Force creation of a new shell session' }),
+  ),
 })
 
 /** Bash tool output metadata. */
