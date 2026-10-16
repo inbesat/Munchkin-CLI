@@ -1,0 +1,5 @@
+{
+  "name": "pr-reviewer",
+  "version": "1.0.0",
+  "description": "Reviews the open diff for spec conformance and risk before landing."
+}

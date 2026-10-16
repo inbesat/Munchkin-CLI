@@ -1,0 +1,5 @@
+{
+  "name": "security-review",
+  "version": "1.0.0",
+  "description": "Runs a severity-ranked security review of changed code, mapped to OWASP Top 10 findings."
+}

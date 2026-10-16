@@ -1,0 +1,5 @@
+{
+  "name": "env-guard",
+  "version": "1.0.0",
+  "description": "Blocks credential-file edits and suggests env-var patterns."
+}

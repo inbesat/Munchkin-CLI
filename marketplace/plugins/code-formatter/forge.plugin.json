@@ -1,0 +1,5 @@
+{
+  "name": "code-formatter",
+  "version": "1.0.0",
+  "description": "Normalizes style and formatting across the touched files."
+}

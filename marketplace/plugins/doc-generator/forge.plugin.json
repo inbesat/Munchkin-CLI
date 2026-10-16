@@ -1,0 +1,5 @@
+{
+  "name": "doc-generator",
+  "version": "1.0.0",
+  "description": "Generates module documentation using the Diataxis framework."
+}

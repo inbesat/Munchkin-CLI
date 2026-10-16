@@ -1,0 +1,5 @@
+{
+  "name": "database-tools",
+  "version": "1.0.0",
+  "description": "Inspects schemas, reviews queries, and plans safe migrations."
+}

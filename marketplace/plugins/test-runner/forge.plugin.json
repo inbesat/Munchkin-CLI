@@ -1,0 +1,5 @@
+{
+  "name": "test-runner",
+  "version": "1.0.0",
+  "description": "Discovers, runs, and summarizes the project test suite."
+}
