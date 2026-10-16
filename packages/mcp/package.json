@@ -18,7 +18,7 @@
     "lint": "biome check src/",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.31.0" },
   "devDependencies": {
     "typescript": "^5.7.0",
     "@biomejs/biome": "^1.9.0"

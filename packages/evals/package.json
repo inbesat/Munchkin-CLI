@@ -18,7 +18,9 @@
     "lint": "biome check src/",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@forge/core": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.7.0",
     "@biomejs/biome": "^1.9.0"
