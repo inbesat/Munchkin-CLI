@@ -2561,6 +2561,8 @@ Each phase contains:
 
 **Testing:** Create worktree, list worktrees, merge worktree, remove worktree.
 
+**Status (2026-10-17):** Implemented (`packages/git/src/worktree/cli.ts` - dependency-free handlers over git: `worktreeList` (parsed `--porcelain` entries: path/head/branch/bare), `worktreeCreate` (scratch default `<repo>/.forge/worktrees/<sanitized-name>`, optional base ref), `worktreeMerge` (merge into the current branch), `worktreeRemove` (matches by path or branch name, optional `--force` + branch deletion - keeps unmerged branches with an explanatory note). Forge CLI wiring: `forge worktree <list|create|merge|remove>` subcommand in `packages/server/src/cli.ts` (dispatcher `runWorktreeCommand`, prints handler output, `@forge/git` workspace dep added to @forge/server). Tests: 5 green - full lifecycle per blueprint (create → list shows branch+head → merge brings committed worktree changes into main → remove deletes incl. branch), unmerged-branch protection on remove, unknown-worktree + non-repo clean failures. Server CLI suites 29/29 w/ the new wiring. git 34/34, tsc 0 git, lint 0 git+server.
+
 **Estimated Hours:** 4–5 hours.
 
 ---
