@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 133 - Smart Commit/PR Tools (Complete); Phases 87-133 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-133 - Stages 7-11 closed, Stage 12 (Git Deep Integration, 131-136) 3/6 done
-- **Next action:** Phase 134 - GitHub Actions / GitLab CI Integration (Stage 12)
+- **Current phase:** Phase 134 - GitHub Actions / GitLab CI Integration (Complete); Phases 87-134 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-134 - Stages 7-11 closed, Stage 12 (Git Deep Integration, 131-136) 4/6 done
+- **Next action:** Phase 135 - Worktree Manager CLI (Stage 12)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404

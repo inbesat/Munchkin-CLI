@@ -2544,6 +2544,8 @@ Each phase contains:
 
 **Testing:** Create PR with label → agent runs in CI → review comments posted.
 
+**Status (2026-10-17):** Implemented (`.github/workflows/forge-review.yml` - `pull_request_target` labeled trigger on `forge-review`: checkout + bun setup + FORGE_GH_TOKEN secret + `bun run scripts/ci-forge-review.ts`; `scripts/ci-forge-review.ts` - PR number resolution from FORGE_PR_NUMBER / GITHUB_REF refs/pull / GitLab CI_MERGE_REQUEST_IID (result-object validation), Phase-133 `ReviewPrTool` diff review, deterministic comment formatting (`formatReviewComment`: risk level, counts, per-findings, footer), posted via `gh pr review --comment` with `gh pr comment` fallback + FORGE_GH_TOKEN env passing; `docs/ci/forge-review.gitlab-ci.yml` - GitLab merge-request-event job on the same label regex + env contract; `docs/ci/README.md` - setup documentation (secrets, label creation, env table, include snippet). Tests: 6 green - PR-number resolution (GitHub ref/GitLab iid/override/invalid/missing) and comment formatting (risk+findings, finding-free variant) - the pure CI surface, verified offline; the live label->PR round-trip = repository-with-actions step. git 29/29, tsc 0, lint 0.
+
 **Estimated Hours:** 6–8 hours.
 
 ---
