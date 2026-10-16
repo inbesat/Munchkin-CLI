@@ -2157,6 +2157,8 @@ Each phase contains:
 
 **Testing:** Install plugin v1.0. Update to v1.1. Rollback to v1.0. Verify rollback.
 
+**Status (2026-10-17):** Implemented (`packages/plugin-kernel/src/plugin/versioning.ts` - `VersionManager`: every install/update snapshots the plugin into an immutable `plugins/<name>/versions/vX.Y.Z/` copy plus a `versions.json` index (history, pinned, current); the `active/` directory the loader consumes is re-materialized from the current snapshot, so rollback = re-materialize from a previous entry + repoint pin (history kept, rollback w/o target refuses at the earliest version, missing snapshots and unknown versions are errors); `update()` refuses downgrades (rollback's job)). Tests: 2 green driving the exact blueprint path - install 1.0.0 → update 1.1.1 → rollback 1.0.0 → manifest + file content verified reverted → default-rollback refusal at earliest. Kernel 80/80, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 4–5 hours.
 
 ---
