@@ -50,3 +50,17 @@ export {
   type BuildRunOptions,
   type ContainerRuntime,
 } from './docker/provider'
+
+// Remote cloud providers (Phase 130)
+export {
+  E2BSandboxProvider,
+  E2B_SANDBOX_ID,
+  e2bSandboxProvider,
+  type E2BOptions,
+} from './remote/e2b'
+export {
+  DaytonaSandboxProvider,
+  DAYTONA_SANDBOX_ID,
+  daytonaSandboxProvider,
+  type DaytonaOptions,
+} from './remote/daytona'
