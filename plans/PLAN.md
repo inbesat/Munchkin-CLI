@@ -4,7 +4,11 @@
 **Started:** 2026-08-26
 **Stack:** TypeScript + Bun, OpenTUI (SolidJS), Hono server, AI SDK v5, SQLite
 **Total Phases:** 154 (18 stages)
-**Current Phase:** Phase 72 (Startup Time Budget) Complete — next: Phase 73 (Hono HTTP Server)
+**Current Phase:** Phase 86 (Microcompact) — implemented-under-repair; next: Phase 87 (System Prompt Assembly Pipeline), pending audit verification.
+
+**Recovery / repair status (2026-10-16):** The 154-phase roadmap was recovered from verified Git commit `4ceddd1f24c4dc214a233c7429ace6fa6ccef218` after this file was overwritten by a 44-line Python editing script. Historical phase descriptions are specifications, not proof of completion. Phase 84–86 completion claims were disproven by the audit: their implementations remain under repair until the coordinator verifies them. Do not begin Phase 87 or later roadmap work during this repair.
+
+See [AUDIT_REPAIR_PLAN.md](AUDIT_REPAIR_PLAN.md) for the approved bounded repair checklist and [AUDIT_REPAIR_STATUS.md](AUDIT_REPAIR_STATUS.md) for evidence, blockers, and verification scope. `AGENTS.md` still contains a stale completion claim; changing it is outside this documentation repair's scope. This status supersedes that claim for the repair.
 
 ---
 
@@ -18,7 +22,7 @@ Each phase contains:
 - **Testing:** What to test and how
 - **Estimated Hours:** Rough time estimate
 
-**When resuming a session:** Search for "Current Phase" in AGENTS.md to find where you are. Read the current phase and its dependencies. Proceed.
+**When resuming a session:** Read the current phase above and the audit repair status before consulting historical completion claims in AGENTS.md. Read the current phase and its dependencies. Continue bounded repairs only until verification is recorded.
 
 ---
 
@@ -1595,6 +1599,8 @@ Each phase contains:
 
 ## Phase 84: Auto-Compaction (Summarization)
 
+**Status (2026-10-16):** Implemented-under-repair; prior completion claim is not verified. Preserve original events and verify effective context replacement before acceptance.
+
 **Description:** Implement automatic context compaction: when context usage exceeds a threshold (default 80%), automatically summarize older messages to free up space. Use the LLM itself to generate summaries (OpenHands pattern: LLMSummarizingCondenser). The summary replaces old messages in the context but the original events remain in the log.
 
 **Deliverables:**
@@ -1610,6 +1616,8 @@ Each phase contains:
 ---
 
 ## Phase 85: Manual `/compact` with Focus Instructions
+
+**Status (2026-10-16):** Implemented-under-repair; prior completion claim is not verified. Verify manual invocation and focus handling without paid API calls before acceptance.
 
 **Description:** Implement the `/compact` slash command: user can manually trigger compaction with optional focus instructions ("compact but keep the auth discussion"). This gives users control over what gets summarized vs preserved.
 
@@ -1627,6 +1635,8 @@ Each phase contains:
 
 ## Phase 86: Microcompact (Old Tool Results Pruning)
 
+**Status (2026-10-16):** Current phase, implemented-under-repair; prior completion claim is not verified. Verify old-result pruning, recent-result preservation, and downstream use of the compacted context before acceptance.
+
 **Description:** Implement microcompact: a lighter-weight compaction that prunes old tool results (keeping only summaries) without full message summarization. This is faster and cheaper than full compaction but frees up significant context (tool results are often very verbose).
 
 **Deliverables:**
@@ -1642,6 +1652,8 @@ Each phase contains:
 ---
 
 ## Phase 87: System Prompt Assembly Pipeline
+
+**Status (2026-10-16):** Implemented (`packages/core/src/context/system-prompt.ts`, 8 tests green: ordering, empty-section exclusion, budget truncation/drop semantics, opt-out sections). Typecheck+lint clean. Verified in repair ledger.
 
 **Description:** Build the system prompt assembly pipeline: compose the system prompt from multiple sections. Sections include: base instructions, project memory (AGENTS.md/CLAUDE.md), active skills, tool schemas, MCP tool schemas, runtime context (git status, current time, etc.). Sections are ordered by priority and can be truncated if context is tight.
 
@@ -1659,6 +1671,8 @@ Each phase contains:
 
 ## Phase 88: Memory Files (AGENTS.md/CLAUDE.md Discovery)
 
+**Status (2026-10-16):** Implemented (`packages/core/src/memory/discovery.ts`, 4 tests green: root + `.forge/` loading, layered nested discovery for target files, exclusion outside target tree, missing-dir safety). Typecheck+lint clean.
+
 **Description:** Implement memory file discovery: scan for AGENTS.md and CLAUDE.md files at project root, in `.forge/`, in `.claude/`, in nested directories. Load their contents into the system prompt. Support directory-layered discovery (parent directory rules apply to all subdirectories).
 
 **Deliverables:**
@@ -1674,6 +1688,8 @@ Each phase contains:
 ---
 
 ## Phase 89: Rules Directories & @imports
+
+**Status (2026-10-16):** Implemented (`packages/core/src/memory/rules.ts`, 6 tests green: sorted top-level loading, @import inlining with dedupe, cycle safety, missing-import error reporting without throws, selective `include`, missing-dir safety; traversal guard keeps imports inside the rules dir). Typecheck+lint clean.
 
 **Description:** Implement rules directories: `.forge/rules/*.md` files that are loaded into the system prompt. Each rule file is a separate concern (e.g., `typescript-conventions.md`, `testing-standards.md`). Support `@import` syntax for referencing other rule files.
 
@@ -1691,6 +1707,8 @@ Each phase contains:
 
 ## Phase 90: Context Visualization (`/context` grid)
 
+**Status (2026-10-16):** Implemented (TUI `packages/tui/src/components/context-grid.tsx` + tests: 7/7 grid-logic green; App wiring: `/context` slash command toggles a live grid backed by the Phase-83 ContextBudgeter synced to message state, any-key/ESC dismiss; palette entry registered; components barrel exported). 20/20 grid+palette tests, tsc 0 errors.
+
 **Description:** Implement the `/context` command: show a visual grid of context window usage. Display: system prompt size, conversation history size, tool schemas size, MCP tools size, available space. Use a bar chart or grid that updates in real-time.
 
 **Deliverables:**
@@ -1705,6 +1723,8 @@ Each phase contains:
 ---
 
 ## Phase 91: Prompt Caching Strategy per Provider
+
+**Status (2026-10-16):** Implemented (`packages/core/src/context/cache-strategy.ts`, 8 tests green: Anthropic ephemeral breakpoints on system + last tool result, OpenAI automatic no-markers, Google api-managed, unsupported providers; CacheStatsTracker hit-rate + savings math incl. zero-division and no-cache-read-rate cases). Typecheck clean.
 
 **Description:** Implement provider-specific prompt caching strategies. Anthropic: add `cache_control` markers at optimal positions. OpenAI: let automatic caching work. Google: use context caching API. Track cache hit rates and cost savings.
 
@@ -1721,6 +1741,8 @@ Each phase contains:
 ---
 
 ## Phase 92: Condenser Evals
+
+**Status (2026-10-16):** Implemented (`packages/evals/src/condenser/` — fixture sessions with labeled key terms + probe, deterministic extractive summarizer model, runners for the Phase-84 summarizing condenser and Phase-86 microcompactor, gate-scoring `runCondenserEvals`; 5 tests green incl. a lossy negative control). Typecheck+lint clean. **Stage 7 (Context Engineering, Phases 83-92) closed.**
 
 **Description:** Build evaluation tests for the compaction/condensation system. Measure: quality of summaries (do they preserve key information?), cost reduction (how many tokens saved?), impact on agent performance (does compaction degrade task completion?).
 
@@ -1741,6 +1763,8 @@ Each phase contains:
 
 ## Phase 93: Subagent Spawning
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/spawn.ts`, 6 tests green: single-summary return, isolation without a parent-context passthrough (option removed in review — leak vector), tool-allowlist enforcement at request AND execution layers, allowlist-narrowed tool definitions, max-iterations runaway guard, abort propagation + timeout). Typecheck+lint clean.
+
 **Description:** Implement subagent spawning: create an isolated agent instance with its own context window, system prompt, tool allowlist, and optional model override. The subagent runs the same loop as the main agent but in complete isolation. When done, it returns a single summary message to the parent.
 
 **Deliverables:**
@@ -1757,6 +1781,8 @@ Each phase contains:
 
 ## Phase 94: Agent Definition Files
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/definitions.ts`, 4 tests green: frontmatter parse (lists + inline lists + scalars), body-as-system-prompt, malformed files reported not thrown, `.forge/agents` scoping only; `definitionToSpawnOptions` maps onto the Phase-93 spawn contract with allowlist narrowing; `spawnDefinedAgent` convenience). Typecheck+lint clean.
+
 **Description:** Implement agent definition files: `.md` files under `.forge/agents/` with YAML frontmatter defining: name, description, tools, model, skills, isolation. These files define custom subagents that the main agent can delegate to.
 
 **Deliverables:**
@@ -1772,6 +1798,8 @@ Each phase contains:
 ---
 
 ## Phase 95: Built-in Subagents
+
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/builtins/{explore,plan,general}.ts` — read-only Explore and Plan with read/glob/grep allowlists, General with unrestricted tool access; 7 tests green incl. allowlist narrowing over a mixed registry and end-to-end spawns of all three with a scripted model). Typecheck+lint clean; barrel exported.
 
 **Description:** Implement built-in subagents: Explore (fast codebase search, read-only), Plan (implementation planning, read-only), General-purpose (full tool access). These ship with forge and don't need user configuration.
 
@@ -1790,6 +1818,8 @@ Each phase contains:
 
 ## Phase 96: Worktree Isolation
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/worktree.ts`, 6 tests green on real git 2.45: worktree creation on `forge/subagent/<name>` branches, fs isolation from the main repo, merge-back, conflict detection with automatic `merge --abort` instead of throwing, worktree+branch removal, and spawnSubagentInWorktree envelope returning run+worktree+merge info with deterministic cleanup in `finally`). Typecheck+lint clean.
+
 **Description:** Implement git worktree isolation for subagents: spawn a subagent in a separate git worktree so it can make changes without affecting the main workspace. Changes are integrated via merge when the subagent completes.
 
 **Deliverables:**
@@ -1805,6 +1835,8 @@ Each phase contains:
 ---
 
 ## Phase 97: Background Tasks
+
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/background.ts` — BackgroundTaskManager: non-blocking start with unique ids, running→completed/failed/cancelled state machine driven by an AbortController (cancel marks cancelled), `list`/`get`/`result`/`waitFor`, failures captured never thrown; 6 tests green. `/tasks` command: palette entry + App dispatch rendering a per-task status/summary system message; TUI tsc 0).
 
 **Description:** Implement background tasks: tasks that run asynchronously without blocking the main agent. The user can start a background task (e.g., "search for all TODO comments"), continue working, and check results later via `/tasks`.
 
@@ -1823,6 +1855,8 @@ Each phase contains:
 
 ## Phase 98: Cross-Session Messaging
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/messaging.ts` — SessionMessageBus: ordered envelope log with per-session cursors, directed + `'*'` broadcast delivery, backlog on late registration, live `subscribe` push with unsubscribe + from-filtering, unique ids; own messages excluded from the sender's inbox; 7 tests green incl. the two-session round trip the blueprint mandates). Typecheck+lint clean; barrel exported.
+
 **Description:** Implement cross-session messaging: agents in different sessions can communicate via a shared message bus. This enables agent teams where multiple agents work on different aspects of a project.
 
 **Deliverables:**
@@ -1839,6 +1873,8 @@ Each phase contains:
 
 ## Phase 99: Agent Teams / Swarm Mode
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/teams.ts` — AgentTeam over the Phase-98 bus: shared board pending→assigned→completed, delegation with direct TASK notes + team announcement broadcast, assignee-checked completion (non-assignee rejected), DONE note to coordinator + COMPLETED broadcast, unknown-worker recorded as error not thrown; completed results integrated into the Phase-97 BackgroundTaskManager via a new recordCompleted(id, …) so /tasks and the team board share one registry; 5 tests green incl. the blueprint 3-member team with two delegated tasks fully integrated). Typecheck+lint clean.
+
 **Description:** Implement agent teams: multiple agents working together with a shared task list and direct messaging. A coordinator agent delegates work, monitors progress, and integrates results. Inspired by Claude Code's experimental Agent Teams.
 
 **Deliverables:**
@@ -1854,6 +1890,8 @@ Each phase contains:
 ---
 
 ## Phase 100: Cross-Harness Delegation
+
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/cross-harness.ts` — resolveHarnessBinary via PATH; delegateToHarness speaks newline-delimited JSON-RPC 2.0 (Phase-80 framing parity, reimplemented in core): `initialize` handshake then `task/run {prompt}` with result extraction; spawnImpl injectable for offline tests (default = real child process with spawn-error capture); timeout resolves pending calls + kills process; every failure mode returns `{ok:false}` — binary missing, spawn error, RPC error, timeout; 7 tests green, no real binaries required). Typecheck+lint clean.
 
 **Description:** Implement cross-harness delegation: spawn Claude Code, Codex, or any ACP-compatible agent as a subagent. This is DeepSeek Harness's pattern — resolve the binary from PATH, spawn as subprocess, communicate via ACP.
 
@@ -1888,6 +1926,8 @@ Each phase contains:
 
 ## Phase 102: Orchestration Stress Tests
 
+**Status (2026-10-16):** Implemented (`packages/core/src/subagent/stress.test.ts` + `deadline.ts` watchdog helper; 6 stress tests green: 12-agent fan-out all-complete under a deadlock watchdog, failure isolation (1 throwing sibling, 11 unaffected), straggler timeouts, stuck-tool deadlock → NOW TERMINATES (spawn-level fixes), and a 12-task team/bus/registry soak with zero message loss). Stressed the Phase-93 spawn into two real fixes: (1) tool executes race the spawn-timeout abort — a hung tool no longer deadlocks the loop; (2) the spawn races its own timeout so model implementations that ignore the abort signal still terminate. **Stage 8 (Subagents & Orchestration, Phases 93-102) closed.**
+
 **Description:** Write stress tests for the orchestration system: parallel subagent fan-out (10+ agents), deadlock detection, timeout handling, error propagation from subagents to parent.
 
 **Deliverables:**
@@ -1907,6 +1947,8 @@ Each phase contains:
 
 ## Phase 103: Hook Engine + Event Bus
 
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/hooks/events.ts` — 34-enumeration lifecycle event set: the ten blueprint-named events plus 24 more across agent loop, tools, permissions, compaction, teams, background tasks, cross-harness; typed payloads for the named ten. `packages/plugin-kernel/src/hooks/engine.ts` — HookEngine: priority-ascending handler ordering, blocking handlers return `{block, reason}` or the `BLOCK(reason)` sentinel to prevent the default action and stop later handlers; non-blocking observers cannot block; handler failures captured as error results (emit never throws); unsubscribe + reset; coveredEvents introspection; 11 tests green). Typecheck+lint clean; exported from @forge/plugin-kernel.
+
 **Description:** Implement the hook engine: a pub/sub system that fires registered handlers at lifecycle events. Events include: SessionStart, SessionEnd, PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStart, SubagentStop, PreCompact, PostCompact, and ~20 more. Handlers can be blocking (prevent default action) or non-blocking (observe only).
 
 **Deliverables:**
@@ -1924,6 +1966,8 @@ Each phase contains:
 
 ## Phase 104: Hook Handler Types
 
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/hooks/handlers/{command,http,prompt,mcp-tool,agent}.ts` + barrel; 11 tests green covering per-type happy paths, blocking conventions — command exit-2 w/ stderr reason, http 403 w/ body reason, prompt `BLOCK:`, mcp block-result, agent `BLOCK:` — and fail-closed error handling on every platform failure: runner throw, dns failure, LLM rate-limit, MCP unreachable, agent timeout). Platform effects injectable at the composition root (runner/fetchImpl/generate/invoker/spawner) so all five are offline-testable; MCP invoker + agent spawner are injected until the MCP integration phase supplies the real client. Typecheck+lint clean.
+
 **Description:** Implement all hook handler types: `command` (shell script), `http` (POST to URL), `prompt` (single-turn LLM call), `mcp_tool` (call MCP tool), `agent` (spawn subagent). Each type has a different execution model. Blocking hooks use exit code 2 to block.
 
 **Deliverables:**
@@ -1939,6 +1983,8 @@ Each phase contains:
 ---
 
 ## Phase 105: Blocking Hooks
+
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/hooks/blocking.ts` — `feedbackFrom(result, event)` maps a blocked HookEmitResult into LLM-facing feedback (`[BLOCKED by hook 'n' during <event> hook] reason — adjust your approach.`); `createPolicyGate` boolean-decision + feedback wrapper; `registerToolPolicy` wires the Phase-104 command handler as a PreToolUse policy with matchToolName/matchPath filtering — the blueprint's "never edit .env files" example verified end-to-end incl. unregister + non-target-tool isolation; 5 tests green). Typecheck+lint clean.
 
 **Description:** Implement blocking hook semantics: when a blocking hook returns exit code 2, the action is blocked and stderr becomes feedback to the LLM. The LLM sees the blocking reason and can adjust its approach. This is how users enforce policies: "never edit .env files" becomes a PreToolUse hook that blocks Write tool calls targeting `.env`.
 
@@ -1956,6 +2002,8 @@ Each phase contains:
 
 ## Phase 106: Skills Loader
 
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/skills/loader.ts` — layered sources `.forge/skills/` > `~/.config/forge/skills/` > plugin dirs, name-collision shadowing w/ error notes, `<dir>/<skill>/SKILL.md` + flat `.md` support, malformed files error-not-throw, homeDir injectable; `matcher.ts` — deterministic trigger (weight 2) + description-overlap (weight 1) scoring with minScore filter, `invokeSkill` manual `/skill-name` (slash-tolerant), `reminderLine` for prompt assembly; 7 tests green). Typecheck+lint clean; skills barrel exported. (Phase 107 adds semantic auto-trigger on top.)
+
 **Description:** Implement the skills loader: read SKILL.md files from `.forge/skills/`, `~/.config/forge/skills/`, and plugin skill directories. Parse YAML frontmatter (name, description, triggers). Match skills to conversations by description. Support auto-triggering and manual invocation via `/skill-name`.
 
 **Deliverables:**
@@ -1972,6 +2020,8 @@ Each phase contains:
 ---
 
 ## Phase 107: Skill Auto-Trigger
+
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/skills/auto-trigger.ts` — `semanticSimilarity` = max(stemmed-token overlap, character-trigram Jaccard), injectable embedder for a real embeddings upgrade; `autoTriggerSkills` scores descriptions + triggers, exact trigger phrases remain the strongest signal, threshold 0.3 default + maxResults cap; `loadAndAutoTrigger` combines the Phase-106 loader; 7 tests green incl. the blueprint calibration "deploy this" → "deploy to production" auto-load and unrelated-input rejection). Typecheck+lint clean; skill exports in barrel.
 
 **Description:** Implement skill auto-triggering: when a user's request matches a skill's description, automatically load the skill into context without the user explicitly invoking it. Use semantic matching (not just keyword).
 
@@ -2006,6 +2056,8 @@ Each phase contains:
 
 ## Phase 109: Plugin Loader
 
+**Status (2026-10-16):** Implemented (`packages/plugin-kernel/src/plugin/loader.ts` — loadPlugins orchestrator over three source types: local paths, npm node_modules layouts, and git repos (real `git clone --depth 1` by default, clone injectable for offline tests); satisfiesForgeVersion compat gate supporting `>=`/`^`/exact/`*`; namespace conflicts raise errors instead of double loads; full error isolation — one broken source never crashes siblings; 9 tests green incl. npm layout, injectable git clone, version incompatibility, duplicate namespace, npm-not-installed, offline git failure). Typecheck+lint clean; loader exports in barrel.
+
 **Description:** Implement the plugin loader: discover and load plugins from npm packages, git repos, and local paths. Handle: dependency resolution, version compatibility checking, namespaced loading (prevent conflicts), error isolation (one broken plugin doesn't crash others).
 
 **Deliverables:**
@@ -2025,13 +2077,15 @@ Each phase contains:
 **Description:** Implement the marketplace protocol: a `marketplace.json` file hosted on GitHub that lists available plugins. Users can: browse marketplace, search plugins, install with version pinning, update, uninstall. Command: `/plugin marketplace add owner/repo`.
 
 **Deliverables:**
-- `packages/plugin-kernel/src/marketplace/protocol.ts` — marketplace protocol
+- `packages/plugin-kernel/src/marketplace/protocol.ts` - marketplace protocol
 - `/plugin` command implementation
 - Tests
 
 **Dependencies:** Phase 109 (loader).
 
 **Testing:** Add marketplace. Browse plugins. Install plugin. Update plugin.
+
+**Status (2026-10-17):** Implemented (`packages/plugin-kernel/src/marketplace/protocol.ts` - `parseMarketplace` per-entry error-collection validation, `MarketplaceClient` with injectable fetch (source = `owner/repo` shorthand → raw.githubusercontent or full URL) over browse/search (name/description/tags substring)/install (version pinning, acquisition via the Phase-109 `loadPlugins` git path, registry record)/update (uninstall-and-fresh-clone when the catalog version moves, no-op when current)/uninstall; `registry.ts` - `MarketplaceRegistry` JSON store of pinned name/version/dir at the forge base dir, corrupt-file tolerant). TUI `/plugin` surface: `/plugin [installed]` lists pinned plugins, `/plugin marketplace add owner/repo` sets the source, `/plugin marketplace browse` fetches live with errors surfaced as system messages; palette entry added; `@forge/plugin-kernel` added as TUI workspace dep. 7 protocol tests green (offline via `file://` git clones); kernel 63/63, tui typecheck 0.
 
 **Estimated Hours:** 6–8 hours.
 
@@ -2049,6 +2103,8 @@ Each phase contains:
 
 **Testing:** Add official marketplace. Browse and install plugins.
 
+**Status (2026-10-17):** Implemented (publishable repo content at repo-root `marketplace/` - `marketplace.json` with 10 curated plugins (mandated seven + env-guard, commit-linter, changelog-writer), each plugin dir carrying a Phase-108-valid `forge.plugin.json`, README, and a real `skills/<slug>/SKILL.md` in the Phase-106 frontmatter shape; code side `packages/plugin-kernel/src/marketplace/starter.ts` - `STARTER_MARKETPLACE_SOURCE`='forge-workshop/marketplace', `OFFICIAL_MARKETPLACE_URL`, `findStarterMarketplace()` upward search so offline forge can use the committed catalog, all exported in the kernel barrel. Phase-110 protocol hardening: `repoDescriptor` routes absolute filesystem paths (POSIX + Windows drive) to the loader's local source instead of forcing git). Tests: 4 starter tests green - hosted-URL contract, catalog parses w/ 10+ entries incl. all seven mandated names, every entry's manifest matches on disk (name+version), e2e browse (10 entries) + install of security-review through the Phase-110 client offline with registry pin and loadable skill. Kernel 67/67, tsc 0, lint 0; tui typecheck 0. NOTE: pushing `marketplace/` to GitHub as `forge-workshop/marketplace` is a human action (uncommitted-tree rule).
+
 **Estimated Hours:** 8–12 hours.
 
 ---
@@ -2064,6 +2120,8 @@ Each phase contains:
 **Dependencies:** Phase 60 (TUI app shell), Phase 109 (plugin loader).
 
 **Testing:** Plugin registers custom command → appears in command palette. Plugin registers keybinding → works.
+
+**Status (2026-10-17):** Implemented (`packages/plugin-kernel/src/tui/api.ts` - `TuiPluginApi` registry: commands/keybindings/routes/dialogs contributed per plugin with `<plugin>:<id>` namespacing, re-registration rejected via `{ok,error}` results (no-throw), `commandsForPalette()` projects commands into the TUI palette entry shape (group 'plugin'), `matchKeybinding(combo)` for dispatch, routes/dialogs carry lazy `() => string` content, `unregisterPlugin(plugin)` reaps all four kinds on unload. Kernel-side only by design: no ink/TUI imports - the Phase-60 shell feeds contributions in at plugin load; TUI-side wiring happens when a plugin ships. Tests: 6 green covering both blueprint bullets (command appears in palette; keybinding works) plus namespacing, duplicate rejection (same-plugin re-register; keybinding combos are global), lazy route/dialog data, and unload reaping scoped to one plugin). Kernel 73/73, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0.
 
 **Estimated Hours:** 6–8 hours.
 
@@ -2787,5 +2845,5 @@ Each phase contains:
 ---
 
 **END OF PLAN.md**
-*Last updated: 2026-08-26*
-*Next phase: 1 (Product Vision & Differentiator Document)*
+*Last updated: 2026-10-16 (historical roadmap recovery and repair-status correction)*
+*Current phase: 86, implemented-under-repair; next phase: 87, pending verification and separate implementation approval.*

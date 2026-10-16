@@ -372,12 +372,12 @@
 
 - **Date:** 2026-08-29
 - **Status:** Accepted
-- **Context:** The TUI needs richer input: SGR (1006) mouse reporting (scroll for chat history, click to select, drag for diff scroll) and the Kitty keyboard protocol (CSI-u) so keys are reported with explicit codes/modifiers — most importantly distinguishing Ctrl+I from Tab, which a legacy terminal cannot.
+- **Context:** The TUI needs richer input: SGR (1006) mouse reporting (scroll for chat history, click to select, drag for diff scroll) and the Kitty keyboard protocol (CSI-u) so keys are reported with explicit codes/modifiers ï¿½ most importantly distinguishing Ctrl+I from Tab, which a legacy terminal cannot.
 - **Decision:** Two pure parser modules in packages/tui/src/keyboard:
-  - `kitty.ts` — `parseKittyKey(seq)` decodes `ESC [ <code> ; <mods> ; <keytype> u`: splits modifiers (shift=1/alt=2/ctrl=4/meta=8), maps named-key codes (Tab/Enter/arrows/F-keys) via a table, and for printable ASCII applies the ctrl mask so Ctrl+I yields `i` (not `Tab`). `keytype === 2` or a known named code sets `named: true` (the disambiguation signal). Exposes `KITTY_ENABLE`/`KITTY_DISABLE` opt-in sequences.
-  - `mouse.ts` — `parseMouseSGR(seq)` decodes `ESC [ < b ; x ; y (M|m)`: `m`=release, `b&64`=wheel (b&1 ? down), `b&32`=drag, else press; button from `b&3`; modifier bits 4/8/16. Exposes `MOUSE_ENABLE`/`MOUSE_DISABLE` (1006) sequences.
+  - `kitty.ts` ï¿½ `parseKittyKey(seq)` decodes `ESC [ <code> ; <mods> ; <keytype> u`: splits modifiers (shift=1/alt=2/ctrl=4/meta=8), maps named-key codes (Tab/Enter/arrows/F-keys) via a table, and for printable ASCII applies the ctrl mask so Ctrl+I yields `i` (not `Tab`). `keytype === 2` or a known named code sets `named: true` (the disambiguation signal). Exposes `KITTY_ENABLE`/`KITTY_DISABLE` opt-in sequences.
+  - `mouse.ts` ï¿½ `parseMouseSGR(seq)` decodes `ESC [ < b ; x ; y (M|m)`: `m`=release, `b&64`=wheel (b&1 ? down), `b&32`=drag, else press; button from `b&3`; modifier bits 4/8/16. Exposes `MOUSE_ENABLE`/`MOUSE_DISABLE` (1006) sequences.
 - **Rationale:**
-  - Both parsers are pure (string in ? structured event out) so they are unit-testable without a TTY/raw mode — critical because Ink `useInput` cannot run in the test environment.
+  - Both parsers are pure (string in ? structured event out) so they are unit-testable without a TTY/raw mode ï¿½ critical because Ink `useInput` cannot run in the test environment.
   - The Kitty parser keeps the key-vs-character distinction explicit (`named` flag + ctrl mask), which is exactly the spec's "distinguishes Ctrl+I from Tab" requirement and the reason to adopt the protocol.
   - Exposing enable/disable sequences makes wiring into the app shell a single write, and the parsers are reusable for any input source (stdin reader, test harness).
 - **Alternatives rejected:** Wiring parsing directly into `useInput` (untestable + mixes protocol with React); X10/legacy mouse encoding (no coordinates/modifiers, inferior to SGR 1006). Feature-detecting the terminal is deferred to the app shell.
@@ -398,7 +398,7 @@
   - Lazy `import('shiki')` is the single highest-leverage win: Shiki + grammars/themes are large and off the critical path for first paint. The type-only static import keeps the `Highlighter` type available with zero runtime cost.
   - A subprocess-spawn benchmark gives a true cold measurement (module cache cannot mask costs), and is reproducible on any platform via `bun run bench/startup.ts 100`.
 - **Alternatives rejected:** Rewriting components to avoid Shiki (it is the chosen highlighter per Phase 59). Eagerly preloading Shiki in a worker (adds complexity for marginal gain; on-demand load is sufficient since highlighting happens post-paint).
-- **Consequences:** 249+ tui tests pass (percentile test added). Shiki is removed from the cold path. Benchmark on this Windows sandbox reported p50~481ms / p95~901ms / min~274ms — dominated by cold `bun` process spawn + React/Ink load, not app code; re-run on the target platform to confirm the <300ms budget. (ADR ref: Phase 59 renderer choice.)
+- **Consequences:** 249+ tui tests pass (percentile test added). Shiki is removed from the cold path. Benchmark on this Windows sandbox reported p50~481ms / p95~901ms / min~274ms ï¿½ dominated by cold `bun` process spawn + React/Ink load, not app code; re-run on the target platform to confirm the <300ms budget. (ADR ref: Phase 59 renderer choice.)
 
 ---
 
@@ -457,10 +457,10 @@ oImplicitReturns; zod ContextVariableMap augmentation enables typed c.get('valid
 - **Date:** 2026-09-03
 - **Status:** Accepted
 - **Context:** Phase 74 shipped the OpenAPI 3.1 contract at /api/openapi.json. Phase 76 needs a typed TS client so every consumer (TUI, web, IDE, future Python SDK in Phase 79, automation) talks to the server through one type-safe surface.
-- **Decision:** Hand-rolled typed SDK in packages/sdk (ForgeClient + SSEParser + streamSSE) that mirrors the OpenAPI schemas. No new runtime dependencies — uses platform etch (override via etchImpl). Spec coverage: system (health, ready, openapi.json), sessions (list/search/get/create/delete/events), prompts (submit), tools (list/get/execute), config (all/defaults/get/set/delete with scope), auth (status), sse (stats/broadcast/stream).
+- **Decision:** Hand-rolled typed SDK in packages/sdk (ForgeClient + SSEParser + streamSSE) that mirrors the OpenAPI schemas. No new runtime dependencies ï¿½ uses platform etch (override via etchImpl). Spec coverage: system (health, ready, openapi.json), sessions (list/search/get/create/delete/events), prompts (submit), tools (list/get/execute), config (all/defaults/get/set/delete with scope), auth (status), sse (stats/broadcast/stream).
 - **Rationale:**
   - At ~20 routes the codegen overhead (Stainless/openapi-typescript) outweighs the benefit of auto-generated types; the spec already exists and is small enough to mirror by hand.
-  - Hand-rolled SDK lets us ship first-class SSE support (typed SSEEventName union, streamSSE async iterator + callback handler) that the OpenAPI spec can't describe — the SSE consumer is a real product surface, not a stub.
+  - Hand-rolled SDK lets us ship first-class SSE support (typed SSEEventName union, streamSSE async iterator + callback handler) that the OpenAPI spec can't describe ï¿½ the SSE consumer is a real product surface, not a stub.
   - Zero-dep policy (see ADR-001, STACK.md): every dependency is a future upgrade tax. etch is a built-in everywhere we deploy.
 - **Implementation details:**
   - src/types.ts mirrors every request/response shape from openapi.ts (Phase 74). Updates to one must update the other.
@@ -479,11 +479,11 @@ oImplicitReturns; zod ContextVariableMap augmentation enables typed c.get('valid
 
 - **Date:** 2026-09-03
 - **Status:** Accepted
-- **Context:** Phase 73 shipped ForgeServer.create() as a programmatic surface. Phase 77 needs a binary that turns that into orge serve [--port 3845] [--host 0.0.0.0] [--auth-token …] [--cors …] [--no-cors] so the server is one command away from being useful for the dashboard (Stage 16), IDE extensions, and CI automation. The server install was already signal-aware (SIGINT/SIGTERM from Phase 73) so the CLI is a thin argv adapter.
+- **Context:** Phase 73 shipped ForgeServer.create() as a programmatic surface. Phase 77 needs a binary that turns that into orge serve [--port 3845] [--host 0.0.0.0] [--auth-token ï¿½] [--cors ï¿½] [--no-cors] so the server is one command away from being useful for the dashboard (Stage 16), IDE extensions, and CI automation. The server install was already signal-aware (SIGINT/SIGTERM from Phase 73) so the CLI is a thin argv adapter.
 - **Decision:** CLI lives in packages/server/bin/forge.ts with the parser in src/cli.ts as a pure, importable module. parseArgs(argv): ParsedArgs returns { command, options, flags, errors, raw } and un(argv, opts?) does the I/O. The in field in @forge/server/package.json points at dist/bin/forge.js so the same package can be 
 pm i -g'd to get the orge binary on PATH.
 - **Flags:** --port <n>, --host <h>, --base-dir <path>, --db <path>, --cors <origin> (repeatable), --no-cors, --auth-token <t>, --help / -h, --version / -v. Bare flags (--port) and --flag=value are both accepted. Subcommand is inferred when the first token is a flag (so orge --port 3000 works). The parser is pure, so the 20-test CLI suite runs without a server.
-- **Auth middleware:** A new createAuthMiddleware(token?) short-circuits when no token is configured; otherwise it gates every non-/health* request with a timing-safe bearer check. Phase 81 replaces it with the proper per-provider auth model — the public middleware contract is stable so the swap is drop-in. Liveness probes stay open.
+- **Auth middleware:** A new createAuthMiddleware(token?) short-circuits when no token is configured; otherwise it gates every non-/health* request with a timing-safe bearer check. Phase 81 replaces it with the proper per-provider auth model ï¿½ the public middleware contract is stable so the swap is drop-in. Liveness probes stay open.
 - **Bug found and fixed during testing:** The --flag=value form of parseArgs returned 
 : next (the current index) for inline values, then i = n - 1 re-processed the same arg ? infinite loop ? 4+ tests hung. Fix: 
 : next + 1 so the for-loop's i++ advances past the inline-value arg. Caught because we run the test suite as one process and the hang blocks the runner instead of failing one test.
@@ -502,8 +502,8 @@ pm i -g'd to get the orge binary on PATH.
   - streamSSE was an AsyncGenerator that didn't start until you called .next(). The handler-style consumption mode (client.sse.stream({ handler })) silently never connected. Fix: when a handler is passed, run the pump in the background (oid pumpStream(...)) and return oid; without a handler, return the generator as before. The handler variant matches what every consumer actually wants (callback, not iteration).
   - The SDK's streamSSE was casting es.body to ReadableStream<Uint8Array>, but the in-process Hono pp.request() returns a ReadableStream<string>. TextDecoder.decode then threw on the string chunks. Fix: 	ypeof value === 'string' ? value : decoder.decode(value, { stream: true }).
 - **Alternatives rejected:**
-  - Per-room pub/sub (Redis/NATS) — premature for a single-process server; the in-memory index is O(1) and Phase 97 (background tasks) is the natural place to revisit if we ever need cross-process.
-  - Storing per-client "last event id" in a cookie/header instead of an explicit frame — too implicit; clients have no idea which event id they last saw.
+  - Per-room pub/sub (Redis/NATS) ï¿½ premature for a single-process server; the in-memory index is O(1) and Phase 97 (background tasks) is the natural place to revisit if we ever need cross-process.
+  - Storing per-client "last event id" in a cookie/header instead of an explicit frame ï¿½ too implicit; clients have no idea which event id they last saw.
 - **Consequences:** 9 new server tests (SSEHub (multi-client attach)) + 3 new SDK integration tests (Multi-client SSE attach (integration)) pass. Two clients attached to the same session both receive the same broadcast; detaching one drops only that client; broken controllers are auto-pruned (delivered vs ailed accounting). The SDK gained sse.attach/detach/presence/activeSessions/replay methods. Workspace build 12/12 + test 24/24 green.
 
 ---
@@ -513,17 +513,17 @@ pm i -g'd to get the orge binary on PATH.
 - **Status:** Accepted
 - **Context:** Phase 76 shipped a typed HTTP SDK. Phase 79 wants a Python client for automation/Jupyter/ML pipelines, but the spec lists Phase 80 (\"RPC Mode over Stdio\") as a separate phase. The Python SDK *cannot* work without the JSON-RPC server, and shipping them as one phase is far cheaper than a cross-package coordination dance. So Phase 79 ships **both** the server side (@forge/server/rpc) and the Python client (packages/sdk/python). Phase 80 will then deepen the protocol (notifications, ACP surface, capability negotiation) without changing the wire format.
 - **Decision:**
-  - **Server (packages/server/src/rpc/)** — pure-stdlib RpcServer over a newline-delimited JSON stream. Methods registered through egisterRpcMethods(server, { sessionManager, agentExecutor }) mirror the HTTP API one-to-one: system.*, sessions.*, prompts.*, 	ools.*, config.*, sse.*. Errors are surfaced with the handler's thrown { code, message, data } shape (defaults to -32603 Internal).
-  - **CLI (orge rpc [--base-dir …])** — boots the same ForgeServer as orge serve but pipes stdin/stdout into the RPC layer. Stderr is reserved for the human-readable banner (\"forge 0.1.0 rpc ready\"), matching the MCP stdio transport convention.
-  - **Python SDK (packages/sdk/python/forge_sdk/)** — zero-dependency. ProcessTransport spawns orge rpc and runs a reader thread that demultiplexes responses (by id) and notifications (by absence of id). ForgeClient and AsyncForgeClient expose typed resource groups (.system, .sessions, .prompts, .tools, .config, .sse); async wraps the sync transport with loop.run_in_executor so the line discipline stays simple.
+  - **Server (packages/server/src/rpc/)** ï¿½ pure-stdlib RpcServer over a newline-delimited JSON stream. Methods registered through egisterRpcMethods(server, { sessionManager, agentExecutor }) mirror the HTTP API one-to-one: system.*, sessions.*, prompts.*, 	ools.*, config.*, sse.*. Errors are surfaced with the handler's thrown { code, message, data } shape (defaults to -32603 Internal).
+  - **CLI (orge rpc [--base-dir ï¿½])** ï¿½ boots the same ForgeServer as orge serve but pipes stdin/stdout into the RPC layer. Stderr is reserved for the human-readable banner (\"forge 0.1.0 rpc ready\"), matching the MCP stdio transport convention.
+  - **Python SDK (packages/sdk/python/forge_sdk/)** ï¿½ zero-dependency. ProcessTransport spawns orge rpc and runs a reader thread that demultiplexes responses (by id) and notifications (by absence of id). ForgeClient and AsyncForgeClient expose typed resource groups (.system, .sessions, .prompts, .tools, .config, .sse); async wraps the sync transport with loop.run_in_executor so the line discipline stays simple.
 - **Bug found and fixed during testing:**
   - Python subprocess.Popen(['forge.js', ...]) raised WinError 193 on Windows (\"not a valid Win32 application\") because the path ends in .js. Fix: in ProcessTransport.__init__, if the path ends with .js, prepend ['bun', 'run', binary] so the monorepo build artifact can be used as the binary.
   - orge rpc died with SQLiteError: unable to open database file when only --base-dir was passed: dbPath defaulted to <cwd>/.forge/forge.db instead of <baseDir>/forge.db. Fix: derive the default dbPath from the (possibly user-supplied) aseDir rather than process.cwd().
   - The CLI bin lived at packages/server/bin/forge.ts and imported '../src/cli', which worked pre-flatten (dist/bin/forge.js ? dist/src/cli.js) but broke after the Phase 78 postbuild moved dist/src/* ? dist/*. Fix: move the bin into packages/server/src/bin/forge.ts so tsc handles it like every other source file, drop the postbuild flatten, and point the in field at dist/bin/forge.js.
 - **Alternatives rejected:**
-  - JSON-RPC over HTTP (POST /rpc) — adds an HTTP client to every Python user; the stdio transport is the *DeepSeek Harness* idiom for editor integration and zero of our consumers would prefer HTTP.
-  - gRPC — extra codegen + protoc dependency for a 12-method surface.
-  - pip dependency on httpx/websockets — the Python SDK is intentionally zero-dep so it works in minimal ML environments.
+  - JSON-RPC over HTTP (POST /rpc) ï¿½ adds an HTTP client to every Python user; the stdio transport is the *DeepSeek Harness* idiom for editor integration and zero of our consumers would prefer HTTP.
+  - gRPC ï¿½ extra codegen + protoc dependency for a 12-method surface.
+  - pip dependency on httpx/websockets ï¿½ the Python SDK is intentionally zero-dep so it works in minimal ML environments.
 - **Consequences:** 13 new server tests (RPC protocol codec + RpcServer round-trips, errors, multi-request, parse errors, internal/typed errors, notifications, dup registration). 8 Python tests pass (6 codec unit + 2 end-to-end that spawn a real orge rpc subprocess and drive system, tools, sessions, error paths). Workspace un run test 24/24 packages pass; un run build 12/12 green. Phase 80 can now add notifications, capability negotiation, and the ACP surface on top of the same wire format.
 
 ---
@@ -531,17 +531,17 @@ pm i -g'd to get the orge binary on PATH.
 
 - **Date:** 2026-09-03
 - **Status:** Accepted
-- **Context:** Phase 79 shipped the basic JSON-RPC wire format (equest/response/notification, error envelopes, orge rpc subcommand, Python subprocess SDK). Phase 80 deepens the protocol so it can carry a real prompts.submit conversation end-to-end: capability negotiation on connect, server-pushed notifications while a prompt runs, and in-flight cancellation. The wire format stays JSON-RPC 2.0 over newline-delimited JSON — no new envelope or transport.
+- **Context:** Phase 79 shipped the basic JSON-RPC wire format (equest/response/notification, error envelopes, orge rpc subcommand, Python subprocess SDK). Phase 80 deepens the protocol so it can carry a real prompts.submit conversation end-to-end: capability negotiation on connect, server-pushed notifications while a prompt runs, and in-flight cancellation. The wire format stays JSON-RPC 2.0 over newline-delimited JSON ï¿½ no new envelope or transport.
 - **Decision:** Four additions on top of the Phase 79 server:
   1. **initialize / initialized handshake** (pc/capabilities.ts). LSP-shaped two-call exchange. Client advertises streaming / cancellation / structuredErrors; server returns its supported methods. Negotiation is "AND": a feature is enabled only if both sides want it. The Python SDK exposes client.initialize(...) that caches the negotiated server_info and capabilities and fires the follow-up initialized notification.
   2. **$/cancelRequest** (built into the server). When the server reads a cancel request it looks up the in-flight controller, calls controller.abort(), and the handler's eq.signal fires. Returns { cancelled: bool }. Server rejects missing id with InvalidParams.
-  3. **Live $/progress notifications on prompts.submit.** When the client advertised streaming, the bindings forward every LoopEvent to a notifier that wraps the method name in $/progress with { requestId, method, params }. The HTTP SSE surface (Phase 75) and the RPC surface now share the same event vocabulary (	ext_delta, 	ool_call, gent_done, …).
+  3. **Live $/progress notifications on prompts.submit.** When the client advertised streaming, the bindings forward every LoopEvent to a notifier that wraps the method name in $/progress with { requestId, method, params }. The HTTP SSE surface (Phase 75) and the RPC surface now share the same event vocabulary (	ext_delta, 	ool_call, gent_done, ï¿½).
   4. **Per-request AbortSignal plumbing.** New RpcDispatchRequest type (wire-level RpcRequest + per-request signal) is what handlers receive. Handlers can await eq.signal for cancellation; executePrompt passes it through to unAgentLoop.
-- **Bug found and fixed during testing:** the original serve() loop used or await (const line of rl) { await this.handleLine(line) }. That *serializes* requests — a slow handler blocked the read loop, so $/cancelRequest could never arrive. Fix: switch to event-based line reading (l.on('line', …)), dispatch every line in its own async task, and use Promise.allSettled on shutdown so in-flight handlers are awaited. The $/cancelRequest test now passes in 16ms instead of timing out.
+- **Bug found and fixed during testing:** the original serve() loop used or await (const line of rl) { await this.handleLine(line) }. That *serializes* requests ï¿½ a slow handler blocked the read loop, so $/cancelRequest could never arrive. Fix: switch to event-based line reading (l.on('line', ï¿½)), dispatch every line in its own async task, and use Promise.allSettled on shutdown so in-flight handlers are awaited. The $/cancelRequest test now passes in 16ms instead of timing out.
 - **Alternatives rejected:**
-  - Custom wire format (newline-delimited JSON-RPC + a Forge-specific envelope) — every editor/IDE would need a custom parser; the whole point of Phase 79 was to land on a standard so any LSP-aware client could be one config away.
-  - Streaming over HTTP (long-poll or chunked) — defeats the point of orge rpc. The stdio transport is what the Python/ACP/Jupyter clients can spawn for free.
-  - Promise-based handlers that the server Promise.alls — that works for *send* but not for *receive while another handler is running*. The event-based dispatch is the only way to keep the read loop responsive while a slow handler is in flight.
+  - Custom wire format (newline-delimited JSON-RPC + a Forge-specific envelope) ï¿½ every editor/IDE would need a custom parser; the whole point of Phase 79 was to land on a standard so any LSP-aware client could be one config away.
+  - Streaming over HTTP (long-poll or chunked) ï¿½ defeats the point of orge rpc. The stdio transport is what the Python/ACP/Jupyter clients can spawn for free.
+  - Promise-based handlers that the server Promise.alls ï¿½ that works for *send* but not for *receive while another handler is running*. The event-based dispatch is the only way to keep the read loop responsive while a slow handler is in flight.
 - **Consequences:** 9 new server tests (initialize handshake, capability negotiation, initialized silent accept, cancel unknown/cancel in-flight with AbortSignal, 
 otify()/
 otifier accessor, $/progress fan-out for prompts.submit). 3 new Python tests (initialize returns capabilities, no-capabilities yields all-off, $/cancelRequest is acknowledged). 90/90 server + 11/11 Python + 24/24 workspace tests pass. orge rpc is now feature-complete for editor integration, ACP, and any other JSON-RPC 2.0 client.
@@ -598,15 +598,15 @@ otifier accessor, $/progress fan-out for prompts.submit). 3 new Python tests (in
   cheap (in-memory list length) and safe under concurrent startup.
 
 - **Alternatives rejected:**
-  - Storing plaintext secrets in the SQLite session DB — leaks on disk
+  - Storing plaintext secrets in the SQLite session DB ï¿½ leaks on disk
     inspection or DB dump.
-  - JWT-style self-contained tokens with embedded claims — needs a JWT
+  - JWT-style self-contained tokens with embedded claims ï¿½ needs a JWT
     library and a rotation story; opaque tokens + server-side hash are
     simpler and let us revoke instantly.
-  - Per-IP rate limits instead of per-key — Phase 81 spec said per-key.
-  - Hashing with bcrypt/argon — overkill for high-entropy random secrets;
+  - Per-IP rate limits instead of per-key ï¿½ Phase 81 spec said per-key.
+  - Hashing with bcrypt/argon ï¿½ overkill for high-entropy random secrets;
     the search space is 256 bits, sha-256 is fine.
-  - Centralized orge auth daemon — keys live in the same per-server
+  - Centralized orge auth daemon ï¿½ keys live in the same per-server
     store, ops are a one-line orge auth create.
 
 - **Consequences:** 20 new server tests (12 AuthStore unit + 8 CLI auth).
@@ -614,3 +614,81 @@ otifier accessor, $/progress fan-out for prompts.submit). 3 new Python tests (in
   path gained uth.* methods so editor/Python clients can mint + revoke
   keys without shelling out to the CLI. The legacy --auth-token is
   still honored for back-compat, so existing deployments don't break.
+
+---
+
+## Recovery provenance and historical caveats (2026-10-16)
+
+The historical registry above was recovered from verified Git commit `4ceddd1f24c4dc214a233c7429ace6fa6ccef218`: 617 newline-split lines, 41 ADR headings covering ADR-001 through ADR-040. The history already contains two ADR-034 headings, non-sequential ordering, control characters, and historical test/completion claims. Those were retained, not silently renumbered, rewritten, or revalidated.
+
+ADR-041 through ADR-044 below are **reconstructed from session facts supplied by the coordinator**, not recovered original wording. Their original dates and full rationale are unavailable; no alternatives or test outcomes are invented. ADR-045 is preserved verbatim from the pre-recovery working file. Its historical completion claims are superseded by the repair qualification after it. For current evidence see [AUDIT_REPAIR_STATUS.md](AUDIT_REPAIR_STATUS.md).
+
+## ADR-041: Phase 82 Server Integration Test Suite (Reconstructed)
+
+- **Recovered on:** 2026-10-16; original entry date unavailable.
+- **Status:** Reconstructed session record; verification incomplete.
+- **Provenance:** Coordinator-provided session facts, not original ADR text.
+- **Recorded outcome:** Phase 82 server integration tests reported 29 of 37 passing, with 8 known issues. This was not a fully passing integration suite.
+- **Caveats:** Known reports included config persistence, auth/404 expectations, SSE chunk decoding, Scalar docs access, missing provider credentials, and Windows bash availability. These are not all established production root causes; separate implementation defects, test defects, and environment blockers during repair.
+- **Consequences:** Retain failing assertions and investigate offline. Record fresh results rather than promoting this historical partial run to completion.
+
+## ADR-042: Phase 83 ContextBudgeter (Reconstructed)
+
+- **Recovered on:** 2026-10-16; original entry date unavailable.
+- **Status:** Reconstructed session record; repair verification pending.
+- **Provenance:** Coordinator-provided session facts, not original ADR text.
+- **Recorded decision:** Use `ContextBudgeter` with a character-based approximation of 4 characters per token. Bound the context budget by `min(maxTokens, contextWindow)`; warning at 80%, critical at 95%.
+- **Consequences:** Approximation is not an exact provider tokenizer. Verify limits, reserved response space, and threshold boundaries using deterministic tests; no new architecture decision is implied by this reconstruction.
+
+## ADR-043: Phase 84 Automatic LLM Summarization (Reconstructed)
+
+- **Recovered on:** 2026-10-16; original entry date unavailable.
+- **Status:** Implemented-under-repair, not fully verified complete.
+- **Provenance:** Coordinator-provided session facts, not original ADR text.
+- **Recorded decision:** Automatically summarize older context using the LLM and represent the summary as an event, preserving the original events in the append-only log.
+- **Consequences:** A summary must affect assembled model context, not only exist in storage. Prior completion claims were disproven by audit. Verify event preservation, effective context replacement, and failure handling offline before acceptance.
+
+## ADR-044: Phase 85 Manual Focused Compaction (Reconstructed)
+
+- **Recovered on:** 2026-10-16; original entry date unavailable.
+- **Status:** Implemented-under-repair, not fully verified complete.
+- **Provenance:** Coordinator-provided session facts, not original ADR text.
+- **Recorded decision:** Support manual `/compact` invocation with optional user focus instructions for summarization.
+- **Consequences:** Prior completion claims were disproven by audit. Verify invocation, focus propagation, and preserved log history offline. Do not invent missing command signatures or introduce future roadmap features during repair.
+
+---
+## ADR-045: Phase 86 Microcompact (Old Tool Results Pruning) Completion
+
+- **Date:** 2026-09-06
+- **Status:** Accepted
+- **Context:** Phase 86 (Microcompact) is complete. The microcompact system at `packages/core/src/context/microcompact.ts` implements a lighter-weight compaction that prunes old tool results (keeping only summaries) without full message summarization. This is faster and cheaper than full compaction but frees up significant context (tool results are often very verbose).
+
+- **Implementation Details:**
+  - `Microcompactor` class that works with the existing hydration system
+  - `shouldMicrocompact(events)` - checks if tool result messages exceed threshold
+  - `microcompact(events)` - performs microcompaction:
+    1. Extracts messages with tool results from session events via `assembleMessages`
+    2. Identifies messages to process (older tool results beyond `maxToolResultsToKeep` threshold)
+    3. Summarizes tool results (string truncation, array/object summaries) or removes them
+    4. Calculates tokens saved
+  - Configurable: `maxToolResultsToKeep` (default 10), `summarizeToolResults` (default true), `summaryPrefix` (default '[Tool Result Summary]')
+  - `microcompactIfNeeded` convenience function
+  - Integrates with existing session event log and hydration system
+  - 18 comprehensive tests covering all functionality
+
+- **Integration:**
+  - Uses `assembleMessages` from Phase 14 (hydration) for message extraction
+  - Complements Phase 83 (budgeter) for context management
+  - Complements Phase 84 (auto-compaction) and Phase 85 (manual compaction)
+  - Ready for Phase 87 (system prompt assembly) integration
+
+- **Alternatives rejected:**
+  - Removing tool results entirely (loses important debugging info; summarization preserves key info)
+  - Full message summarization for tool results (overkill; tool results are structured and can be summarized cheaper)
+  - Fixed window of tool results to keep (configurable threshold is more flexible)
+
+- **Consequences:** Phase 86 is complete. The microcompact system provides a lightweight alternative to full compaction for managing verbose tool results. Phase 87 can now implement the system prompt assembly pipeline.
+
+### ADR-045 repair qualification (2026-10-16)
+
+The ADR-045 text above is retained as historical evidence, not a current acceptance decision. The audit disproved the Phase 84â€“86 completion claims. Phase 86 remains **implemented-under-repair** until the coordinator records final verification. Phase 87 remains pending; neither this historical ADR nor the recovered roadmap authorizes its implementation. Test counts quoted in old ADRs are historical and must not be substituted for fresh package/workspace verification.

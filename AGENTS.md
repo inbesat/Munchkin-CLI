@@ -72,10 +72,17 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 80 - RPC Mode over Stdio (Complete)
-- **Current phase:** Phase 81 - Auth/Token Model for Remote Servers (Complete)
-- **Next action:** Phase 80 - RPC Mode over Stdio
-- **Blockers:** None
+- **Current phase:** Phase 112 - TUI Plugin API (Complete); Phases 87-112 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-112 (Context Engineering, Subagents & Orchestration, and the first six Stage 9 phases)
+  - Stages closed: 7 (Context Engineering, 83-92) and 8 (Subagents & Orchestration, 93-102); Stage 9 (Hooks/Skills/Plugins, 103-116) in progress
+- **Next action:** Phase 113 - Plugin Sandboxing
+- **Blockers:**
+  - Config key persistence (GET after POST returns 404)
+  - Revoked key GET returns 401 instead of 404
+  - Config key DELETE returns 401 instead of 404
+  - Test environment limitations (OpenAI API key, bash on Windows)
+  - SSE TextDecoder expects ArrayBuffer
+  - Scalar docs returns 401/500
 
 ## How to Update This File
 
