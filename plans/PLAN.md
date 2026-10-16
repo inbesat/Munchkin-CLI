@@ -2215,6 +2215,8 @@ Each phase contains:
 
 **Testing:** Connect to GitHub MCP server locally. List tools. Execute a tool.
 
+**Status (2026-10-17):** Implemented (hand-rolled JSON-RPC 2.0 over newline-delimited stdio per the MCP transport spec, no SDK dependency used: `packages/mcp/src/client/stdio.ts` - `McpStdioTransport` over `Bun.spawn` pipes with id-matched pending map, notification handlers, per-request timeouts (default 30s), stderr ring buffer for diagnostics, close() kills the child and settles every pending request, unparseable lines vs responses isolated to the diagnostics ring; `packages/mcp/src/client/tools.ts` - `McpToolClient`: `connect()` runs the initialize handshake (protocol 2024-11-05) + `notifications/initialized`, `listTools()` discovery, `callTool(name,args)` surfacing `isError` results, `registerToolsInto(registry)` adapts discovered tools into Phase-34-style core registry definitions (structural interface, no @forge/core import). Blueprint's GitHub-server test requires a token/network, so protocol conformance is proven against a real spawnable mock server (`mock-server.ts`: initialize + tools/list + echo/add/slow/fail tools + unsolicited notification). Tests: 6 green - handshake w/ serverInfo, discovery (4 tools w/ schemas), echo/add execution + isError surfacing, no-hang timeout on the slow tool, core-registry adapter registration, nonexistent-server spawn fails without throwing. mcp 7/7, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 8–10 hours.
 
 ---
