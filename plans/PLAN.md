@@ -2391,6 +2391,8 @@ Each phase contains:
 
 **Testing:** Run command in sandbox. Verify restricted access. Try to access forbidden paths → denied.
 
+**Status (2026-10-17):** Implemented (`packages/sandbox/src/windows/runner.ts` - `WindowsSandboxProvider` (id `windows-restricted-token`): executes commands under a RESTRICTED TOKEN via `runas /trustlevel:0x20000` (TrustLevel Untrusted) - the native-free restricted-token mechanism; output captured through marker files in a per-run scratch (runas detaches into its own console), done/exitcode markers using the parenthesized `%ERRORLEVEL%` echo (avoids the digit-trailing stream-redirect pitfall), cwd + env honored inside the generated run.bat, poll-to-timeout, scratch cleaned per run. Sensitive deny list: SystemRoot, System32, Program Files (+x86), and every real user profile under %SystemDrive%\Users except the current user (shared-by-design entries - Public, All Users - junctions, desktop.ini and non-directories excluded). `checkIsolation()` runs live probes: scratch write must succeed; writes into every sensitive dir must fail; `extraDeniedPaths` option. `isAvailable()` = win32 + runas present + live restricted echo probe, cached per instance; unavailable sessions degrade to skip-with-reason (tests guard). This dev machine: runas trust verified - probes confirmed writes DENIED to C:\Windows, System32, Program Files (x2), isolated=true (a deny-list bug that initially included the shared Public/All Users junctions was caught by the live probe and fixed). Tests: 5 green (2 platform-structure + 3 live-on-Windows). sandbox 9/9, tsc 0, lint 0; barrel + dist rebuilt.
+
 **Estimated Hours:** 8–10 hours (complex, may need native addon).
 
 ---
