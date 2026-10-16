@@ -22,7 +22,12 @@ import {
   getPreset,
   installPreset,
 } from '../../mcp/dist/index'
-import { type CheckpointEntry, CheckpointEngine, RewindService } from '../../git/dist/index'
+import {
+  type CheckpointEntry,
+  CheckpointEngine,
+  ReviewWorkflowTool,
+  RewindService,
+} from '../../git/dist/index'
 import { ContextGrid } from './components/context-grid'
 import { createDefaultBindings, getKeyboardManager } from './keyboard'
 import { type ChatMessage, MainLayout, type SidebarItem } from './layout/main'
@@ -98,6 +103,8 @@ export function App() {
   const rewindServiceRef = useRef(new RewindService(checkpointEngineRef.current))
   const conversationSnapshotsRef = useRef<{ id: string; savedAt: number; messages: ChatMessage[] }[]>([])
   const rewindTargetRef = useRef<string | null>(null)
+  /** Phase 136: PR review workflow (gh-backed). */
+  const reviewWorkflowRef = useRef(new ReviewWorkflowTool())
 
   useEffect(() => {
     budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
@@ -271,10 +278,26 @@ export function App() {
         appendSystem(lines.join('\n'))
         return
       }
+      if (command === 'review') {
+        const prNumberRaw = argsText.trim()
+        const prNumber = Number.parseInt(prNumberRaw, 10)
+        const hasPr = !Number.isNaN(prNumber) && prNumber > 0
+        appendSystem(
+          hasPr
+            ? 'Running forge review on PR #' + String(prNumber) + '...'
+            : 'Running forge review on the current branch PR... (pass a number for a specific PR)',
+        )
+        void reviewWorkflowRef.current
+          .execute({ prNumber: hasPr ? prNumber : undefined, cwd: process.cwd() })
+          .then((result) => {
+            appendSystem(result.output)
+          })
+          .catch(() => appendSystem('Review workflow crashed unexpectedly.'))
+        return
+      }
       if (command === 'rewind') {
         const engine = checkpointEngineRef.current
-        const service = rewindServiceRef.current
-        if (argsText === 'cancel' && rewindTargetRef.current !== null) {
+        const service = rewindServiceRef.current        if (argsText === 'cancel' && rewindTargetRef.current !== null) {
           rewindTargetRef.current = null
           appendSystem('Rewind cancelled.')
           return

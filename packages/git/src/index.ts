@@ -53,3 +53,10 @@ export {
   type DiffReview,
   type ReviewFinding,
 } from './tools/review-pr'
+
+// PR review workflow (Phase 136)
+export {
+  ReviewWorkflowTool,
+  reviewWorkflowTool,
+  formatReviewReport,
+} from './tools/review-workflow'

@@ -71,6 +71,12 @@ export const defaultCommands: Command[] = [
     description: 'Restore files + conversation to a checkpoint (`/rewind` lists, `/rewind <id>` confirms)',
     group: 'builtin',
   },
+  {
+    id: 'review',
+    title: 'review',
+    description: 'Deterministic PR review (`/review <prNumber>`) - posts findings when `--post` used',
+    group: 'builtin',
+  },
   { id: 'init', title: 'init', description: 'Generate project configuration', group: 'builtin' },
   { id: 'review', title: 'review', description: 'Run a code review on the diff', group: 'builtin' },
   { id: 'terminal', title: 'terminal', description: 'Open an interactive shell', group: 'builtin' },
