@@ -9,11 +9,11 @@
  * stays a pure argument adapter that's easy to test.
  */
 
+import { join } from 'node:path'
 import { VERSION } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
-import { join } from 'node:path'
 import { AuthStore } from './auth/store'
-import { createServer, type ServerOptions } from './server'
+import { type ServerOptions, createServer } from './server'
 
 export type Subcommand = 'serve' | 'rpc' | 'auth' | 'worktree' | 'help' | 'version'
 
@@ -244,6 +244,11 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   if (argv[0] === 'worktree') {
     return runWorktreeCommand(argv.slice(1), { write })
   }
+  // Phase 137: `forge -p "prompt"` - one-shot print mode.
+  if (argv[0] === '-p' || argv[0] === '--print') {
+    const prompt = argv.slice(1).join(' ').trim()
+    return runPrintMode(prompt, { write, errorWrite: write })
+  }
   const parsed = parseArgs(argv, opts)
 
   if (parsed.errors.length > 0) {
@@ -278,7 +283,6 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
     return 0
   }
 
-
   if (parsed.command === 'auth') {
     return runAuthCommand(argv, { write: opts.write ?? ((l) => process.stdout.write(`${l}\n`)) })
   }
@@ -291,7 +295,9 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   write(`  base-dir: ${parsed.options.baseDir ?? '<cwd>/.forge'}`)
   if (parsed.options.authToken) write('  auth: bearer token required')
   if (parsed.options.corsOrigins !== undefined) {
-    write(`  cors: ${parsed.options.corsOrigins.length === 0 ? 'disabled' : parsed.options.corsOrigins.join(', ')}`)
+    write(
+      `  cors: ${parsed.options.corsOrigins.length === 0 ? 'disabled' : parsed.options.corsOrigins.join(', ')}`,
+    )
   }
   write('Press Ctrl+C to stop.')
 
@@ -322,9 +328,10 @@ export async function runAuthCommand(
     return 0
   }
   const baseDirFlagIdx = argv.indexOf('--base-dir')
-  const baseDir = baseDirFlagIdx >= 0 && argv[baseDirFlagIdx + 1]
-    ? argv[baseDirFlagIdx + 1]
-    : join(process.cwd(), '.forge')
+  const baseDir =
+    baseDirFlagIdx >= 0 && argv[baseDirFlagIdx + 1]
+      ? argv[baseDirFlagIdx + 1]
+      : join(process.cwd(), '.forge')
   const authDir = join(baseDir, 'auth')
   const store = new AuthStore({ baseDir: authDir })
   await store.load()
@@ -336,10 +343,14 @@ export async function runAuthCommand(
       write(`  Create one with: forge auth create --name <name>`)
       return 0
     }
-    write(`${'ID'.padEnd(18)} ${'NAME'.padEnd(24)} ${'ENV'.padEnd(8)} ${'SCOPES'.padEnd(12)} LAST USED`)
+    write(
+      `${'ID'.padEnd(18)} ${'NAME'.padEnd(24)} ${'ENV'.padEnd(8)} ${'SCOPES'.padEnd(12)} LAST USED`,
+    )
     for (const k of keys) {
       const last = k.lastUsedAt ? new Date(k.lastUsedAt).toISOString() : 'never'
-      write(`${k.id.padEnd(18)} ${k.name.padEnd(24)} ${k.env.padEnd(8)} ${k.scopes.join(',').padEnd(12)} ${last}`)
+      write(
+        `${k.id.padEnd(18)} ${k.name.padEnd(24)} ${k.env.padEnd(8)} ${k.scopes.join(',').padEnd(12)} ${last}`,
+      )
     }
     return 0
   }
@@ -357,7 +368,9 @@ export async function runAuthCommand(
     write(`  name:   ${result.metadata.name}`)
     write(`  env:    ${result.metadata.env}`)
     write(`  scopes: ${result.metadata.scopes.join(', ')}`)
-    write(`  rate:   ${result.metadata.rateLimit.capacity} burst / ${result.metadata.rateLimit.refillPerSec}/s refill`)
+    write(
+      `  rate:   ${result.metadata.rateLimit.capacity} burst / ${result.metadata.rateLimit.refillPerSec}/s refill`,
+    )
     write('')
     write('  secret (save now - it will NOT be shown again):')
     write(`    ${result.secret}`)
@@ -394,11 +407,69 @@ Usage:
   forge worktree help
 `
 
+/**
+ * Phase 137: one-shot print mode (`forge -p "prompt"`). Runs the agent loop
+ * with a resolved model, prints the final response to stdout, exits 0 on
+ * success / 1 on error. `opts.model` is injectable for tests.
+ */
+export async function runPrintMode(
+  prompt: string,
+  opts: {
+    model?: import('@forge/core').AgentModel
+    modelId?: string
+    write?: (line: string) => void
+    errorWrite?: (line: string) => void
+  } = {},
+): Promise<number> {
+  const write = opts.write ?? ((line) => process.stdout.write(`${line}\n`))
+  const errorWrite = opts.errorWrite ?? ((line) => process.stderr.write(`${line}\n`))
+  if (prompt.length === 0) {
+    errorWrite('error: -p requires a prompt string')
+    return 1
+  }
+
+  const { runAgentLoop } = await import('@forge/core')
+  let model = opts.model
+  if (model === undefined) {
+    try {
+      const { createModelResolver } = await import('./services/model-resolver')
+      const resolve = createModelResolver({
+        anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+        openaiApiKey: process.env.OPENAI_API_KEY,
+        googleApiKey: process.env.GOOGLE_API_KEY,
+      })
+      model = await resolve(opts.modelId ?? process.env.FORGE_MODEL ?? 'claude-sonnet-4-6')
+    } catch (error) {
+      errorWrite(`error: ${error instanceof Error ? error.message : String(error)}`)
+      return 1
+    }
+  }
+
+  write(`forge: ${prompt}`)
+  try {
+    const result = await runAgentLoop({
+      model,
+      messages: [{ role: 'user', parts: [{ type: 'text', text: prompt }], content: prompt }],
+      onEvent(event) {
+        if (event.type === 'text') write(event.delta)
+      },
+    })
+    write('')
+    if (result.error !== undefined) {
+      errorWrite(
+        `error: ${result.error instanceof Error ? result.error.message : String(result.error)}`,
+      )
+      return 1
+    }
+    return 0
+  } catch (error) {
+    errorWrite(`error: ${error instanceof Error ? error.message : String(error)}`)
+    return 1
+  }
+}
+
 /** Phase 135: dispatch `forge worktree ...` against the @forge/git handlers. */
-function runWorktreeCommand(
-  argv: string[],
-  opts: { write: (line: string) => void },
-): number {
+function runWorktreeCommand(argv: string[], opts: { write: (line: string) => void }): number {
   const write = (line: string): void => opts.write(line)
   const sub = argv[0] ?? 'list'
   const repoPath = process.cwd()
@@ -486,7 +557,12 @@ Options (create):
 `
 
 interface ParsedCreateOptions {
-  options: { name: string; env?: string; scopes?: string[]; rateLimit?: { capacity?: number; refillPerSec?: number } }
+  options: {
+    name: string
+    env?: string
+    scopes?: string[]
+    rateLimit?: { capacity?: number; refillPerSec?: number }
+  }
   error?: string
 }
 
@@ -516,8 +592,16 @@ function parseAuthCreateFlags(argv: string[]): ParsedCreateOptions {
       const [cap, rps] = v.split(':')
       capacity = Number.parseInt(cap ?? '', 10)
       refillPerSec = Number.parseFloat(rps ?? '')
-      if (!Number.isFinite(capacity) || capacity! <= 0 || !Number.isFinite(refillPerSec!) || refillPerSec! <= 0) {
-        return { options: { name: '' }, error: `--rate expects "capacity:refillPerSec" (got "${v}")` }
+      if (
+        !Number.isFinite(capacity) ||
+        capacity! <= 0 ||
+        !Number.isFinite(refillPerSec!) ||
+        refillPerSec! <= 0
+      ) {
+        return {
+          options: { name: '' },
+          error: `--rate expects "capacity:refillPerSec" (got "${v}")`,
+        }
       }
     } else if (a === '--base-dir') {
       i++ // skip the value; the dispatch reads it separately

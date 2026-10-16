@@ -2600,6 +2600,8 @@ Each phase contains:
 
 **Testing:** `forge -p "what is 2+2"` → prints "4" → exits 0.
 
+**Status (2026-10-17):** Implemented (server cli.ts - run() intercepts `-p`/`--print` BEFORE parseArgs (like auth/worktree) and dispatches `runPrintMode(prompt)`; `runPrintMode` (exported, model injectable): empty prompt -> exit 1; model resolution via Phase-80 createModelResolver from env keys (override FORGE_MODEL), injectable opts.model for tests; Phase-33 runAgentLoop with text deltas routed through the injected writer; loop errors -> stderr + exit 1; success -> buffered response + streamed deltas + exit 0; all no-throw. Tests: 4 green - scripted model streams 4 and exits 0 (blueprint bullet), throwing-model -> exit 1 w/ error, empty-prompt rejection, run([-p]) interception reaches print-mode validation. server dist rebuilt; cli suites 29/29; pre-existing failures (ForgeServer Full Integration, server repair regressions) verified failing on the clean stash baseline - unrelated to this phase.
+
 **Estimated Hours:** 3–4 hours.
 
 ---
