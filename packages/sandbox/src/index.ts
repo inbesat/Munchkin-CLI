@@ -20,3 +20,12 @@ export {
   sensitiveDirectories,
   windowsSandboxProvider,
 } from './windows/runner'
+
+// macOS Seatbelt provider (Phase 127)
+export {
+  MACOS_SANDBOX_ID,
+  MacosSeatbeltProvider,
+  buildSeatbeltProfile,
+  macosSeatbeltProvider,
+  type SeatbeltProfileOptions,
+} from './macos/sandbox'
