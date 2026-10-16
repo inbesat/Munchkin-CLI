@@ -2341,6 +2341,8 @@ Each phase contains:
 
 **Testing:** Connect Claude Code to our MCP server. Delegate a task. Verify it works.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/server/` - `ForgeMcpServer` (forge-server.ts): hand-rolled newline-delimited JSON-RPC stdio SERVER (mirror of the Phase-117 client framing) answering initialize (serverInfo `forge` 0.1.0), tools/list, tools/call (unknown tools → `isError` results, handler exceptions → tool-error results, `-32601` for unknown methods), ping; serve loop consumes stdin until EOF, `import.meta.path` guard for direct `bun run` invocation. `forge-tools.ts` - five default capability tools: forge_status (status + capabilities), run_tests (bun test w/ optional scope, timeout 300s, PASS/CHECK verdict from the output's fail summary, truncated to 8k chars), git_diff (diff --stat), new_task (delegation: appends JSON lines to `<cwd>/.forge/mcp-tasks.jsonl`), read_task_queue. npm-readiness: `@forge/mcp` package now ships a `bin` (`forge-mcp-server` → dist/server/forge-server.js) - actual `npm publish` remains the human step (credentials; package is still `private: true` pending consent). Tests: 4 green - and the round trip is dogfooded: the tests drive the server through OUR OWN Phase-117 `McpToolClient` (spawn → initialize → tools/list w/ all five tools → forge_status/git_diff real outputs → run_tests scoped at `src/client/lazy` PASS → new_task delegation queued in a tmp workspace → read_task_queue → empty-task isError). mcp 40/40, tsc 0, lint 0; barrel + dist rebuilt. Live Claude Code connection = manual (register the server binary in the client's config).
+
 **Estimated Hours:** 8–10 hours.
 
 ---
