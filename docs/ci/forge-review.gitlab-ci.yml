@@ -1,0 +1,20 @@
+# GitLab CI: label-triggered forge review on merge requests.
+# Include from your project: 
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/inbesat/Munchkin-CLI/main/docs/ci/forge-review.gitlab-ci.yml'
+# Required CI/CD variable: FORGE_GH_TOKEN (or use glab + GITLAB_TOKEN variant).
+
+forge-review:
+  image: node:22-bookworm-slim
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_LABELS =~ /forge-review/'
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git curl && rm -rf /var/lib/apt/lists/*
+    - curl -fsSL https://bun.sh/install | bash
+    - export PATH="$HOME/.bun/bin:$PATH"
+  script:
+    - export FORGE_PR_NUMBER="$CI_MERGE_REQUEST_IID"
+    - export FORGE_GH_TOKEN="$FORGE_GH_TOKEN"
+    - export CI_PROJECT_DIR="$CI_PROJECT_DIR"
+    - bun run scripts/ci-forge-review.ts
+  allow_failure: true
