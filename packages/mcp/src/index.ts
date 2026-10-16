@@ -23,3 +23,16 @@ export {
   type McpToolDescriptor,
   type McpToolResult,
 } from './client/tools'
+
+// OAuth for remote servers (Phase 119)
+export {
+  McpOAuthFlow,
+  TokenStore,
+  buildPkcePair,
+  fetchOAuthMetadata,
+  type AuthorizeOptions,
+  type AuthorizeResult,
+  type OAuthEndpoints,
+  type OAuthTokenSet,
+  type TokenStoreOptions,
+} from './auth/oauth'
