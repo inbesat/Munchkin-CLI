@@ -1,4 +1,5 @@
 import type { GenerateOptions, GenerateResult, Model, StreamChunk } from '../model/types'
+import { combineAbortSignals } from '../retry/cancellation'
 import { type NormalizedProviderError, normalizeProviderError } from '../retry/normalize'
 
 export interface FallbackOptions {
@@ -33,20 +34,18 @@ export function withFallback(models: readonly Model[], opts: FallbackOptions = {
   const [primary] = chain
   const shouldFallback = opts.shouldFallback ?? (() => true)
 
-  function moveToNext(current: Model): Model | undefined {
-    const idx = chain.indexOf(current)
-    return idx >= 0 && idx + 1 < chain.length ? chain[idx + 1] : undefined
-  }
-
   async function generate(options: GenerateOptions): Promise<GenerateResult> {
+    const abortSignal = combineAbortSignals(options.abortSignal, opts.abortSignal)
+    let index = 0
     let current = primary
     for (;;) {
+      abortSignal?.throwIfAborted()
       try {
-        return await current.generate(options)
+        return await current.generate({ ...options, abortSignal })
       } catch (error) {
-        if (opts.abortSignal?.aborted) throw error
+        abortSignal?.throwIfAborted()
         const normalized = normalizeProviderError(error, current.provider)
-        const next = moveToNext(current)
+        const next = chain[++index]
         if (!next || !shouldFallback(normalized, current)) throw normalized
         opts.onFallback?.(current, next, normalized)
         current = next
@@ -55,19 +54,23 @@ export function withFallback(models: readonly Model[], opts: FallbackOptions = {
   }
 
   async function* stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+    const abortSignal = combineAbortSignals(options.abortSignal, opts.abortSignal)
+    let index = 0
     let current = primary
     for (;;) {
+      abortSignal?.throwIfAborted()
       let yielded = false
       try {
-        for await (const chunk of current.stream(options)) {
+        for await (const chunk of current.stream({ ...options, abortSignal })) {
+          abortSignal?.throwIfAborted()
           yielded = true
           yield chunk
         }
         return
       } catch (error) {
-        if (opts.abortSignal?.aborted) throw error
+        abortSignal?.throwIfAborted()
         const normalized = normalizeProviderError(error, current.provider)
-        const next = moveToNext(current)
+        const next = chain[++index]
         if (yielded || !next || !shouldFallback(normalized, current)) throw normalized
         opts.onFallback?.(current, next, normalized)
         current = next

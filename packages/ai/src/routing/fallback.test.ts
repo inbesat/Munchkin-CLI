@@ -47,6 +47,66 @@ function ok(provider: string, name: string): GenerateResult {
 const options: GenerateOptions = { messages: [{ role: 'user', content: 'hi' }] }
 
 describe('withFallback', () => {
+  it('does not call another provider after request cancellation', async () => {
+    const controller = new AbortController()
+    const reason = new Error('cancelled')
+    let secondaryCalls = 0
+    const routed = withFallback([
+      mkModel('first', 'a', {
+        generate: async () => {
+          controller.abort(reason)
+          throw new Error('503 unavailable')
+        },
+      }),
+      mkModel('second', 'b', {
+        generate: async () => {
+          secondaryCalls++
+          return ok('second', 'b')
+        },
+      }),
+    ])
+
+    await expect(routed.generate({ ...options, abortSignal: controller.signal })).rejects.toBe(
+      reason,
+    )
+    expect(secondaryCalls).toBe(0)
+  })
+
+  it('attempts duplicate model references only once per chain entry', async () => {
+    let calls = 0
+    const model = mkModel('first', 'a', {
+      generate: async () => {
+        calls++
+        if (calls <= 2) throw new Error('503 unavailable')
+        return ok('first', 'a')
+      },
+    })
+
+    await expect(withFallback([model, model]).generate(options)).rejects.toThrow()
+    expect(calls).toBe(2)
+  })
+
+  it('does not start a provider stream after wrapper cancellation', async () => {
+    let calls = 0
+    const controller = new AbortController()
+    const reason = new Error('already cancelled')
+    controller.abort(reason)
+    const routed = withFallback(
+      [
+        mkModel('first', 'a', {
+          stream: async function* () {
+            calls++
+            yield { type: 'text-delta', delta: 'unexpected' }
+          },
+        }),
+      ],
+      { abortSignal: controller.signal },
+    )
+
+    await expect(routed.stream(options)[Symbol.asyncIterator]().next()).rejects.toBe(reason)
+    expect(calls).toBe(0)
+  })
+
   it('falls through to the next provider on a 429 and stays transparent', async () => {
     const falls: Array<{ from: string; to: string; kind: string }> = []
     const primary = mkModel('anthropic', 'claude-sonnet-4-6', {

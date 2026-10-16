@@ -26,13 +26,13 @@ export interface RefreshOptions {
 const inFlight = new Map<string, Promise<ParsedTokens>>()
 
 export async function refreshTokens(opts: RefreshOptions): Promise<ParsedTokens> {
-  const dedupKey = opts.refreshToken
+  const dedupKey = JSON.stringify([opts.provider, opts.refreshToken])
   const running = inFlight.get(dedupKey)
   if (running) return running
 
   const attempt = (async () => {
     try {
-      const payload = await opts.requestRefresh(opts.refreshToken)
+      const payload = await Promise.resolve().then(() => opts.requestRefresh(opts.refreshToken))
       return opts.parseTokens(payload)
     } catch (cause) {
       throw new AuthFlowError(

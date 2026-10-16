@@ -1,5 +1,6 @@
 import type { GenerateOptions, GenerateResult, Model, StreamChunk } from '../model/types'
 import { type BackoffOptions, computeBackoffDelay, sleep, withRetry } from './backoff'
+import { combineAbortSignals } from './cancellation'
 import { type NormalizedProviderError, isRetryable, normalizeProviderError } from './normalize'
 
 export interface ModelRetryOptions extends BackoffOptions {
@@ -23,29 +24,36 @@ export function withModelRetry(model: Model, opts: ModelRetryOptions = {}): Mode
   const retryOn = opts.retryOn ?? ((error: unknown) => isRetryable(normalize(error)))
 
   async function generate(options: GenerateOptions): Promise<GenerateResult> {
+    const abortSignal = combineAbortSignals(options.abortSignal, opts.abortSignal)
+    abortSignal?.throwIfAborted()
     try {
-      return await withRetry(() => model.generate(options), {
+      return await withRetry(() => model.generate({ ...options, abortSignal }), {
         ...opts,
+        abortSignal,
         retryOn,
       })
     } catch (error) {
+      abortSignal?.throwIfAborted()
       throw normalize(error)
     }
   }
 
   async function* stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+    const abortSignal = combineAbortSignals(options.abortSignal, opts.abortSignal)
     const maxAttempts = opts.maxAttempts ?? 3
     let attempt = 0
     for (;;) {
+      abortSignal?.throwIfAborted()
       let yielded = false
       try {
-        for await (const chunk of model.stream(options)) {
+        for await (const chunk of model.stream({ ...options, abortSignal })) {
+          abortSignal?.throwIfAborted()
           yielded = true
           yield chunk
         }
         return
       } catch (error) {
-        if (opts.abortSignal?.aborted) throw error
+        abortSignal?.throwIfAborted()
         const normalized = normalize(error)
         const canRetry =
           (opts.retryOn ? opts.retryOn(error) : isRetryable(normalized)) &&
@@ -53,7 +61,7 @@ export function withModelRetry(model: Model, opts: ModelRetryOptions = {}): Mode
           attempt + 1 < maxAttempts
         if (!canRetry) throw normalized
         attempt += 1
-        await sleep(computeBackoffDelay(attempt, opts), opts.abortSignal)
+        await sleep(computeBackoffDelay(attempt, opts), abortSignal)
       }
     }
   }

@@ -2,6 +2,40 @@ import { describe, expect, it } from 'bun:test'
 import { refreshAndStore, refreshTokens } from './refresh'
 
 describe('refreshTokens', () => {
+  it('clears deduplication after a synchronously thrown request error', async () => {
+    let calls = 0
+    const options = {
+      provider: 'copilot' as const,
+      refreshToken: 'synchronous-failure-token',
+      requestRefresh: () => {
+        calls++
+        throw new Error('synchronous request failure')
+      },
+      parseTokens: () => ({ accessToken: 'unused' }),
+    }
+    await expect(refreshTokens(options)).rejects.toThrow('Token refresh failed')
+    await expect(refreshTokens(options)).rejects.toThrow('Token refresh failed')
+    expect(calls).toBe(2)
+  })
+
+  it('does not share refresh results between different providers', async () => {
+    const first = refreshTokens({
+      provider: 'claude',
+      refreshToken: 'same-provider-local-token',
+      requestRefresh: async () => ({ accessToken: 'claude-access' }),
+      parseTokens: (payload) => payload as { accessToken: string },
+    })
+    const second = refreshTokens({
+      provider: 'chatgpt',
+      refreshToken: 'same-provider-local-token',
+      requestRefresh: async () => ({ accessToken: 'chatgpt-access' }),
+      parseTokens: (payload) => payload as { accessToken: string },
+    })
+
+    expect((await first).accessToken).toBe('claude-access')
+    expect((await second).accessToken).toBe('chatgpt-access')
+  })
+
   it('dedupes concurrent refreshes for the same token', async () => {
     let upstreamCalls = 0
     let release: () => void

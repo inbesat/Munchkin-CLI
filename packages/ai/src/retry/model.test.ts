@@ -42,6 +42,68 @@ function fakeModel(overrides: {
 const options: GenerateOptions = { messages: [{ role: 'user', content: 'hi' }] }
 
 describe('withModelRetry', () => {
+  it('does not invoke a provider for an already aborted request', async () => {
+    let calls = 0
+    const controller = new AbortController()
+    const reason = new Error('cancelled by caller')
+    controller.abort(reason)
+    const wrapped = withModelRetry(
+      fakeModel({
+        generate: async () => {
+          calls++
+          throw new Error('provider must not run')
+        },
+      }),
+      { baseMs: 0 },
+    )
+
+    await expect(wrapped.generate({ ...options, abortSignal: controller.signal })).rejects.toBe(
+      reason,
+    )
+    expect(calls).toBe(0)
+  })
+
+  it('does not retry when the request signal aborts during generation', async () => {
+    let calls = 0
+    const controller = new AbortController()
+    const reason = new Error('cancelled during generation')
+    const wrapped = withModelRetry(
+      fakeModel({
+        generate: async () => {
+          calls++
+          controller.abort(reason)
+          throw new Error('provider error 503')
+        },
+      }),
+      { baseMs: 0, maxAttempts: 3 },
+    )
+
+    await expect(wrapped.generate({ ...options, abortSignal: controller.signal })).rejects.toBe(
+      reason,
+    )
+    expect(calls).toBe(1)
+  })
+
+  it('forwards wrapper cancellation to the underlying stream', async () => {
+    const controller = new AbortController()
+    let received: AbortSignal | undefined
+    const wrapped = withModelRetry(
+      fakeModel({
+        stream: async function* (request) {
+          received = request.abortSignal
+          yield { type: 'text-delta', delta: 'first' }
+        },
+      }),
+      { abortSignal: controller.signal },
+    )
+
+    const iterator = wrapped.stream(options)[Symbol.asyncIterator]()
+    await iterator.next()
+    controller.abort()
+    expect(received?.aborted).toBe(true)
+    await iterator.return?.()
+  })
+
   it('retries a 429 then succeeds', async () => {
     let calls = 0
     const wrapped = withModelRetry(
