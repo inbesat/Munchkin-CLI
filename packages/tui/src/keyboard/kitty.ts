@@ -74,9 +74,9 @@ function decodeMods(mods: number) {
 export function parseKittyKey(seq: string): KittyKey | null {
   const m = /^\[(\d+)(?:;(\d+))?(?:;(\d+))?u$/.exec(seq)
   if (!m) return null
-  const code = parseInt(m[1], 10)
-  const mods = parseInt(m[2] ?? '0', 10)
-  const keytype = parseInt(m[3] ?? '1', 10)
+  const code = Number.parseInt(m[1], 10)
+  const mods = Number.parseInt(m[2] ?? '0', 10)
+  const keytype = Number.parseInt(m[3] ?? '1', 10)
   const { shift, alt, ctrl, meta } = decodeMods(mods)
 
   const named = keytype === 2 || code in NAMED_KEYS

@@ -33,9 +33,9 @@ function decodeMods(b: number) {
 export function parseMouseSGR(seq: string): MouseEvent | null {
   const m = /^\x1b\[<(\d+);(\d+);(\d+)([Mm])$/.exec(seq)
   if (!m) return null
-  const b = parseInt(m[1], 10)
-  const x = parseInt(m[2], 10)
-  const y = parseInt(m[3], 10)
+  const b = Number.parseInt(m[1], 10)
+  const x = Number.parseInt(m[2], 10)
+  const y = Number.parseInt(m[3], 10)
   const trailing = m[4]
   const { shift, alt, ctrl } = decodeMods(b)
 

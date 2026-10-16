@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
+import { useEffect, useRef, useState } from 'react'
 import type { ThemeColors } from '../theme'
 
 export interface Command {
@@ -15,14 +15,53 @@ export const defaultCommands: Command[] = [
   { id: 'clear', title: 'clear', description: 'Clear the conversation screen', group: 'builtin' },
   { id: 'model', title: 'model', description: 'Switch the active model', group: 'builtin' },
   { id: 'theme', title: 'theme', description: 'Change the color theme', group: 'builtin' },
-  { id: 'permissions', title: 'permissions', description: 'Open the permissions manager', group: 'builtin' },
-  { id: 'compact', title: 'compact', description: 'Compact the conversation context', group: 'builtin' },
+  {
+    id: 'permissions',
+    title: 'permissions',
+    description: 'Open the permissions manager',
+    group: 'builtin',
+  },
+  {
+    id: 'compact',
+    title: 'compact',
+    description: 'Compact the conversation context',
+    group: 'builtin',
+  },
   { id: 'export', title: 'export', description: 'Export the transcript', group: 'builtin' },
   { id: 'status', title: 'status', description: 'Show session and token usage', group: 'builtin' },
+  {
+    id: 'context',
+    title: 'context',
+    description: 'Show a live context-window usage grid',
+    group: 'builtin',
+  },
+  {
+    id: 'tasks',
+    title: 'tasks',
+    description: 'List background tasks and their results',
+    group: 'builtin',
+  },
+  {
+    id: 'goal',
+    title: 'goal',
+    description: 'Set an autonomous goal (`/goal <condition>`, `/goal clear`)',
+    group: 'builtin',
+  },
+  {
+    id: 'plugin',
+    title: 'plugin',
+    description: 'Plugin marketplace (`/plugin installed`, `/plugin marketplace add owner/repo`)',
+    group: 'builtin',
+  },
   { id: 'init', title: 'init', description: 'Generate project configuration', group: 'builtin' },
   { id: 'review', title: 'review', description: 'Run a code review on the diff', group: 'builtin' },
   { id: 'terminal', title: 'terminal', description: 'Open an interactive shell', group: 'builtin' },
-  { id: 'summarize', title: 'summarize', description: 'Summarize the current changes', group: 'builtin' },
+  {
+    id: 'summarize',
+    title: 'summarize',
+    description: 'Summarize the current changes',
+    group: 'builtin',
+  },
 ]
 
 export function filterCommands(commands: Command[], query: string): Command[] {
@@ -38,7 +77,7 @@ export function filterCommands(commands: Command[], query: string): Command[] {
     let score = 0
     if (title.startsWith(terms[0])) score += 100
     else if (title.includes(terms[0])) score += 50
-    score -= (cmd.title.length - terms[0].length)
+    score -= cmd.title.length - terms[0].length
     scored.push({ cmd, score })
   }
   scored.sort((a, b) => b.score - a.score)
@@ -116,7 +155,7 @@ export function CommandPalette({
       }
       void input
     },
-    { isActive: isActive && isOpen }
+    { isActive: isActive && isOpen },
   )
 
   if (!isOpen) return null
@@ -139,7 +178,10 @@ export function CommandPalette({
       <Box marginBottom={1}>
         <Text color={themeColors.textMuted}>› </Text>
         <Text color={themeColors.textPrimary}>/{query}</Text>
-        <Text color={themeColors.textMuted}>  ({list.length} command{list.length === 1 ? '' : 's'})</Text>
+        <Text color={themeColors.textMuted}>
+          {' '}
+          ({list.length} command{list.length === 1 ? '' : 's'})
+        </Text>
       </Box>
       {paged.length === 0 ? (
         <Text color={themeColors.textMuted}>No matching commands</Text>
@@ -157,10 +199,7 @@ export function CommandPalette({
                 backgroundColor={isSel ? themeColors.primary : undefined}
                 flexGrow={1}
               >
-                <Text
-                  color={isSel ? themeColors.background : themeColors.textPrimary}
-                  bold={isSel}
-                >
+                <Text color={isSel ? themeColors.background : themeColors.textPrimary} bold={isSel}>
                   {' '}
                   /{cmd.title}
                 </Text>
@@ -182,9 +221,7 @@ export function CommandPalette({
         })
       )}
       <Box marginTop={1}>
-        <Text color={themeColors.textMuted}>
-          ↑/↓ navigate · Enter select · Esc cancel
-        </Text>
+        <Text color={themeColors.textMuted}>↑/↓ navigate · Enter select · Esc cancel</Text>
       </Box>
     </Box>
   )

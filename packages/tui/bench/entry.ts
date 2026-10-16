@@ -1,5 +1,5 @@
-import { performance } from 'node:perf_hooks'
 import { EventEmitter } from 'node:events'
+import { performance } from 'node:perf_hooks'
 import React from 'react'
 
 const start = performance.now()
@@ -19,10 +19,7 @@ const stdout = new EventEmitter() as unknown as NodeJS.WriteStream
 ;(stdout as unknown as { rows: number }).rows = 24
 ;(stdout as unknown as { isTTY: boolean }).isTTY = true
 
-const instance = render(
-  React.createElement(Box, null),
-  { stdout },
-)
+const instance = render(React.createElement(Box, null), { stdout })
 instance.unmount()
 
 const ms = performance.now() - start

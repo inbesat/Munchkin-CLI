@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  type SessionSummary,
   filterSessions,
   formatSessionDate,
   moveSessionSelection,
-  type SessionSummary,
 } from './session-picker'
 
 function sess(id: string, title: string, preview = '', model?: string): SessionSummary {

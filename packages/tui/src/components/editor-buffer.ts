@@ -8,12 +8,7 @@ export function clampCol(line: string, col: number): number {
   return Math.max(0, Math.min(col, line.length))
 }
 
-export function insertText(
-  lines: string[],
-  row: number,
-  col: number,
-  text: string
-): BufferState {
+export function insertText(lines: string[], row: number, col: number, text: string): BufferState {
   const current = lines[row] ?? ''
   const before = current.slice(0, col)
   const after = current.slice(col)
@@ -82,11 +77,7 @@ export function deleteWordAt(lines: string[], row: number, col: number): BufferS
   return { lines: next, row, col: start }
 }
 
-export function getMentionQuery(
-  lines: string[],
-  row: number,
-  col: number
-): string | null {
+export function getMentionQuery(lines: string[], row: number, col: number): string | null {
   const line = (lines[row] ?? '').slice(0, col)
   const atIdx = line.lastIndexOf('@')
   if (atIdx === -1) return null
@@ -141,10 +132,7 @@ function bufferResult(buffer: BufferState): EditorKeyResult {
   }
 }
 
-export function reduceEditorKey(
-  state: BufferState,
-  key: EditorKeyInput
-): EditorKeyResult {
+export function reduceEditorKey(state: BufferState, key: EditorKeyInput): EditorKeyResult {
   const { lines, row, col } = state
 
   if (key.ctrl && key.input === 'c') {

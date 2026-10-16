@@ -1,27 +1,26 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  themes,
+  type ColorBlindnessType,
+  isValidThemeColors,
+  mergeThemeColors,
+  resolveTheme,
+  simulateColorBlindness,
+  themeToCssVars,
+} from './apply'
+import {
+  type CustomThemeConfig,
+  loadCustomThemeFromFile,
+  loadCustomThemeFromObject,
+  validateCustomTheme,
+} from './custom'
+import {
+  daltonizedLightTheme,
   getTheme,
   listThemeModes,
   listThemeNames,
   nextThemeMode,
-  daltonizedLightTheme,
-  type ThemeMode,
+  themes,
 } from './themes'
-import {
-  simulateColorBlindness,
-  mergeThemeColors,
-  resolveTheme,
-  isValidThemeColors,
-  themeToCssVars,
-  type ColorBlindnessType,
-} from './apply'
-import {
-  validateCustomTheme,
-  loadCustomThemeFromObject,
-  loadCustomThemeFromFile,
-  type CustomThemeConfig,
-} from './custom'
 
 describe('built-in themes', () => {
   it('has all four themes', () => {
@@ -84,7 +83,11 @@ describe('theme application', () => {
   })
 
   it('resolves custom theme by mode', () => {
-    const custom = loadCustomThemeFromObject({ name: 'My', mode: 'dark', colors: { primary: '#abcdef' } })
+    const custom = loadCustomThemeFromObject({
+      name: 'My',
+      mode: 'dark',
+      colors: { primary: '#abcdef' },
+    })
     expect(resolveTheme('dark', [custom]).colors.primary).toBe('#abcdef')
   })
 

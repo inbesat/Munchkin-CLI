@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import {
-  themes,
-  nextThemeMode,
-  type Theme,
-  type ThemeMode,
-  type ThemeColors,
-} from './themes'
 import { applyThemeVars } from './apply'
+import { type Theme, type ThemeColors, type ThemeMode, nextThemeMode, themes } from './themes'
 
 export {
   themes,
@@ -78,7 +72,12 @@ export function ThemeProvider({
       document.documentElement.setAttribute('data-theme', mode)
     }
     // Apply CSS variables for DOM consumers (hot-reload safe).
-    applyThemeVars(theme, typeof window !== 'undefined' ? (document.documentElement as unknown as { setAttribute?: (k: string, v: string) => void }) : undefined)
+    applyThemeVars(
+      theme,
+      typeof window !== 'undefined'
+        ? (document.documentElement as unknown as { setAttribute?: (k: string, v: string) => void })
+        : undefined,
+    )
   }, [mode, storageKey, theme])
 
   const toggleTheme = useCallback(() => {
@@ -121,7 +120,10 @@ export function createThemedComponent<T extends React.ComponentType<any>>(
 ): T {
   const ThemedComponent = (props: any) => {
     const colors = useThemeColors()
-    return React.createElement(component, { ...props, style: { ...props.style, ...styleFn(colors) } })
+    return React.createElement(component, {
+      ...props,
+      style: { ...props.style, ...styleFn(colors) },
+    })
   }
   ThemedComponent.displayName = `Themed(${component.displayName || component.name || 'Component'})`
   return ThemedComponent as T

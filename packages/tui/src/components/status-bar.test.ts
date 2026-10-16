@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  type StatusBarState,
+  type StatusSegment,
   buildStatusBarSegments,
   formatCost,
   formatTokens,
   selectVisibleSegments,
   statusColor,
-  type StatusBarState,
-  type StatusSegment,
 } from './status-bar'
 
 const theme = {

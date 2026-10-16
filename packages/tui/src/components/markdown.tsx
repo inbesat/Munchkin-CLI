@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Box, Text } from 'ink'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useThemeColors } from '../theme'
-import { StreamingMarkdownParser, type MarkdownToken } from './markdown-parser'
 import { CodeBlock } from './code-block'
+import { type MarkdownToken, StreamingMarkdownParser } from './markdown-parser'
 
 /** StreamingMarkdown component - renders markdown as it streams in */
 interface StreamingMarkdownProps {
@@ -46,8 +46,12 @@ export function StreamingMarkdown({ content, onTokensChange }: StreamingMarkdown
           return (
             <Box key={index} marginTop={1} marginBottom={0}>
               <Box flexDirection="row">
-                <Text color={colors.primary} bold>{'#'.repeat(token.meta?.level || 1)} </Text>
-                <Text color={colors.textPrimary} bold>{token.content}</Text>
+                <Text color={colors.primary} bold>
+                  {'#'.repeat(token.meta?.level || 1)}{' '}
+                </Text>
+                <Text color={colors.textPrimary} bold>
+                  {token.content}
+                </Text>
               </Box>
             </Box>
           )
@@ -55,12 +59,7 @@ export function StreamingMarkdown({ content, onTokensChange }: StreamingMarkdown
         case 'code_block': {
           const language = token.meta?.language || 'text'
           return (
-            <CodeBlock
-              key={index}
-              code={token.content}
-              language={language}
-              themeColors={colors}
-            />
+            <CodeBlock key={index} code={token.content} language={language} themeColors={colors} />
           )
         }
 
@@ -81,18 +80,32 @@ export function StreamingMarkdown({ content, onTokensChange }: StreamingMarkdown
           )
 
         case 'bold':
-          return <Text key={index} bold color={colors.textPrimary}>{token.content}</Text>
+          return (
+            <Text key={index} bold color={colors.textPrimary}>
+              {token.content}
+            </Text>
+          )
 
         case 'italic':
-          return <Text key={index} italic color={colors.textPrimary}>{token.content}</Text>
+          return (
+            <Text key={index} italic color={colors.textPrimary}>
+              {token.content}
+            </Text>
+          )
 
         case 'strikethrough':
-          return <Text key={index} strikethrough color={colors.textSecondary}>{token.content}</Text>
+          return (
+            <Text key={index} strikethrough color={colors.textSecondary}>
+              {token.content}
+            </Text>
+          )
 
         case 'link':
           return (
             <Box key={index} flexDirection="row">
-              <Text color={colors.primary} underline>{token.content}</Text>
+              <Text color={colors.primary} underline>
+                {token.content}
+              </Text>
               <Box marginLeft={1}>
                 <Text color={colors.textMuted}>({token.meta?.href})</Text>
               </Box>
@@ -113,20 +126,36 @@ export function StreamingMarkdown({ content, onTokensChange }: StreamingMarkdown
 
         case 'blockquote':
           return (
-            <Box key={index} marginLeft={2} borderLeft borderLeftColor={colors.border} paddingLeft={1}>
-              <Text color={colors.textSecondary} italic>{token.content}</Text>
+            <Box
+              key={index}
+              marginLeft={2}
+              borderLeft
+              borderLeftColor={colors.border}
+              paddingLeft={1}
+            >
+              <Text color={colors.textSecondary} italic>
+                {token.content}
+              </Text>
             </Box>
           )
 
         case 'horizontal_rule':
-          return <Text key={index} color={colors.border}>━━━━━━━━━━━━━━━━━━━━━━━━━━━</Text>
+          return (
+            <Text key={index} color={colors.border}>
+              ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            </Text>
+          )
 
         case 'text':
         default:
-          return <Text key={index} color={colors.textPrimary}>{token.content}</Text>
+          return (
+            <Text key={index} color={colors.textPrimary}>
+              {token.content}
+            </Text>
+          )
       }
     },
-    [colors]
+    [colors],
   )
 
   // Render pending content if parser is in incomplete state
@@ -165,8 +194,12 @@ export function Markdown({ content }: { content: string }) {
             return (
               <Box key={index} marginTop={1} marginBottom={0}>
                 <Box flexDirection="row">
-                  <Text color={colors.primary} bold>{'#'.repeat(token.meta?.level || 1)} </Text>
-                  <Text color={colors.textPrimary} bold>{token.content}</Text>
+                  <Text color={colors.primary} bold>
+                    {'#'.repeat(token.meta?.level || 1)}{' '}
+                  </Text>
+                  <Text color={colors.textPrimary} bold>
+                    {token.content}
+                  </Text>
                 </Box>
               </Box>
             )
@@ -195,15 +228,29 @@ export function Markdown({ content }: { content: string }) {
               </Box>
             )
           case 'bold':
-            return <Text key={index} bold color={colors.textPrimary}>{token.content}</Text>
+            return (
+              <Text key={index} bold color={colors.textPrimary}>
+                {token.content}
+              </Text>
+            )
           case 'italic':
-            return <Text key={index} italic color={colors.textPrimary}>{token.content}</Text>
+            return (
+              <Text key={index} italic color={colors.textPrimary}>
+                {token.content}
+              </Text>
+            )
           case 'strikethrough':
-            return <Text key={index} strikethrough color={colors.textSecondary}>{token.content}</Text>
+            return (
+              <Text key={index} strikethrough color={colors.textSecondary}>
+                {token.content}
+              </Text>
+            )
           case 'link':
             return (
               <Box key={index} flexDirection="row">
-                <Text color={colors.primary} underline>{token.content}</Text>
+                <Text color={colors.primary} underline>
+                  {token.content}
+                </Text>
                 <Box marginLeft={1}>
                   <Text color={colors.textMuted}>({token.meta?.href})</Text>
                 </Box>
@@ -222,15 +269,31 @@ export function Markdown({ content }: { content: string }) {
             )
           case 'blockquote':
             return (
-              <Box key={index} marginLeft={2} borderLeft borderLeftColor={colors.border} paddingLeft={1}>
-                <Text color={colors.textSecondary} italic>{token.content}</Text>
+              <Box
+                key={index}
+                marginLeft={2}
+                borderLeft
+                borderLeftColor={colors.border}
+                paddingLeft={1}
+              >
+                <Text color={colors.textSecondary} italic>
+                  {token.content}
+                </Text>
               </Box>
             )
           case 'horizontal_rule':
-            return <Text key={index} color={colors.border}>━━━━━━━━━━━━━━━━━━━━━━━━━━━</Text>
+            return (
+              <Text key={index} color={colors.border}>
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+              </Text>
+            )
           case 'text':
           default:
-            return <Text key={index} color={colors.textPrimary}>{token.content}</Text>
+            return (
+              <Text key={index} color={colors.textPrimary}>
+                {token.content}
+              </Text>
+            )
         }
       })}
     </Box>

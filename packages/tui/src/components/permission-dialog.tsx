@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
+import { useEffect, useState } from 'react'
 import type { ThemeColors } from '../theme'
 
 export type PermissionDecision = 'allow' | 'ask' | 'deny'
@@ -24,12 +24,7 @@ export interface PermissionResponse {
   message?: string
 }
 
-export type PermissionChoice =
-  | 'allow'
-  | 'allow-session'
-  | 'allow-always'
-  | 'deny'
-  | 'deny-always'
+export type PermissionChoice = 'allow' | 'allow-session' | 'allow-always' | 'deny' | 'deny-always'
 
 function truncate(value: unknown, max = 120): string {
   if (typeof value !== 'string') return JSON.stringify(value)
@@ -63,7 +58,7 @@ export function describeRequest(req: PermissionRequest): string {
 
 export function resolveFromChoice(
   req: PermissionRequest,
-  choice: PermissionChoice
+  choice: PermissionChoice,
 ): PermissionResponse {
   const base: PermissionResponse = { requestId: req.id, decision: 'allow' }
   switch (choice) {
@@ -94,7 +89,7 @@ export function resolveFromChoice(
 
 export function riskColor(
   theme: ThemeColors,
-  level?: 'low' | 'medium' | 'high' | 'critical'
+  level?: 'low' | 'medium' | 'high' | 'critical',
 ): string {
   switch (level) {
     case 'low':
@@ -140,13 +135,37 @@ export function PermissionDialog({
   showArgs = true,
   allowRemember = true,
 }: PermissionDialogProps) {
-  const buildOptions = (): Array<{ key: string; choice: PermissionChoice; label: string; danger: boolean }> => {
-    const opts: Array<{ key: string; choice: PermissionChoice; label: string; danger: boolean }> = []
+  const buildOptions = (): Array<{
+    key: string
+    choice: PermissionChoice
+    label: string
+    danger: boolean
+  }> => {
+    const opts: Array<{ key: string; choice: PermissionChoice; label: string; danger: boolean }> =
+      []
     opts.push({ key: 'a', choice: 'allow', label: 'Allow (once)', danger: false })
-    if (allowRemember) opts.push({ key: 's', choice: 'allow-session', label: 'Allow for this session', danger: false })
-    if (allowRemember) opts.push({ key: 'A', choice: 'allow-always', label: `Allow always (${request?.tool.name ?? 'this tool'})`, danger: false })
+    if (allowRemember)
+      opts.push({
+        key: 's',
+        choice: 'allow-session',
+        label: 'Allow for this session',
+        danger: false,
+      })
+    if (allowRemember)
+      opts.push({
+        key: 'A',
+        choice: 'allow-always',
+        label: `Allow always (${request?.tool.name ?? 'this tool'})`,
+        danger: false,
+      })
     opts.push({ key: 'd', choice: 'deny', label: 'Deny', danger: true })
-    if (allowRemember) opts.push({ key: 'D', choice: 'deny-always', label: `Deny always (${request?.tool.name ?? 'this tool'})`, danger: true })
+    if (allowRemember)
+      opts.push({
+        key: 'D',
+        choice: 'deny-always',
+        label: `Deny always (${request?.tool.name ?? 'this tool'})`,
+        danger: true,
+      })
     return opts
   }
 
@@ -183,7 +202,7 @@ export function PermissionDialog({
         onResolve(resolveFromChoice(request, direct.choice))
       }
     },
-    { isActive: isActive && isOpen }
+    { isActive: isActive && isOpen },
   )
 
   if (!isOpen || !request) return null
@@ -205,9 +224,7 @@ export function PermissionDialog({
         <Text color={themeColors.warning} bold>
           {' ⚠ Permission required '}
         </Text>
-        {request.isRetry ? (
-          <Text color={themeColors.error}> (retry after denial)</Text>
-        ) : null}
+        {request.isRetry ? <Text color={themeColors.error}> (retry after denial)</Text> : null}
       </Box>
 
       <Box marginBottom={1} flexDirection="column">
@@ -259,10 +276,20 @@ export function PermissionDialog({
               </Text>
               <Box
                 // @ts-ignore runtime-only prop works in Ink
-                backgroundColor={isSel ? (o.danger ? themeColors.error : themeColors.primary) : undefined}
+                backgroundColor={
+                  isSel ? (o.danger ? themeColors.error : themeColors.primary) : undefined
+                }
                 flexGrow={1}
               >
-                <Text color={isSel ? themeColors.background : o.danger ? themeColors.error : themeColors.textPrimary}>
+                <Text
+                  color={
+                    isSel
+                      ? themeColors.background
+                      : o.danger
+                        ? themeColors.error
+                        : themeColors.textPrimary
+                  }
+                >
                   {' '}
                   [{o.key}] {o.label}
                 </Text>

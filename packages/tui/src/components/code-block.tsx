@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
 import { Box, Text } from 'ink'
+import type React from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Highlighter } from 'shiki'
 
 /** CodeBlock component with syntax highlighting using Shiki */
@@ -70,7 +71,13 @@ async function getSharedHighlighter(): Promise<Highlighter> {
 interface HighlightedLine {
   lineNumber: number
   content: string
-  segments: Array<{ text: string; color?: string; backgroundColor?: string; bold?: boolean; italic?: boolean }>
+  segments: Array<{
+    text: string
+    color?: string
+    backgroundColor?: string
+    bold?: boolean
+    italic?: boolean
+  }>
 }
 
 /** CodeBlock component */
@@ -105,15 +112,16 @@ export function CodeBlock({
           lineNumber: i + 1,
           content: line || ' ',
           segments: [{ text: line || ' ', color: themeColors.textPrimary }],
-        }))
+        })),
       )
       return
     }
 
     try {
-      const theme = themeColors.background.includes('#ffffff') || themeColors.background.includes('#fff')
-        ? 'github-light'
-        : 'github-dark'
+      const theme =
+        themeColors.background.includes('#ffffff') || themeColors.background.includes('#fff')
+          ? 'github-light'
+          : 'github-dark'
       // Use codeToHtml and parse for terminal rendering
       const rawLines = code.split('\n')
       setLines(
@@ -121,7 +129,7 @@ export function CodeBlock({
           lineNumber: i + 1,
           content: line || ' ',
           segments: [{ text: line || ' ', color: themeColors.textPrimary }],
-        }))
+        })),
       )
     } catch {
       const rawLines = code.split('\n')
@@ -130,7 +138,7 @@ export function CodeBlock({
           lineNumber: i + 1,
           content: line || ' ',
           segments: [{ text: line || ' ', color: themeColors.textPrimary }],
-        }))
+        })),
       )
     }
   }, [code, language, highlighter, themeColors])
@@ -172,9 +180,7 @@ export function CodeBlock({
             <Text color={themeColors.warning}>● streaming</Text>
           </Box>
         )}
-        {focused && onCopy && (
-          <Box flexGrow={1} />
-        )}
+        {focused && onCopy && <Box flexGrow={1} />}
         {focused && onCopy && (
           <Box flexDirection="row" marginRight={1}>
             <Box marginRight={1}>
@@ -248,7 +254,11 @@ export function useSyntaxHighlighter() {
   }, [])
 
   const highlight = useCallback(
-    async (code: string, language: string, theme: 'github-dark' | 'github-light' = 'github-dark'): Promise<string> => {
+    async (
+      code: string,
+      language: string,
+      theme: 'github-dark' | 'github-light' = 'github-dark',
+    ): Promise<string> => {
       if (!highlighter) return code
       try {
         return highlighter.codeToHtml(code, { lang: language, theme })
@@ -256,7 +266,7 @@ export function useSyntaxHighlighter() {
         return code
       }
     },
-    [highlighter]
+    [highlighter],
   )
 
   return { highlighter, highlight }

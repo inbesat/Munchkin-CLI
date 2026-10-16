@@ -1,14 +1,14 @@
-import React, { useCallback, useRef, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
+import { useCallback, useRef, useState } from 'react'
 import type { ThemeColors } from '../theme'
-import { EditorHistory, type EditorMode } from './editor-history'
 import {
   type BufferState,
   type EditorKeyInput,
-  reduceEditorKey,
   getMentionQuery,
   getSlashQuery,
+  reduceEditorKey,
 } from './editor-buffer'
+import type { EditorHistory, EditorMode } from './editor-history'
 
 export interface EditorProps {
   themeColors: ThemeColors
@@ -71,7 +71,7 @@ export function Editor({
       setBuffer(next)
       if (onChange) onChange(next.lines.join('\n'), mode)
     },
-    [onChange, mode]
+    [onChange, mode],
   )
 
   const handleSubmit = useCallback(() => {
@@ -97,7 +97,7 @@ export function Editor({
       if (onSlashCommand) onSlashCommand(getSlashQuery(lines) ?? '')
       if (onMention) onMention(getMentionQuery(lines, row, col) ?? '')
     },
-    [onSlashCommand, onMention]
+    [onSlashCommand, onMention],
   )
 
   const loadHistoryPrev = useCallback(() => {
@@ -109,7 +109,11 @@ export function Editor({
     if (prev !== null) {
       const nextLines = prev.split('\n')
       setHistoryNav(true)
-      commit({ lines: nextLines, row: nextLines.length - 1, col: nextLines[nextLines.length - 1].length })
+      commit({
+        lines: nextLines,
+        row: nextLines.length - 1,
+        col: nextLines[nextLines.length - 1].length,
+      })
       applyContext(nextLines, bufferRef.current.row, bufferRef.current.col)
     }
   }, [history, historyNav, commit, applyContext])
@@ -119,13 +123,21 @@ export function Editor({
     const next = history.next()
     if (next !== null) {
       const nextLines = next.split('\n')
-      commit({ lines: nextLines, row: nextLines.length - 1, col: nextLines[nextLines.length - 1].length })
+      commit({
+        lines: nextLines,
+        row: nextLines.length - 1,
+        col: nextLines[nextLines.length - 1].length,
+      })
       applyContext(nextLines, bufferRef.current.row, bufferRef.current.col)
     } else {
       const restored = draftRef.current !== null ? draftRef.current.split('\n') : ['']
       draftRef.current = null
       setHistoryNav(false)
-      commit({ lines: restored, row: restored.length - 1, col: restored[restored.length - 1].length })
+      commit({
+        lines: restored,
+        row: restored.length - 1,
+        col: restored[restored.length - 1].length,
+      })
       if (onSlashCommand) onSlashCommand('')
       if (onMention) onMention('')
     }
@@ -173,7 +185,7 @@ export function Editor({
           break
       }
     },
-    { isActive }
+    { isActive },
   )
 
   const totalText = buffer.lines.join('\n')
@@ -190,13 +202,13 @@ export function Editor({
             borderColor={mode === 'bash' ? themeColors.warning : themeColors.primary}
             paddingX={1}
           >
-            <Text
-              color={mode === 'bash' ? themeColors.warning : themeColors.primary}
-              bold
-            >
+            <Text color={mode === 'bash' ? themeColors.warning : themeColors.primary} bold>
               {mode === 'bash' ? 'BASH' : 'PROMPT'}
             </Text>
-            <Text color={themeColors.textMuted}>  Ctrl+B: toggle mode · Shift+Enter: newline · ↑/↓: history </Text>
+            <Text color={themeColors.textMuted}>
+              {' '}
+              Ctrl+B: toggle mode · Shift+Enter: newline · ↑/↓: history{' '}
+            </Text>
           </Box>
         </Box>
       )}

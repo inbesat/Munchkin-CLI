@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
-import {
-  Toast,
-  ToastContainer,
-  type Toast as ToastType,
-} from './toast'
-import { Spinner, ProgressBar } from './spinner'
+import { render } from 'ink'
+import { ProgressBar, Spinner } from './spinner'
+import { Toast, ToastContainer, type Toast as ToastType } from './toast'
 
 const mockTheme = {
   background: '#1e1e1e',
@@ -53,7 +48,7 @@ describe('toast/spinner (smoke)', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
       <Toast themeColors={mockTheme} toast={{ id: '1', kind: 'success', message: 'Saved!' }} />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Saved!')
@@ -69,7 +64,7 @@ describe('toast/spinner (smoke)', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
       <ToastContainer themeColors={mockTheme} toasts={toasts} onDismiss={() => {}} />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('one')
@@ -88,7 +83,7 @@ describe('toast/spinner (smoke)', () => {
         onDismiss={(id) => dismissed.push(id)}
         autoDismissMs={50}
       />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).toContain('bye')
     await new Promise((r) => setTimeout(r, 150))
@@ -98,10 +93,9 @@ describe('toast/spinner (smoke)', () => {
 
   it('renders spinner frame (inactive)', () => {
     const { stdout, getOutput } = createMockStdout()
-    const { unmount } = render(
-      <Spinner themeColors={mockTheme} label="Working" active={false} />,
-      { stdout }
-    )
+    const { unmount } = render(<Spinner themeColors={mockTheme} label="Working" active={false} />, {
+      stdout,
+    })
     const frame = getOutput()
     expect(frame).toContain('Working')
     expect(frame.length).toBeGreaterThan(0)
@@ -112,7 +106,7 @@ describe('toast/spinner (smoke)', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
       <ProgressBar themeColors={mockTheme} ratio={0.5} width={10} label="Loading" />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Loading')

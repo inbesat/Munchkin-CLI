@@ -1,5 +1,5 @@
-import React from 'react'
 import { Box, Text, useStdout } from 'ink'
+import React from 'react'
 import type { ThemeColors } from '../theme'
 
 export type AgentStatus = 'thinking' | 'executing' | 'idle' | 'waiting' | 'error'
@@ -55,10 +55,7 @@ export interface StatusSegment {
   required?: boolean
 }
 
-export function buildStatusBarSegments(
-  state: StatusBarState,
-  theme: ThemeColors
-): StatusSegment[] {
+export function buildStatusBarSegments(state: StatusBarState, theme: ThemeColors): StatusSegment[] {
   const segs: StatusSegment[] = []
 
   segs.push({
@@ -122,10 +119,7 @@ function segmentLength(seg: StatusSegment): number {
   return labelPart + seg.value.length + 2
 }
 
-export function selectVisibleSegments(
-  segments: StatusSegment[],
-  width: number
-): StatusSegment[] {
+export function selectVisibleSegments(segments: StatusSegment[], width: number): StatusSegment[] {
   const required = segments.filter((s) => s.required)
   const optional = segments.filter((s) => !s.required)
   const chosen = [...required]

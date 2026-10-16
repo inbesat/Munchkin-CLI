@@ -1,9 +1,4 @@
-import {
-  themes,
-  type Theme,
-  type ThemeMode,
-  type ThemeColors,
-} from './themes'
+import { type Theme, type ThemeColors, type ThemeMode, themes } from './themes'
 
 export type ColorBlindnessType = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
 
@@ -32,7 +27,7 @@ function clamp(n: number): number {
 function hexToRgb(hex: string): [number, number, number] | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!m) return null
-  const int = parseInt(m[1], 16)
+  const int = Number.parseInt(m[1], 16)
   return [(int >> 16) & 255, (int >> 8) & 255, int & 255]
 }
 
@@ -123,7 +118,10 @@ export function themeToCssVars(theme: Theme): Record<string, string> {
 }
 
 /** Apply a theme's CSS variables onto an element-like target (document root). */
-export function applyThemeVars(theme: Theme, target?: { setAttribute?: (k: string, v: string) => void }): Record<string, string> {
+export function applyThemeVars(
+  theme: Theme,
+  target?: { setAttribute?: (k: string, v: string) => void },
+): Record<string, string> {
   const vars = themeToCssVars(theme)
   if (target?.setAttribute) {
     target.setAttribute('data-theme', theme.mode)

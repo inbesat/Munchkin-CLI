@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
+import { useEffect, useState } from 'react'
 import type { ThemeColors } from '../theme'
 
 export type CheckpointKind = 'user' | 'tool' | 'assistant' | 'manual' | 'system'
@@ -53,7 +53,7 @@ export function kindColor(theme: ThemeColors, kind: CheckpointKind): string {
 export function moveCursor(
   checkpoints: Checkpoint[],
   currentId: string | undefined,
-  dir: 1 | -1
+  dir: 1 | -1,
 ): string | undefined {
   if (checkpoints.length === 0) return undefined
   if (currentId === undefined) {
@@ -95,7 +95,12 @@ export function CheckpointTimeline({
   useInput(
     (input, key) => {
       if (!isOpen) return
-      const k = key as unknown as { upArrow: boolean; downArrow: boolean; return: boolean; escape: boolean }
+      const k = key as unknown as {
+        upArrow: boolean
+        downArrow: boolean
+        return: boolean
+        escape: boolean
+      }
       if (k.escape) {
         onClose?.()
         return
@@ -116,7 +121,7 @@ export function CheckpointTimeline({
         onRewind(cursor)
       }
     },
-    { isActive: isActive && isOpen }
+    { isActive: isActive && isOpen },
   )
 
   if (!isOpen) return null
@@ -157,9 +162,7 @@ export function CheckpointTimeline({
                 backgroundColor={isCursor ? color : undefined}
                 flexGrow={1}
               >
-                <Text
-                  color={isCursor ? themeColors.background : themeColors.textPrimary}
-                >
+                <Text color={isCursor ? themeColors.background : themeColors.textPrimary}>
                   {` ${kindGlyph(cp.kind)} ${cp.label} `}
                 </Text>
                 <Text color={isCursor ? themeColors.background : themeColors.textMuted}>

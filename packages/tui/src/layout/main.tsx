@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Box, Text, useInput } from 'ink'
-import { useThemeColors, type ThemeMode } from '../theme'
-import { getKeyboardManager, formatKey as formatKeyImport } from '../keyboard'
+﻿import { Box, Text, useInput } from 'ink'
+import type React from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { formatKey as formatKeyImport, getKeyboardManager } from '../keyboard'
+import { type ThemeMode, useThemeColors } from '../theme'
 
 /** Message type for chat. */
 export interface ChatMessage {
@@ -111,80 +112,97 @@ export function MainLayout({
     return colors.borderFocus
   }
 
-  const handleSidebarNavigation = useCallback((key: string) => {
-    if (!sidebarOpen || sidebarItems.length === 0) return false
-    if (key === 'up') {
-      setSelectedSidebarIndex((prev) => (prev > 0 ? prev - 1 : sidebarItems.length - 1))
-      return true
-    }
-    if (key === 'down') {
-      setSelectedSidebarIndex((prev) => (prev < sidebarItems.length - 1 ? prev + 1 : 0))
-      return true
-    }
-    if (key === 'enter') {
-      const item = sidebarItems[selectedSidebarIndex]
-      item.onClick?.()
-      return true
-    }
-    return false
-  }, [sidebarOpen, sidebarItems, selectedSidebarIndex])
+  const handleSidebarNavigation = useCallback(
+    (key: string) => {
+      if (!sidebarOpen || sidebarItems.length === 0) return false
+      if (key === 'up') {
+        setSelectedSidebarIndex((prev) => (prev > 0 ? prev - 1 : sidebarItems.length - 1))
+        return true
+      }
+      if (key === 'down') {
+        setSelectedSidebarIndex((prev) => (prev < sidebarItems.length - 1 ? prev + 1 : 0))
+        return true
+      }
+      if (key === 'enter') {
+        const item = sidebarItems[selectedSidebarIndex]
+        item.onClick?.()
+        return true
+      }
+      return false
+    },
+    [sidebarOpen, sidebarItems, selectedSidebarIndex],
+  )
 
   const handleChatNavigation = useCallback((key: string) => {
     if (key === 'pageup' || key === 'pagedown' || key === 'home' || key === 'end') return true
     return false
   }, [])
 
-  const handleInputKey = useCallback((key: string, modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean }) => {
-    if (key === 'enter' && !modifiers.shift && !modifiers.ctrl) {
-      if (inputValue.trim() && onInputSubmit) {
-        onInputSubmit(inputValue)
+  const handleInputKey = useCallback(
+    (
+      key: string,
+      modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+    ) => {
+      if (key === 'enter' && !modifiers.shift && !modifiers.ctrl) {
+        if (inputValue.trim() && onInputSubmit) {
+          onInputSubmit(inputValue)
+          return true
+        }
+      }
+      if (key === 'enter' && modifiers.shift) {
+        if (onInputChange) onInputChange(inputValue + '\n')
         return true
       }
-    }
-    if (key === 'enter' && modifiers.shift) {
-      if (onInputChange) onInputChange(inputValue + '\n')
-      return true
-    }
-    if (key === 'escape') {
-      if (inputValue) {
-        onInputChange?.('')
-      } else {
-        focusChat()
+      if (key === 'escape') {
+        if (inputValue) {
+          onInputChange?.('')
+        } else {
+          focusChat()
+        }
+        return true
       }
-      return true
-    }
-    return false
-  }, [inputValue, onInputSubmit, onInputChange, focusChat])
+      return false
+    },
+    [inputValue, onInputSubmit, onInputChange, focusChat],
+  )
 
-  const combinedKeyHandler = useCallback(async (key: string, modifiers: any) => {
-    if (focusedArea === 'sidebar' && handleSidebarNavigation(key)) return true
-    if (focusedArea === 'chat' && handleChatNavigation(key)) return true
-    if (focusedArea === 'input' && handleInputKey(key, modifiers)) return true
-    if (key === 'f1') {
-      setShowHelp((prev) => !prev)
-      return true
-    }
-    if (key === 'escape') {
-      if (showHelp) {
-        setShowHelp(false)
-      } else if (inputValue) {
-        onInputChange?.('')
-      } else {
-        focusChat()
+  const combinedKeyHandler = useCallback(
+    async (key: string, modifiers: any) => {
+      if (focusedArea === 'sidebar' && handleSidebarNavigation(key)) return true
+      if (focusedArea === 'chat' && handleChatNavigation(key)) return true
+      if (focusedArea === 'input' && handleInputKey(key, modifiers)) return true
+      if (key === 'f1') {
+        setShowHelp((prev) => !prev)
+        return true
       }
-      return true
-    }
-    return false
-  }, [focusedArea, handleSidebarNavigation, handleChatNavigation, handleInputKey, showHelp, inputValue, onInputChange, focusChat])
+      if (key === 'escape') {
+        if (showHelp) {
+          setShowHelp(false)
+        } else if (inputValue) {
+          onInputChange?.('')
+        } else {
+          focusChat()
+        }
+        return true
+      }
+      return false
+    },
+    [
+      focusedArea,
+      handleSidebarNavigation,
+      handleChatNavigation,
+      handleInputKey,
+      showHelp,
+      inputValue,
+      onInputChange,
+      focusChat,
+    ],
+  )
 
   useInput(combinedKeyHandler)
 
   return (
-    <Box
-      flexDirection="column"
-      height="100%"
-      width="100%"
-    >
+    <Box flexDirection="column" height="100%" width="100%">
       <Box
         flexDirection="row"
         paddingLeft={1}
@@ -195,13 +213,31 @@ export function MainLayout({
         borderBottomColor={colors.border}
         alignItems="center"
       >
-        <Text color={colors.primary} bold>forge</Text>
-        <Box marginLeft={1}><Text color={colors.textMuted}>v0.1.0</Text></Box>
-        {statusLeft && <Box flexDirection="row" marginLeft={2}>{statusLeft}</Box>}
+        <Text color={colors.primary} bold>
+          forge
+        </Text>
+        <Box marginLeft={1}>
+          <Text color={colors.textMuted}>v0.1.0</Text>
+        </Box>
+        {statusLeft && (
+          <Box flexDirection="row" marginLeft={2}>
+            {statusLeft}
+          </Box>
+        )}
         <Box flexGrow={1} />
-        {statusRight && <Box flexDirection="row" marginRight={1}>{statusRight}</Box>}
-        <Box marginRight={2}><Text color={colors.textMuted}>{themeMode.toUpperCase()}</Text></Box>
-        <Box marginRight={2}><Text color={colors.textMuted}>{terminalSize.width}x{terminalSize.height}</Text></Box>
+        {statusRight && (
+          <Box flexDirection="row" marginRight={1}>
+            {statusRight}
+          </Box>
+        )}
+        <Box marginRight={2}>
+          <Text color={colors.textMuted}>{themeMode.toUpperCase()}</Text>
+        </Box>
+        <Box marginRight={2}>
+          <Text color={colors.textMuted}>
+            {terminalSize.width}x{terminalSize.height}
+          </Text>
+        </Box>
       </Box>
 
       <Box flexDirection="row" flexGrow={1} height={chatHeight + 2}>
@@ -219,7 +255,11 @@ export function MainLayout({
             overflowY="hidden"
             borderColor={getFocusBorder('sidebar')}
           >
-            <Box marginBottom={1}><Text color={colors.primary} bold>SESSIONS</Text></Box>
+            <Box marginBottom={1}>
+              <Text color={colors.primary} bold>
+                SESSIONS
+              </Text>
+            </Box>
             {sidebarItems.map((item, index) => {
               const isSelected = index === selectedSidebarIndex && focusedArea === 'sidebar'
               if (renderSidebarItem) {
@@ -236,11 +276,19 @@ export function MainLayout({
                   marginBottom={0}
                 >
                   <Box flexDirection="row" alignItems="center">
-                    {item.icon && <Box marginRight={1}><Text>{item.icon}</Text></Box>}
-                    <Box flexGrow={1}><Text>{item.label}</Text></Box>
+                    {item.icon && (
+                      <Box marginRight={1}>
+                        <Text>{item.icon}</Text>
+                      </Box>
+                    )}
+                    <Box flexGrow={1}>
+                      <Text>{item.label}</Text>
+                    </Box>
                     {item.badge && (
                       <Box paddingLeft={1} paddingRight={1} paddingTop={0} paddingBottom={0}>
-                        <Text color={colors.accent} backgroundColor={colors.surfaceElevated}>{item.badge}</Text>
+                        <Text color={colors.accent} backgroundColor={colors.surfaceElevated}>
+                          {item.badge}
+                        </Text>
                       </Box>
                     )}
                   </Box>
@@ -248,7 +296,9 @@ export function MainLayout({
               )
             })}
             {sidebarItems.length === 0 && (
-              <Box marginTop={2}><Text color={colors.textMuted}>No sessions</Text></Box>
+              <Box marginTop={2}>
+                <Text color={colors.textMuted}>No sessions</Text>
+              </Box>
             )}
           </Box>
         )}
@@ -277,15 +327,29 @@ export function MainLayout({
               <Box key={message.id} marginBottom={1} paddingLeft={1}>
                 <Box flexDirection="row" marginBottom={0}>
                   <Text
-                    color={isUser ? colors.primary : isTool ? colors.accent : isSystem ? colors.warning : colors.success}
+                    color={
+                      isUser
+                        ? colors.primary
+                        : isTool
+                          ? colors.accent
+                          : isSystem
+                            ? colors.warning
+                            : colors.success
+                    }
                     bold
                   >
-                    {isUser ? '►' : isTool ? '⚙' : isSystem ? '◆' : '●'}
+                    {isUser ? 'â–º' : isTool ? 'âš™' : isSystem ? 'â—†' : 'â—'}
                   </Text>
-                  <Box marginLeft={1}><Text color={colors.textSecondary}>{message.role.toUpperCase()}</Text></Box>
-                  <Box marginLeft={1}><Text color={colors.textMuted}>{message.timestamp.toLocaleTimeString()}</Text></Box>
+                  <Box marginLeft={1}>
+                    <Text color={colors.textSecondary}>{message.role.toUpperCase()}</Text>
+                  </Box>
+                  <Box marginLeft={1}>
+                    <Text color={colors.textMuted}>{message.timestamp.toLocaleTimeString()}</Text>
+                  </Box>
                   {message.toolName && (
-                    <Box marginLeft={1}><Text color={colors.accent}>[{message.toolName}]</Text></Box>
+                    <Box marginLeft={1}>
+                      <Text color={colors.accent}>[{message.toolName}]</Text>
+                    </Box>
                   )}
                 </Box>
                 <Box marginLeft={2}>
@@ -297,15 +361,20 @@ export function MainLayout({
             )
           })}
           {messages.length === 0 && (
-            <Box
-              height="100%"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Box marginBottom={1}><Text color={colors.textMuted}>Welcome to forge</Text></Box>
-              <Box><Text color={colors.textMuted}>Press <Text color={colors.primary}>Space</Text> for commands</Text></Box>
-              <Box marginTop={1}><Text color={colors.textMuted}>Press <Text color={colors.primary}>F1</Text> for help</Text></Box>
+            <Box height="100%" flexDirection="column" alignItems="center" justifyContent="center">
+              <Box marginBottom={1}>
+                <Text color={colors.textMuted}>Welcome to forge</Text>
+              </Box>
+              <Box>
+                <Text color={colors.textMuted}>
+                  Press <Text color={colors.primary}>Space</Text> for commands
+                </Text>
+              </Box>
+              <Box marginTop={1}>
+                <Text color={colors.textMuted}>
+                  Press <Text color={colors.primary}>F1</Text> for help
+                </Text>
+              </Box>
             </Box>
           )}
           <Box ref={chatEndRef} />
@@ -324,16 +393,32 @@ export function MainLayout({
         alignItems="center"
         borderColor={getFocusBorder('input')}
       >
-        <Box marginRight={1}><Text color={focusedArea === 'input' ? colors.primary : colors.textSecondary}>›</Text></Box>
+        <Box marginRight={1}>
+          <Text color={focusedArea === 'input' ? colors.primary : colors.textSecondary}>â€º</Text>
+        </Box>
         <Box flexGrow={1} flexDirection="row" alignItems="center">
-          {/* @ts-ignore - backgroundColor works at runtime */}
-          <Box flexGrow={1} paddingLeft={1} paddingRight={1} paddingTop={0} paddingBottom={0} backgroundColor={focusedArea === 'input' ? colors.surfaceElevated : 'transparent'}>
-            <Text color={colors.textPrimary}>{inputValue || <Text color={colors.textMuted}>{inputPlaceholder}</Text>}</Text>
+          <Box
+            flexGrow={1}
+            paddingLeft={1}
+            paddingRight={1}
+            paddingTop={0}
+            paddingBottom={0}
+          >
+            <Text
+              backgroundColor={
+                focusedArea === 'input' ? colors.surfaceElevated : 'transparent'
+              }
+              color={colors.textPrimary}
+            >
+              {inputValue || <Text color={colors.textMuted}>{inputPlaceholder}</Text>}
+            </Text>
           </Box>
           {loading && (
             <Box marginLeft={1} flexDirection="row">
-              <Text color={colors.primary}>⟳</Text>
-              <Box marginLeft={1}><Text color={colors.textMuted}>Processing...</Text></Box>
+              <Text color={colors.primary}>âŸ³</Text>
+              <Box marginLeft={1}>
+                <Text color={colors.textMuted}>Processing...</Text>
+              </Box>
             </Box>
           )}
         </Box>
@@ -350,19 +435,25 @@ export function MainLayout({
         borderTopColor={colors.border}
       >
         <Box flexDirection="row">
-          <Text color={loading ? colors.warning : colors.success}>
-            {loading ? '●' : '●'}
-          </Text>
-          <Box marginLeft={1}><Text color={colors.textSecondary}>{loading ? 'Processing...' : 'Ready'}</Text></Box>
+          <Text color={loading ? colors.warning : colors.success}>{loading ? 'â—' : 'â—'}</Text>
+          <Box marginLeft={1}>
+            <Text color={colors.textSecondary}>{loading ? 'Processing...' : 'Ready'}</Text>
+          </Box>
           {error && (
             <>
-              <Box marginLeft={2}><Text color={colors.error}>Error: {error}</Text></Box>
+              <Box marginLeft={2}>
+                <Text color={colors.error}>Error: {error}</Text>
+              </Box>
             </>
           )}
         </Box>
         <Box flexDirection="row">
           <Text color={colors.textMuted}>{focusedArea.toUpperCase()}</Text>
-          <Box marginLeft={2}><Text color={colors.textMuted}>{keyboardManager.isLeaderActive() && 'LEADER ACTIVE'}</Text></Box>
+          <Box marginLeft={2}>
+            <Text color={colors.textMuted}>
+              {keyboardManager.isLeaderActive() && 'LEADER ACTIVE'}
+            </Text>
+          </Box>
         </Box>
       </Box>
 
@@ -387,16 +478,33 @@ export function MainLayout({
             borderRadius={2}
             marginBottom={1}
           >
-            <Box marginBottom={1}><Text bold color={colors.primary}>KEYBOARD SHORTCUTS</Text></Box>
-            <Box marginBottom={1}><Text color={colors.textMuted}>Leader key: SPACE (hold to see leader bindings)</Text></Box>
+            <Box marginBottom={1}>
+              <Text bold color={colors.primary}>
+                KEYBOARD SHORTCUTS
+              </Text>
+            </Box>
+            <Box marginBottom={1}>
+              <Text color={colors.textMuted}>Leader key: SPACE (hold to see leader bindings)</Text>
+            </Box>
           </Box>
           <Box flexDirection="column">
-            {getKeyboardManager().getBindings().map((binding: any, i: number) => (
-              <Box key={i} flexDirection="row" paddingLeft={1} paddingRight={1} paddingTop={0} paddingBottom={0}>
-                <Box width={12}><Text color={colors.primary}>{formatKeyImport(binding.combo)}</Text></Box>
-                <Text color={colors.textSecondary}>{binding.description}</Text>
-              </Box>
-            ))}
+            {getKeyboardManager()
+              .getBindings()
+              .map((binding: any, i: number) => (
+                <Box
+                  key={i}
+                  flexDirection="row"
+                  paddingLeft={1}
+                  paddingRight={1}
+                  paddingTop={0}
+                  paddingBottom={0}
+                >
+                  <Box width={12}>
+                    <Text color={colors.primary}>{formatKeyImport(binding.combo)}</Text>
+                  </Box>
+                  <Text color={colors.textSecondary}>{binding.description}</Text>
+                </Box>
+              ))}
           </Box>
           <Box marginTop={2} flexDirection="row">
             <Text color={colors.textMuted}>Press </Text>

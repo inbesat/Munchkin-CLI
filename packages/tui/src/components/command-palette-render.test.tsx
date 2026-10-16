@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
+import { render } from 'ink'
 import { CommandPalette } from './command-palette'
 
 const mockTheme = {
@@ -55,7 +54,7 @@ describe('CommandPalette (smoke)', () => {
         onSelect={() => {}}
         onClose={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('/mo')
@@ -73,7 +72,7 @@ describe('CommandPalette (smoke)', () => {
         onSelect={() => {}}
         onClose={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).not.toContain('model')
     unmount()
@@ -90,7 +89,7 @@ describe('CommandPalette (smoke)', () => {
         onSelect={() => {}}
         onClose={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).toContain('No matching commands')
     unmount()

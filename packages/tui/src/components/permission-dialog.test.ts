@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  type PermissionChoice,
+  type PermissionRequest,
   describeRequest,
   resolveFromChoice,
   riskColor,
-  type PermissionRequest,
-  type PermissionChoice,
 } from './permission-dialog'
 
 function makeRequest(over: Partial<PermissionRequest> = {}): PermissionRequest {
@@ -21,49 +21,51 @@ function makeRequest(over: Partial<PermissionRequest> = {}): PermissionRequest {
 
 describe('describeRequest', () => {
   it('describes bash command', () => {
-    expect(describeRequest(makeRequest({ tool: { name: 'bash' }, args: { command: 'ls -la' } }))).toBe(
-      'Run shell command: ls -la'
-    )
+    expect(
+      describeRequest(makeRequest({ tool: { name: 'bash' }, args: { command: 'ls -la' } })),
+    ).toBe('Run shell command: ls -la')
   })
 
   it('describes read file', () => {
-    expect(describeRequest(makeRequest({ tool: { name: 'read' }, args: { path: 'src/app.ts' } }))).toBe(
-      'Read file: src/app.ts'
-    )
+    expect(
+      describeRequest(makeRequest({ tool: { name: 'read' }, args: { path: 'src/app.ts' } })),
+    ).toBe('Read file: src/app.ts')
   })
 
   it('describes write file (file alias)', () => {
     expect(describeRequest(makeRequest({ tool: { name: 'write' }, args: { file: 'a.txt' } }))).toBe(
-      'Write file: a.txt'
+      'Write file: a.txt',
     )
   })
 
   it('describes edit file', () => {
     expect(describeRequest(makeRequest({ tool: { name: 'edit' }, args: { path: 'x.ts' } }))).toBe(
-      'Edit file: x.ts'
+      'Edit file: x.ts',
     )
   })
 
   it('describes web fetch', () => {
-    expect(describeRequest(makeRequest({ tool: { name: 'web_fetch' }, args: { url: 'https://x.com' } }))).toBe(
-      'Fetch URL: https://x.com'
-    )
+    expect(
+      describeRequest(makeRequest({ tool: { name: 'web_fetch' }, args: { url: 'https://x.com' } })),
+    ).toBe('Fetch URL: https://x.com')
   })
 
   it('describes web search', () => {
-    expect(describeRequest(makeRequest({ tool: { name: 'web_search' }, args: { query: 'best tui' } }))).toBe(
-      'Web search: best tui'
-    )
+    expect(
+      describeRequest(makeRequest({ tool: { name: 'web_search' }, args: { query: 'best tui' } })),
+    ).toBe('Web search: best tui')
   })
 
   it('describes glob', () => {
-    expect(describeRequest(makeRequest({ tool: { name: 'glob' }, args: { pattern: '**/*.ts' } }))).toBe(
-      'Glob pattern: **/*.ts'
-    )
+    expect(
+      describeRequest(makeRequest({ tool: { name: 'glob' }, args: { pattern: '**/*.ts' } })),
+    ).toBe('Glob pattern: **/*.ts')
   })
 
   it('falls back to argument summary', () => {
-    const r = describeRequest(makeRequest({ tool: { name: 'mystery' }, args: { foo: 'bar', baz: 1 } }))
+    const r = describeRequest(
+      makeRequest({ tool: { name: 'mystery' }, args: { foo: 'bar', baz: 1 } }),
+    )
     expect(r).toContain('foo=bar')
     expect(r).toContain('baz=')
   })

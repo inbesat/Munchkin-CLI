@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  type Checkpoint,
+  type CheckpointKind,
   formatCheckpointTime,
   kindColor,
   kindGlyph,
   moveCursor,
-  type Checkpoint,
-  type CheckpointKind,
 } from './checkpoint-timeline'
 
 const theme = {
@@ -42,7 +42,13 @@ const theme = {
 } as unknown as import('../theme').ThemeColors
 
 function cp(id: string, messageIndex: number, kind: CheckpointKind = 'tool'): Checkpoint {
-  return { id, label: `step-${id}`, timestamp: 1_700_000_000_000 + messageIndex * 1000, messageIndex, kind }
+  return {
+    id,
+    label: `step-${id}`,
+    timestamp: 1_700_000_000_000 + messageIndex * 1000,
+    messageIndex,
+    kind,
+  }
 }
 
 describe('formatCheckpointTime', () => {

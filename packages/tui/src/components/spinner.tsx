@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
 import { Box, Text } from 'ink'
+import { useEffect, useState } from 'react'
 import type { ThemeColors } from '../theme'
 
 const DEFAULT_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
@@ -17,12 +17,7 @@ export function clampRatio(ratio: number): number {
   return ratio
 }
 
-export function renderProgressBar(
-  ratio: number,
-  width = 20,
-  fill = '█',
-  empty = '░'
-): string {
+export function renderProgressBar(ratio: number, width = 20, fill = '█', empty = '░'): string {
   const r = clampRatio(ratio)
   const filled = Math.round(r * width)
   return fill.repeat(filled) + empty.repeat(Math.max(0, width - filled))
@@ -78,13 +73,7 @@ export interface ProgressBarProps {
   color?: string
 }
 
-export function ProgressBar({
-  themeColors,
-  ratio,
-  width = 20,
-  label,
-  color,
-}: ProgressBarProps) {
+export function ProgressBar({ themeColors, ratio, width = 20, label, color }: ProgressBarProps) {
   const r = clampRatio(ratio)
   const bar = renderProgressBar(r, width)
   const barColor = color ?? (r >= 1 ? themeColors.success : themeColors.primary)
@@ -112,7 +101,7 @@ export function LoadingDots({ themeColors, label, active = true }: LoadingDotsPr
     const handle = setInterval(() => setTick((t) => t + 1), 400)
     return () => clearInterval(handle)
   }, [active])
-  const dots = '.'.repeat(((tick % 3) + 1))
+  const dots = '.'.repeat((tick % 3) + 1)
   return (
     <Box flexDirection="row">
       {label ? <Text color={themeColors.textSecondary}>{label}</Text> : null}

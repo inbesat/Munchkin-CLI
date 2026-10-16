@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
+import { useEffect, useState } from 'react'
 import type { ThemeColors } from '../theme'
 import { formatCost } from './status-bar'
 
@@ -31,11 +31,7 @@ export function formatSessionDate(ts: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export function moveSessionSelection(
-  count: number,
-  current: number,
-  dir: 1 | -1
-): number {
+export function moveSessionSelection(count: number, current: number, dir: 1 | -1): number {
   if (count === 0) return 0
   if (current < 0) return dir === 1 ? 0 : count - 1
   const next = current + dir
@@ -134,7 +130,7 @@ export function SessionPicker({
         }
       }
     },
-    { isActive: isActive && isOpen }
+    { isActive: isActive && isOpen },
   )
 
   if (!isOpen) return null
@@ -157,7 +153,10 @@ export function SessionPicker({
         {effectiveQuery ? (
           <Text color={themeColors.textMuted}> (filter: {effectiveQuery})</Text>
         ) : null}
-        <Text color={themeColors.textMuted}> — {results.length} of {sessions.length}</Text>
+        <Text color={themeColors.textMuted}>
+          {' '}
+          — {results.length} of {sessions.length}
+        </Text>
       </Box>
 
       {results.length === 0 ? (
@@ -205,7 +204,9 @@ export function SessionPicker({
       )}
 
       <Box marginTop={1}>
-        <Text color={themeColors.textMuted}>↑/↓ move · Enter resume · f fork · e export · Esc close</Text>
+        <Text color={themeColors.textMuted}>
+          ↑/↓ move · Enter resume · f fork · e export · Esc close
+        </Text>
       </Box>
     </Box>
   )

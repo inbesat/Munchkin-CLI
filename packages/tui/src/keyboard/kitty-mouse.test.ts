@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { parseKittyKey, KITTY_ENABLE, KITTY_DISABLE } from './kitty'
-import { parseMouseSGR, MOUSE_ENABLE, MOUSE_DISABLE } from './mouse'
+import { KITTY_DISABLE, KITTY_ENABLE, parseKittyKey } from './kitty'
+import { MOUSE_DISABLE, MOUSE_ENABLE, parseMouseSGR } from './mouse'
 
 describe('Kitty keyboard protocol', () => {
   it('exposes enable/disable sequences', () => {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
+import { render } from 'ink'
 import { SessionPicker, type SessionSummary } from './session-picker'
 
 const mockTheme = {
@@ -55,17 +54,44 @@ function createMockStdout() {
 }
 
 const sessions: SessionSummary[] = [
-  { id: 'a', title: 'Refactor auth', preview: 'moved login logic', model: 'claude-opus', cost: 0.01, createdAt: 1_700_000_000_000 },
-  { id: 'b', title: 'Fix bug', preview: 'null pointer', model: 'gpt-4', cost: 0.02, createdAt: 1_700_000_100_000 },
-  { id: 'c', title: 'Write docs', preview: 'updated README', model: 'claude-opus', cost: 0.0, createdAt: 1_700_000_200_000 },
+  {
+    id: 'a',
+    title: 'Refactor auth',
+    preview: 'moved login logic',
+    model: 'claude-opus',
+    cost: 0.01,
+    createdAt: 1_700_000_000_000,
+  },
+  {
+    id: 'b',
+    title: 'Fix bug',
+    preview: 'null pointer',
+    model: 'gpt-4',
+    cost: 0.02,
+    createdAt: 1_700_000_100_000,
+  },
+  {
+    id: 'c',
+    title: 'Write docs',
+    preview: 'updated README',
+    model: 'claude-opus',
+    cost: 0.0,
+    createdAt: 1_700_000_200_000,
+  },
 ]
 
 describe('SessionPicker (smoke)', () => {
   it('renders sessions with metadata', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <SessionPicker themeColors={mockTheme} sessions={sessions} isOpen={true} isActive={false} onResume={() => {}} />,
-      { stdout }
+      <SessionPicker
+        themeColors={mockTheme}
+        sessions={sessions}
+        isOpen={true}
+        isActive={false}
+        onResume={() => {}}
+      />,
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Sessions')
@@ -78,8 +104,13 @@ describe('SessionPicker (smoke)', () => {
   it('does not render when closed', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <SessionPicker themeColors={mockTheme} sessions={sessions} isOpen={false} onResume={() => {}} />,
-      { stdout }
+      <SessionPicker
+        themeColors={mockTheme}
+        sessions={sessions}
+        isOpen={false}
+        onResume={() => {}}
+      />,
+      { stdout },
     )
     expect(getOutput()).not.toContain('Sessions')
     unmount()
@@ -88,8 +119,15 @@ describe('SessionPicker (smoke)', () => {
   it('filters via controlled query', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <SessionPicker themeColors={mockTheme} sessions={sessions} isOpen={true} isActive={false} query="docs" onResume={() => {}} />,
-      { stdout }
+      <SessionPicker
+        themeColors={mockTheme}
+        sessions={sessions}
+        isOpen={true}
+        isActive={false}
+        query="docs"
+        onResume={() => {}}
+      />,
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Write docs')
@@ -100,8 +138,15 @@ describe('SessionPicker (smoke)', () => {
   it('shows empty message when no match', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <SessionPicker themeColors={mockTheme} sessions={sessions} isOpen={true} isActive={false} query="zzz" onResume={() => {}} />,
-      { stdout }
+      <SessionPicker
+        themeColors={mockTheme}
+        sessions={sessions}
+        isOpen={true}
+        isActive={false}
+        query="zzz"
+        onResume={() => {}}
+      />,
+      { stdout },
     )
     expect(getOutput()).toContain('No sessions match.')
     unmount()

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
+import { render } from 'ink'
 import { PermissionDialog, type PermissionRequest } from './permission-dialog'
 
 const mockTheme = {
@@ -65,7 +64,7 @@ describe('PermissionDialog (smoke)', () => {
         isActive={false}
         onResolve={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Permission required')
@@ -86,7 +85,7 @@ describe('PermissionDialog (smoke)', () => {
         isOpen={false}
         onResolve={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).not.toContain('Permission required')
     unmount()
@@ -103,7 +102,7 @@ describe('PermissionDialog (smoke)', () => {
         allowRemember={false}
         onResolve={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Allow (once)')
@@ -122,7 +121,7 @@ describe('PermissionDialog (smoke)', () => {
         isActive={false}
         onResolve={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).toContain('Arguments:')
     expect(getOutput()).toContain('command:')

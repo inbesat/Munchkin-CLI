@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
 import { Box, Text } from 'ink'
+import { useEffect, useRef } from 'react'
 import type { ThemeColors } from '../theme'
 
 export type ToastKind = 'success' | 'error' | 'info' | 'warning'

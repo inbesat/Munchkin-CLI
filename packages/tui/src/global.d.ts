@@ -1,5 +1,5 @@
 import 'ink'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 
 declare module 'ink' {
   interface BoxProps {
@@ -39,10 +39,22 @@ declare module 'ink' {
     zIndex?: number
     overflowY?: 'auto' | 'hidden' | 'visible' | 'scroll'
     alignItems?: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'baseline'
-    justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'
+    justifyContent?:
+      | 'flex-start'
+      | 'flex-end'
+      | 'center'
+      | 'space-between'
+      | 'space-around'
+      | 'space-evenly'
     flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse'
     flexWrap?: 'wrap' | 'nowrap' | 'wrap-reverse'
     alignSelf?: 'auto' | 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'baseline'
-    alignContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'stretch'
+    alignContent?:
+      | 'flex-start'
+      | 'flex-end'
+      | 'center'
+      | 'space-between'
+      | 'space-around'
+      | 'stretch'
   }
 }

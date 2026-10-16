@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { toastColor, toastLabel, type ToastKind } from './toast'
-import {
-  clampRatio,
-  renderIndeterminate,
-  renderProgressBar,
-  spinnerFrame,
-} from './spinner'
+import { clampRatio, renderIndeterminate, renderProgressBar, spinnerFrame } from './spinner'
+import { type ToastKind, toastColor, toastLabel } from './toast'
 
 const theme = {
   background: '#1e1e1e',
@@ -65,7 +60,7 @@ describe('progress bar', () => {
   it('clamps ratio', () => {
     expect(clampRatio(-1)).toBe(0)
     expect(clampRatio(2)).toBe(1)
-    expect(clampRatio(NaN)).toBe(0)
+    expect(clampRatio(Number.NaN)).toBe(0)
     expect(clampRatio(0.5)).toBe(0.5)
   })
 

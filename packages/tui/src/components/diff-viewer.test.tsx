@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
 import { render } from 'ink'
 import { DiffViewer, SimpleDiffViewer, detectLanguage } from './diff-viewer'
 
@@ -70,7 +69,7 @@ describe('SimpleDiffViewer', () => {
         oldContent="const x = 1"
         newContent="const x = 2"
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -82,7 +81,7 @@ describe('SimpleDiffViewer', () => {
         newContent="const x = 2"
         filePath="test.ts"
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -93,7 +92,7 @@ describe('SimpleDiffViewer', () => {
         oldContent="const x = 1"
         newContent="const x = 1"
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -105,7 +104,7 @@ describe('SimpleDiffViewer', () => {
         newContent="const x = 2"
         viewMode="side-by-side"
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -142,7 +141,7 @@ describe('DiffViewer', () => {
         isOpen={true}
         onClose={() => {}}
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -154,7 +153,7 @@ describe('DiffViewer', () => {
         newContent="const x = 2"
         isOpen={false}
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -166,9 +165,11 @@ describe('DiffViewer', () => {
         oldContent="const x = 1"
         newContent="const x = 2"
         isOpen={true}
-        onClose={() => { closed = true }}
+        onClose={() => {
+          closed = true
+        }}
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })

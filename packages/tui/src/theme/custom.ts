@@ -1,10 +1,5 @@
-import {
-  themes,
-  type Theme,
-  type ThemeMode,
-  type ThemeColors,
-} from './themes'
 import { isValidThemeColors, mergeThemeColors } from './apply'
+import { type Theme, type ThemeColors, type ThemeMode, themes } from './themes'
 
 /** Shape of a custom theme config (from JSON or object). */
 export interface CustomThemeConfig {

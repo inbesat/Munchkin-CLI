@@ -1,8 +1,22 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { render, Box, Text, useInput, useFocus } from 'ink'
-import { ThemeProvider, useTheme, useThemeColors, themes, ThemeMode } from './theme'
-import { getKeyboardManager, KeyboardManager, createDefaultBindings, formatKey } from './keyboard'
-import { MainLayout, ChatMessage, SidebarItem } from './layout/main'
+import { join } from 'node:path'
+import { Box, Text, render, useInput } from 'ink'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type BackgroundTask,
+  BackgroundTaskManager,
+  ContextBudgeter,
+  clearGoal,
+  setGoal,
+} from '../../core/dist/index'
+import {
+  type InstalledPlugin,
+  MarketplaceClient,
+  MarketplaceRegistry,
+} from '../../plugin-kernel/dist/index'
+import { ContextGrid } from './components/context-grid'
+import { createDefaultBindings, getKeyboardManager } from './keyboard'
+import { type ChatMessage, MainLayout, type SidebarItem } from './layout/main'
+import { type ThemeMode, ThemeProvider, useThemeColors } from './theme'
 
 /** App state. */
 interface AppState {
@@ -14,6 +28,7 @@ interface AppState {
   loading: boolean
   error: string | null
   sidebarWidth: number
+  showContextGrid: boolean
 }
 
 /** Create initial app state. */
@@ -38,6 +53,7 @@ function createInitialState(): AppState {
     loading: false,
     error: null,
     sidebarWidth: 30,
+    showContextGrid: false,
   }
 }
 
@@ -48,6 +64,35 @@ export function App() {
   const colors = useThemeColors()
   const keyboardManager = getKeyboardManager()
   const chatEndRef = useRef<HTMLDivElement>(null)
+  /** Phase 90: live context budget, kept in sync with message state. */
+  const budgeterRef = useRef(
+    new ContextBudgeter({
+      modelInfo: { contextWindow: 200_000, maxOutputTokens: 8192 },
+      config: { maxTokens: 200_000, compactionThreshold: 0.8, keepRecentMessages: 10 },
+      systemPrompt: 'You are forge.',
+    }),
+  )
+  /** Phase 97: detached background tasks (`/tasks` lists them). */
+  const backgroundTasksRef = useRef(new BackgroundTaskManager())
+  /** Phase 110: plugin marketplace state. */
+  const pluginRegistryRef = useRef(new MarketplaceRegistry(join(process.cwd(), '.forge')))
+  const marketplaceSourceRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
+  }, [state.messages])
+
+  /** Append a system message (used by slash-command feedback). */
+  const appendSystem = useCallback((content: string) => {
+    setState((s) => ({
+      ...s,
+      inputValue: '',
+      messages: [
+        ...s.messages,
+        { id: `sys-${Date.now()}`, role: 'system' as const, content, timestamp: new Date() },
+      ],
+    }))
+  }, [])
 
   // Register default key bindings
   useEffect(() => {
@@ -68,15 +113,31 @@ export function App() {
       },
       openHelp: () => setShowHelp(true),
       quit: () => process.exit(0),
-      focusInput: () => { /* handled by layout */ },
-      focusChat: () => { /* handled by layout */ },
-      focusSidebar: () => { /* handled by layout */ },
-      nextTab: () => { /* tab navigation */ },
-      prevTab: () => { /* tab navigation */ },
-      closeTab: () => { /* tab navigation */ },
-      copyCode: () => { /* copy code block */ },
+      focusInput: () => {
+        /* handled by layout */
+      },
+      focusChat: () => {
+        /* handled by layout */
+      },
+      focusSidebar: () => {
+        /* handled by layout */
+      },
+      nextTab: () => {
+        /* tab navigation */
+      },
+      prevTab: () => {
+        /* tab navigation */
+      },
+      closeTab: () => {
+        /* tab navigation */
+      },
+      copyCode: () => {
+        /* copy code block */
+      },
       interrupt: () => setState((s) => ({ ...s, loading: false })),
-      retry: () => { /* retry last operation */ },
+      retry: () => {
+        /* retry last operation */
+      },
     })
     keyboardManager.registerAll(bindings)
 
@@ -95,6 +156,93 @@ export function App() {
   // Handle input submit
   const handleInputSubmit = useCallback(async (value: string) => {
     if (!value.trim()) return
+
+    // Slash-command dispatch (Phases 90/97/101/110).
+    if (value.startsWith('/')) {
+      const command = value.slice(1).trim().split(/\s+/)[0] ?? ''
+      const argsText = value.slice(1).trim().slice(command.length).trim()
+
+      if (command === 'context') {
+        setState((s) => ({ ...s, showContextGrid: !s.showContextGrid, inputValue: '' }))
+        return
+      }
+      if (command === 'tasks') {
+        const tasks: readonly BackgroundTask[] = backgroundTasksRef.current.list()
+        appendSystem(
+          tasks.length === 0
+            ? 'No background tasks.'
+            : tasks
+                .map((t) => {
+                  const suffix =
+                    t.status === 'completed' && t.result !== undefined
+                      ? ` — ${String(t.result)}`
+                      : t.error !== undefined
+                        ? ` — ${t.error}`
+                        : ''
+                  return `[${t.status}] ${t.id}: ${t.description}${suffix}`
+                })
+                .join('\n'),
+        )
+        return
+      }
+      if (command === 'goal') {
+        if (argsText === 'clear') {
+          clearGoal()
+          appendSystem('Goal cleared — autonomous mode stopped.')
+          return
+        }
+        if (argsText.length === 0) {
+          appendSystem('Usage: /goal <condition> — or /goal clear')
+          return
+        }
+        setGoal(argsText)
+        appendSystem(`Goal set: ${argsText} — ends when the agent reports [GOAL_MET].`)
+        return
+      }
+      if (command === 'plugin') {
+        if (argsText === '' || argsText === 'installed') {
+          const installed = pluginRegistryRef.current.installed()
+          appendSystem(
+            installed.length === 0
+              ? 'No plugins installed.'
+              : installed
+                  .map((p: InstalledPlugin) => `[installed] ${p.name} v${p.version} — ${p.dir}`)
+                  .join('\n'),
+          )
+          return
+        }
+        const addMatch = /^marketplace\s+add\s+(\S+\/\S+)\s*$/.exec(argsText)
+        if (addMatch !== null) {
+          marketplaceSourceRef.current = addMatch[1]
+          appendSystem(
+            `Marketplace source set to ${addMatch[1]}. Browse with /plugin marketplace browse.`,
+          )
+          return
+        }
+        const browseMatch = /^marketplace\s+browse\s*$/.exec(argsText)
+        if (browseMatch !== null) {
+          const source = marketplaceSourceRef.current
+          if (source === null) {
+            appendSystem('No marketplace source. Use /plugin marketplace add owner/repo.')
+            return
+          }
+          const client = new MarketplaceClient({ source })
+          const result = await client.browse()
+          appendSystem(
+            result.ok
+              ? (result.entries ?? [])
+                  .map((e) => `${e.name} v${e.version} — ${e.description ?? ''}`)
+                  .join('\n') || 'Marketplace is empty.'
+              : `Marketplace browse failed: ${result.error}`,
+          )
+          return
+        }
+        appendSystem(`Unknown plugin subcommand: ${argsText}`)
+        return
+      }
+      appendSystem(`Unknown command: ${value}`)
+      return
+    }
 
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -178,6 +326,9 @@ export function App() {
 
   return (
     <ThemeProvider initialMode={state.themeMode}>
+      {state.showContextGrid && (
+        <ContextGrid snapshot={() => budgeterRef.current.calculateBudget()} width={32} />
+      )}
       <MainLayout
         messages={state.messages}
         sidebarItems={state.sidebarItems}

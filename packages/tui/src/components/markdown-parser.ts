@@ -320,7 +320,7 @@ export class StreamingMarkdownParser {
     // Return combined token for simplicity
     return {
       type: 'text',
-      content: tokens.map(t => t.content).join(''),
+      content: tokens.map((t) => t.content).join(''),
     }
   }
 

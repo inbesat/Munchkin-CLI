@@ -1,4 +1,4 @@
-import { StreamingMarkdownParser, type MarkdownToken } from './markdown-parser'
+import { StreamingMarkdownParser } from './markdown-parser'
 
 describe('StreamingMarkdownParser', () => {
   it('parses headers', () => {
@@ -17,7 +17,7 @@ describe('StreamingMarkdownParser', () => {
     const tokens = parser.processChunk('```typescript\nconst x = 1\n```\n')
     // Returns code_block + potential trailing newline text token
     expect(tokens.length).toBeGreaterThanOrEqual(1)
-    const codeBlockToken = tokens.find(t => t.type === 'code_block')
+    const codeBlockToken = tokens.find((t) => t.type === 'code_block')
     expect(codeBlockToken).toBeDefined()
     expect(codeBlockToken?.content).toContain('const x = 1')
     expect(codeBlockToken?.meta?.language).toBe('typescript')
@@ -26,13 +26,13 @@ describe('StreamingMarkdownParser', () => {
   it('parses list items', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('- item 1\n- item 2\n')
-    expect(tokens.filter(t => t.type === 'list_item').length).toBe(2)
+    expect(tokens.filter((t) => t.type === 'list_item').length).toBe(2)
   })
 
   it('parses ordered list items', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('1. first\n2. second\n')
-    const listItems = tokens.filter(t => t.type === 'list_item')
+    const listItems = tokens.filter((t) => t.type === 'list_item')
     expect(listItems.length).toBe(2)
     expect(listItems[0].meta?.ordered).toBe(true)
   })
@@ -40,13 +40,13 @@ describe('StreamingMarkdownParser', () => {
   it('parses blockquotes', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('> quote\n')
-    expect(tokens.some(t => t.type === 'blockquote')).toBe(true)
+    expect(tokens.some((t) => t.type === 'blockquote')).toBe(true)
   })
 
   it('parses horizontal rules', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('---\n')
-    expect(tokens.some(t => t.type === 'horizontal_rule')).toBe(true)
+    expect(tokens.some((t) => t.type === 'horizontal_rule')).toBe(true)
   })
 
   it('handles streaming incomplete code block', () => {
@@ -63,7 +63,7 @@ describe('StreamingMarkdownParser', () => {
     // Need newline before closing backticks
     const tokens = parser.processChunk('\n```\n')
     expect(tokens.length).toBeGreaterThanOrEqual(1)
-    const codeBlockToken = tokens.find(t => t.type === 'code_block')
+    const codeBlockToken = tokens.find((t) => t.type === 'code_block')
     expect(codeBlockToken).toBeDefined()
     expect(codeBlockToken?.content).toContain('print("hello")')
     expect(parser.isInCodeBlock()).toBe(false)
@@ -101,9 +101,9 @@ console.log('hello')
 > A quote
 `
     const tokens = parser.processChunk(markdown)
-    const types = tokens.map(t => t.type)
+    const types = tokens.map((t) => t.type)
     expect(types).toContain('header')
-    expect(types.filter(t => t === 'list_item').length).toBe(2)
+    expect(types.filter((t) => t === 'list_item').length).toBe(2)
     expect(types).toContain('code_block')
     expect(types).toContain('blockquote')
   })
@@ -125,13 +125,13 @@ console.log('hello')
   it('parses text content', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('Just some text\nMore text\n')
-    expect(tokens.some(t => t.type === 'text')).toBe(true)
+    expect(tokens.some((t) => t.type === 'text')).toBe(true)
   })
 
   it('handles multiple headers', () => {
     const parser = new StreamingMarkdownParser()
     const tokens = parser.processChunk('# H1\n## H2\n### H3\n')
-    expect(tokens.filter(t => t.type === 'header').length).toBe(3)
+    expect(tokens.filter((t) => t.type === 'header').length).toBe(3)
   })
 })
 
@@ -139,8 +139,8 @@ describe('MarkdownToken types', () => {
   it('produces various token types', () => {
     const parser = new StreamingMarkdownParser()
     parser.processChunk('# H1\n- item\n> quote\n---\n```js\ncode\n```\n')
-    
-    const types = new Set(parser.getTokens().map(t => t.type))
+
+    const types = new Set(parser.getTokens().map((t) => t.type))
     expect(types.has('header')).toBe(true)
     expect(types.has('list_item')).toBe(true)
     expect(types.has('blockquote')).toBe(true)

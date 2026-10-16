@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
+import { render } from 'ink'
 import { StatusBar, type StatusBarState } from './status-bar'
 
 const mockTheme = {
@@ -72,10 +71,9 @@ describe('StatusBar (smoke)', () => {
 
   it('drops optional segments when narrow', () => {
     const { stdout, getOutput } = createMockStdout()
-    const { unmount } = render(
-      <StatusBar themeColors={mockTheme} state={state} width={30} />,
-      { stdout }
-    )
+    const { unmount } = render(<StatusBar themeColors={mockTheme} state={state} width={30} />, {
+      stdout,
+    })
     const frame = getOutput()
     expect(frame).toContain('executing')
     expect(frame).toContain('1.2k')
@@ -87,7 +85,7 @@ describe('StatusBar (smoke)', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
       <StatusBar themeColors={mockTheme} state={{ agentStatus: 'idle' }} />,
-      { stdout }
+      { stdout },
     )
     expect(getOutput()).toContain('idle')
     unmount()

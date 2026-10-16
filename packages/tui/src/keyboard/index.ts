@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { useInput } from 'ink'
+import { useEffect, useRef } from 'react'
 
 /** Key combination representation. */
 export interface KeyCombo {
@@ -34,10 +34,10 @@ interface LeaderState {
 export class KeyboardManager {
   private bindings: Map<string, KeyBinding[]> = new Map()
   private leaderState: LeaderState = { active: false, timeoutId: null }
-  private leaderKey: string = 'Space'
-  private leaderTimeout: number = 1000
-  private context: string = 'global'
-  private helpVisible: boolean = false
+  private leaderKey = 'Space'
+  private leaderTimeout = 1000
+  private context = 'global'
+  private helpVisible = false
 
   constructor(options: { leaderKey?: string; leaderTimeout?: number } = {}) {
     this.leaderKey = options.leaderKey ?? 'Space'
@@ -76,7 +76,10 @@ export class KeyboardManager {
   }
 
   /** Handle a key press. */
-  async handleKey(key: string, modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean }): Promise<boolean> {
+  async handleKey(
+    key: string,
+    modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+  ): Promise<boolean> {
     const combo = this.formatCombo(key, modifiers)
 
     // Check for leader key activation
@@ -139,7 +142,10 @@ export class KeyboardManager {
   }
 
   /** Format a key combo string. */
-  private formatCombo(key: string, modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean }): string {
+  private formatCombo(
+    key: string,
+    modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+  ): string {
     const parts: string[] = []
     if (modifiers.ctrl) parts.push('ctrl')
     if (modifiers.shift) parts.push('shift')
@@ -191,7 +197,10 @@ export class KeyboardManager {
 let globalKeyboardManager: KeyboardManager | null = null
 
 /** Get or create global keyboard manager. */
-export function getKeyboardManager(options?: { leaderKey?: string; leaderTimeout?: number }): KeyboardManager {
+export function getKeyboardManager(options?: {
+  leaderKey?: string
+  leaderTimeout?: number
+}): KeyboardManager {
   if (!globalKeyboardManager) {
     globalKeyboardManager = new KeyboardManager(options)
   }
@@ -249,7 +258,10 @@ export function useKeyBindings(bindings: KeyBinding[], context?: string): void {
 
 /** Hook for handling raw input. */
 export function useInputHandler(
-  handler: (key: string, modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean }) => Promise<boolean>,
+  handler: (
+    key: string,
+    modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+  ) => Promise<boolean>,
   enabled = true,
 ): void {
   const manager = useKeyboardManager()
@@ -266,26 +278,24 @@ export function useInputHandler(
 }
 
 /** Default key bindings for the app. */
-export function createDefaultBindings(
-  actions: {
-    toggleSidebar?: () => void
-    toggleTheme?: () => void
-    newChat?: () => void
-    openSettings?: () => void
-    openHelp?: () => void
-    toggleHelp?: () => void
-    quit?: () => void
-    focusInput?: () => void
-    focusChat?: () => void
-    focusSidebar?: () => void
-    nextTab?: () => void
-    prevTab?: () => void
-    closeTab?: () => void
-    copyCode?: () => void
-    interrupt?: () => void
-    retry?: () => void
-  },
-): KeyBinding[] {
+export function createDefaultBindings(actions: {
+  toggleSidebar?: () => void
+  toggleTheme?: () => void
+  newChat?: () => void
+  openSettings?: () => void
+  openHelp?: () => void
+  toggleHelp?: () => void
+  quit?: () => void
+  focusInput?: () => void
+  focusChat?: () => void
+  focusSidebar?: () => void
+  nextTab?: () => void
+  prevTab?: () => void
+  closeTab?: () => void
+  copyCode?: () => void
+  interrupt?: () => void
+  retry?: () => void
+}): KeyBinding[] {
   const bindings: KeyBinding[] = []
 
   // Global bindings
@@ -463,4 +473,11 @@ export function getKeyDisplay(binding: KeyBinding): string {
   return formatKey(binding.combo)
 }
 export { parseKittyKey, KITTY_ENABLE, KITTY_DISABLE, type KittyKey } from './kitty'
-export { parseMouseSGR, MOUSE_ENABLE, MOUSE_DISABLE, type MouseEvent, type MouseButton, type MouseAction } from './mouse'
+export {
+  parseMouseSGR,
+  MOUSE_ENABLE,
+  MOUSE_DISABLE,
+  type MouseEvent,
+  type MouseButton,
+  type MouseAction,
+} from './mouse'

@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import React from 'react'
-import { render } from 'ink'
 import { EventEmitter } from 'node:events'
-import { CheckpointTimeline, type Checkpoint } from './checkpoint-timeline'
+import { render } from 'ink'
+import { type Checkpoint, CheckpointTimeline } from './checkpoint-timeline'
 
 const mockTheme = {
   background: '#0d1117',
@@ -64,8 +63,14 @@ describe('CheckpointTimeline (smoke)', () => {
   it('renders checkpoints sorted by messageIndex', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <CheckpointTimeline themeColors={mockTheme} checkpoints={checkpoints} isOpen={true} isActive={false} onRewind={() => {}} />,
-      { stdout }
+      <CheckpointTimeline
+        themeColors={mockTheme}
+        checkpoints={checkpoints}
+        isOpen={true}
+        isActive={false}
+        onRewind={() => {}}
+      />,
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('Checkpoints')
@@ -77,8 +82,13 @@ describe('CheckpointTimeline (smoke)', () => {
   it('does not render when closed', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <CheckpointTimeline themeColors={mockTheme} checkpoints={checkpoints} isOpen={false} onRewind={() => {}} />,
-      { stdout }
+      <CheckpointTimeline
+        themeColors={mockTheme}
+        checkpoints={checkpoints}
+        isOpen={false}
+        onRewind={() => {}}
+      />,
+      { stdout },
     )
     expect(getOutput()).not.toContain('Checkpoints')
     unmount()
@@ -87,8 +97,14 @@ describe('CheckpointTimeline (smoke)', () => {
   it('shows empty message when no checkpoints', () => {
     const { stdout, getOutput } = createMockStdout()
     const { unmount } = render(
-      <CheckpointTimeline themeColors={mockTheme} checkpoints={[]} isOpen={true} isActive={false} onRewind={() => {}} />,
-      { stdout }
+      <CheckpointTimeline
+        themeColors={mockTheme}
+        checkpoints={[]}
+        isOpen={true}
+        isActive={false}
+        onRewind={() => {}}
+      />,
+      { stdout },
     )
     expect(getOutput()).toContain('No checkpoints yet.')
     unmount()
@@ -105,7 +121,7 @@ describe('CheckpointTimeline (smoke)', () => {
         isActive={false}
         onRewind={() => {}}
       />,
-      { stdout }
+      { stdout },
     )
     const frame = getOutput()
     expect(frame).toContain('move')

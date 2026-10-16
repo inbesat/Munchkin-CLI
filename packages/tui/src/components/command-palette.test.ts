@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import {
-  filterCommands,
-  moveSelection,
-  defaultCommands,
-  type Command,
-} from './command-palette'
+import { type Command, defaultCommands, filterCommands, moveSelection } from './command-palette'
 
 const cmds: Command[] = [
   { id: 'help', title: 'help', description: 'Show help', group: 'builtin' },

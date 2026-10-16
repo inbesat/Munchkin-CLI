@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Box, Text, useInput } from 'ink'
-import { useThemeColors } from '../theme'
-import { computeDiff, DiffResultStructured, DiffHunk, DiffLine, formatUnifiedDiff, formatSideBySideDiff, formatInlineDiff, ComputeDiffOptions } from '../../../core/dist/diff'
+﻿import { Box, Text, useInput } from 'ink'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Highlighter } from 'shiki'
+import {
+  type ComputeDiffOptions,
+  type DiffHunk,
+  type DiffLine,
+  type DiffResultStructured,
+  computeDiff,
+  formatInlineDiff,
+  formatSideBySideDiff,
+  formatUnifiedDiff,
+} from '../../../core/dist/diff'
+import { useThemeColors } from '../theme'
 
 /** View mode for diff display */
 export type DiffViewMode = 'unified' | 'side-by-side' | 'inline'
@@ -50,8 +59,24 @@ async function getSharedHighlighter(): Promise<Highlighter> {
     sharedHighlighterPromise = createHighlighter({
       themes: ['github-dark', 'github-light'],
       langs: [
-        'typescript', 'javascript', 'python', 'rust', 'go', 'java', 'cpp', 'c',
-        'json', 'yaml', 'markdown', 'html', 'css', 'bash', 'shell', 'sql', 'toml', 'xml'
+        'typescript',
+        'javascript',
+        'python',
+        'rust',
+        'go',
+        'java',
+        'cpp',
+        'c',
+        'json',
+        'yaml',
+        'markdown',
+        'html',
+        'css',
+        'bash',
+        'shell',
+        'sql',
+        'toml',
+        'xml',
       ],
     })
   }
@@ -64,20 +89,48 @@ interface HighlightedLine {
   oldLineNumber?: number
   newLineNumber?: number
   type: 'context' | 'add' | 'remove'
-  segments: Array<{ text: string; color?: string; backgroundColor?: string; bold?: boolean; italic?: boolean }>
+  segments: Array<{
+    text: string
+    color?: string
+    backgroundColor?: string
+    bold?: boolean
+    italic?: boolean
+  }>
 }
 
 /** Detect language from file extension */
 export function detectLanguage(filePath: string): string {
   const ext = filePath.split('.').pop()?.toLowerCase()
   const map: Record<string, string> = {
-    ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
-    py: 'python', rs: 'rust', go: 'go', java: 'java', cpp: 'cpp', cc: 'cpp', cxx: 'cpp',
-    c: 'c', h: 'c', hpp: 'cpp', json: 'json', yml: 'yaml', yaml: 'yaml',
-    md: 'markdown', html: 'html', htm: 'html', css: 'css', scss: 'scss',
-    sh: 'bash', bash: 'bash', sql: 'sql', toml: 'toml', xml: 'xml',
+    ts: 'typescript',
+    tsx: 'typescript',
+    js: 'javascript',
+    jsx: 'javascript',
+    py: 'python',
+    rs: 'rust',
+    go: 'go',
+    java: 'java',
+    cpp: 'cpp',
+    cc: 'cpp',
+    cxx: 'cpp',
+    c: 'c',
+    h: 'c',
+    hpp: 'cpp',
+    json: 'json',
+    yml: 'yaml',
+    yaml: 'yaml',
+    md: 'markdown',
+    html: 'html',
+    htm: 'html',
+    css: 'css',
+    scss: 'scss',
+    sh: 'bash',
+    bash: 'bash',
+    sql: 'sql',
+    toml: 'toml',
+    xml: 'xml',
   }
-  return ext ? map[ext] ?? 'text' : 'text'
+  return ext ? (map[ext] ?? 'text') : 'text'
 }
 
 /** DiffViewer component */
@@ -122,9 +175,10 @@ export function DiffViewer({
     if (!diffResult || !highlighter) return
 
     try {
-      const theme = colors.background.includes('#ffffff') || colors.background.includes('#fff')
-        ? 'github-light'
-        : 'github-dark'
+      const theme =
+        colors.background.includes('#ffffff') || colors.background.includes('#fff')
+          ? 'github-light'
+          : 'github-dark'
       const language = filePath ? detectLanguage(filePath) : 'text'
 
       const lines: HighlightedLine[] = []
@@ -138,7 +192,13 @@ export function DiffViewer({
           lines.push({
             lineNumber: globalLineIndex++,
             type: 'context',
-            segments: [{ text: `--- Old (lines ${hunk.oldStart}-${hunk.oldStart + hunk.oldLines - 1}) --- New (lines ${hunk.newStart}-${hunk.newStart + hunk.newLines - 1}) ---`, color: colors.textMuted, bold: true }],
+            segments: [
+              {
+                text: `--- Old (lines ${hunk.oldStart}-${hunk.oldStart + hunk.oldLines - 1}) --- New (lines ${hunk.newStart}-${hunk.newStart + hunk.newLines - 1}) ---`,
+                color: colors.textMuted,
+                bold: true,
+              },
+            ],
           })
         }
 
@@ -162,90 +222,117 @@ export function DiffViewer({
   }, [diffResult, highlighter, viewMode, colors, filePath])
 
   // Keyboard navigation
-  const handleKey = useCallback((key: string) => {
-    if (!isOpen) return
+  const handleKey = useCallback(
+    (key: string) => {
+      if (!isOpen) return
 
-    const maxLines = highlightedLines.length - 1
+      const maxLines = highlightedLines.length - 1
 
-    switch (key) {
-      case 'j':
-      case 'down':
-        setSelectedLine((prev) => Math.min(prev + 1, maxLines))
-        break
-      case 'k':
-      case 'up':
-        setSelectedLine((prev) => Math.max(prev - 1, 0))
-        break
-      case 'J':
-        setSelectedLine((prev) => Math.min(prev + 10, maxLines))
-        break
-      case 'K':
-        setSelectedLine((prev) => Math.max(prev - 10, 0))
-        break
-      case 'g':
-        setSelectedLine(0)
-        break
-      case 'G':
-        setSelectedLine(maxLines)
-        break
-      case 'h':
-      case 'left':
-        setSelectedHunk((prev) => Math.max(prev - 1, 0))
-        break
-      case 'l':
-      case 'right':
-        if (diffResult) {
-          setSelectedHunk((prev) => Math.min(prev + 1, diffResult.hunks.length - 1))
-        }
-        break
-      case 'a':
-        if (actions?.onAccept && diffResult) {
-          const line = highlightedLines[selectedLine]
-          if (line && (line.type === 'add' || line.type === 'remove')) {
-            actions.onAccept(selectedHunk, selectedLine)
+      switch (key) {
+        case 'j':
+        case 'down':
+          setSelectedLine((prev) => Math.min(prev + 1, maxLines))
+          break
+        case 'k':
+        case 'up':
+          setSelectedLine((prev) => Math.max(prev - 1, 0))
+          break
+        case 'J':
+          setSelectedLine((prev) => Math.min(prev + 10, maxLines))
+          break
+        case 'K':
+          setSelectedLine((prev) => Math.max(prev - 10, 0))
+          break
+        case 'g':
+          setSelectedLine(0)
+          break
+        case 'G':
+          setSelectedLine(maxLines)
+          break
+        case 'h':
+        case 'left':
+          setSelectedHunk((prev) => Math.max(prev - 1, 0))
+          break
+        case 'l':
+        case 'right':
+          if (diffResult) {
+            setSelectedHunk((prev) => Math.min(prev + 1, diffResult.hunks.length - 1))
           }
-        }
-        break
-      case 'r':
-        if (actions?.onReject && diffResult) {
-          const line = highlightedLines[selectedLine]
-          if (line && (line.type === 'add' || line.type === 'remove')) {
-            actions.onReject(selectedHunk, selectedLine)
+          break
+        case 'a':
+          if (actions?.onAccept && diffResult) {
+            const line = highlightedLines[selectedLine]
+            if (line && (line.type === 'add' || line.type === 'remove')) {
+              actions.onAccept(selectedHunk, selectedLine)
+            }
           }
-        }
-        break
-      case 'A':
-        if (actions?.onAcceptAll) {
-          actions.onAcceptAll()
-        }
-        break
-      case 'R':
-        if (actions?.onRejectAll) {
-          actions.onRejectAll()
-        }
-        break
-      case 't':
-        setViewMode((prev) => {
-          const modes: DiffViewMode[] = ['unified', 'side-by-side', 'inline']
-          const idx = modes.indexOf(prev)
-          return modes[(idx + 1) % modes.length]
-        })
-        break
-      case 'q':
-      case 'escape':
-        onClose?.()
-        actions?.onClose?.()
-        break
-    }
-  }, [isOpen, highlightedLines, diffResult, selectedHunk, selectedLine, viewMode, colors, actions, onClose])
+          break
+        case 'r':
+          if (actions?.onReject && diffResult) {
+            const line = highlightedLines[selectedLine]
+            if (line && (line.type === 'add' || line.type === 'remove')) {
+              actions.onReject(selectedHunk, selectedLine)
+            }
+          }
+          break
+        case 'A':
+          if (actions?.onAcceptAll) {
+            actions.onAcceptAll()
+          }
+          break
+        case 'R':
+          if (actions?.onRejectAll) {
+            actions.onRejectAll()
+          }
+          break
+        case 't':
+          setViewMode((prev) => {
+            const modes: DiffViewMode[] = ['unified', 'side-by-side', 'inline']
+            const idx = modes.indexOf(prev)
+            return modes[(idx + 1) % modes.length]
+          })
+          break
+        case 'q':
+        case 'escape':
+          onClose?.()
+          actions?.onClose?.()
+          break
+      }
+    },
+    [
+      isOpen,
+      highlightedLines,
+      diffResult,
+      selectedHunk,
+      selectedLine,
+      viewMode,
+      colors,
+      actions,
+      onClose,
+    ],
+  )
 
   useInput(handleKey)
 
   if (!isOpen) return null
 
-  const totalChanges = diffResult?.hunks.reduce((sum: number, h: DiffHunk) => sum + h.lines.filter((l: DiffLine) => l.type !== 'context').length, 0) ?? 0
-  const additions = diffResult?.hunks.reduce((sum: number, h: DiffHunk) => sum + h.lines.filter((l: DiffLine) => l.type === 'add').length, 0) ?? 0
-  const deletions = diffResult?.hunks.reduce((sum: number, h: DiffHunk) => sum + h.lines.filter((l: DiffLine) => l.type === 'remove').length, 0) ?? 0
+  const totalChanges =
+    diffResult?.hunks.reduce(
+      (sum: number, h: DiffHunk) =>
+        sum + h.lines.filter((l: DiffLine) => l.type !== 'context').length,
+      0,
+    ) ?? 0
+  const additions =
+    diffResult?.hunks.reduce(
+      (sum: number, h: DiffHunk) => sum + h.lines.filter((l: DiffLine) => l.type === 'add').length,
+      0,
+    ) ?? 0
+  const deletions =
+    diffResult?.hunks.reduce(
+      (sum: number, h: DiffHunk) =>
+        sum + h.lines.filter((l: DiffLine) => l.type === 'remove').length,
+      0,
+    ) ?? 0
 
   return (
     <Box
@@ -286,41 +373,72 @@ export function DiffViewer({
       >
         {/* Header */}
         <Box flexDirection="row" padding={1} borderBottom borderBottomColor={colors.border}>
-          <Text color={colors.primary} bold>DIFF VIEWER</Text>
+          <Text color={colors.primary} bold>
+            DIFF VIEWER
+          </Text>
           <Box flexGrow={1} />
-          {filePath && <Box marginRight={2}><Text color={colors.textMuted}>{filePath}</Text></Box>}
+          {filePath && (
+            <Box marginRight={2}>
+              <Text color={colors.textMuted}>{filePath}</Text>
+            </Box>
+          )}
           <Box flexDirection="row" marginRight={2}>
-            <Box marginRight={1}><Text color={viewMode === 'unified' ? colors.primary : colors.textMuted}>[u] unified</Text></Box>
-            <Box marginRight={1}><Text color={viewMode === 'side-by-side' ? colors.primary : colors.textMuted}>[s] side-by-side</Text></Box>
-            <Text color={viewMode === 'inline' ? colors.primary : colors.textMuted}>[i] inline</Text>
+            <Box marginRight={1}>
+              <Text color={viewMode === 'unified' ? colors.primary : colors.textMuted}>
+                [u] unified
+              </Text>
+            </Box>
+            <Box marginRight={1}>
+              <Text color={viewMode === 'side-by-side' ? colors.primary : colors.textMuted}>
+                [s] side-by-side
+              </Text>
+            </Box>
+            <Text color={viewMode === 'inline' ? colors.primary : colors.textMuted}>
+              [i] inline
+            </Text>
           </Box>
-          <Box marginRight={1}><Text color={colors.success}>+{additions}</Text></Box>
-          <Box marginRight={2}><Text color={colors.error}>-{deletions}</Text></Box>
-          <Text color={colors.textMuted}>hunk {selectedHunk + 1}/{diffResult?.hunks.length || 0}</Text>
+          <Box marginRight={1}>
+            <Text color={colors.success}>+{additions}</Text>
+          </Box>
+          <Box marginRight={2}>
+            <Text color={colors.error}>-{deletions}</Text>
+          </Box>
+          <Text color={colors.textMuted}>
+            hunk {selectedHunk + 1}/{diffResult?.hunks.length || 0}
+          </Text>
         </Box>
 
         {/* Legend */}
-        <Box flexDirection="row" paddingLeft={1} paddingRight={1} paddingTop={0} paddingBottom={0} marginBottom={1}>
+        <Box
+          flexDirection="row"
+          paddingLeft={1}
+          paddingRight={1}
+          paddingTop={0}
+          paddingBottom={0}
+          marginBottom={1}
+        >
           <Box flexDirection="row" marginRight={2}>
-            <Box>
-              {/* @ts-ignore - paddingLeft/Right works at runtime */}
-              <Text color={colors.success} backgroundColor={colors.surface} paddingLeft={1} paddingRight={1}>+ added</Text>
+            <Box paddingLeft={1} paddingRight={1}>
+              <Text color={colors.success} backgroundColor={colors.surface}>+ added</Text>
             </Box>
           </Box>
           <Box flexDirection="row" marginRight={2}>
-            <Box>
-              {/* @ts-ignore - paddingLeft/Right works at runtime */}
-              <Text color={colors.error} backgroundColor={colors.surface} paddingLeft={1} paddingRight={1}>- removed</Text>
+            <Box paddingLeft={1} paddingRight={1}>
+              <Text color={colors.error} backgroundColor={colors.surface}>- removed</Text>
             </Box>
           </Box>
           <Box flexDirection="row" marginRight={2}>
-            <Box>
-              {/* @ts-ignore - paddingLeft/Right works at runtime */}
-              <Text color={colors.textMuted} backgroundColor={colors.surface} paddingLeft={1} paddingRight={1}>  context</Text>
+            <Box paddingLeft={1} paddingRight={1}>
+              <Text backgroundColor={colors.surface}>
+                {' '}
+                context
+              </Text>
             </Box>
           </Box>
           <Box flexGrow={1} />
-          <Text color={colors.textMuted}>j/k: scroll  h/l: hunk  a/r: accept/reject  A/R: all  t: toggle  q/esc: close</Text>
+          <Text color={colors.textMuted}>
+            j/k: scroll h/l: hunk a/r: accept/reject A/R: all t: toggle q/esc: close
+          </Text>
         </Box>
 
         {/* Diff content */}
@@ -328,9 +446,7 @@ export function DiffViewer({
           {highlightedLines.map((line, index) => {
             const isSelected = index === selectedLine
 
-            const lineStyle = isSelected
-              ? { backgroundColor: colors.selection }
-              : {}
+            const lineStyle = isSelected ? { backgroundColor: colors.selection } : {}
 
             return (
               <Box key={index} flexDirection="row" {...lineStyle}>
@@ -366,7 +482,9 @@ export function DiffViewer({
                 {/* Action indicators for selected line */}
                 {isSelected && (line.type === 'add' || line.type === 'remove') && (
                   <Box marginLeft={2} flexDirection="row">
-                    <Box marginRight={1}><Text color={colors.success}>[a] accept</Text></Box>
+                    <Box marginRight={1}>
+                      <Text color={colors.success}>[a] accept</Text>
+                    </Box>
                     <Text color={colors.error}>[r] reject</Text>
                   </Box>
                 )}
@@ -387,7 +505,7 @@ export function DiffViewer({
           </Text>
           <Box flexGrow={1} />
           <Text color={colors.textMuted}>
-            {highlightedLines.length} lines  •  {diffResult?.hunks.length || 0} hunks
+            {highlightedLines.length} lines â€¢ {diffResult?.hunks.length || 0} hunks
           </Text>
         </Box>
       </Box>
@@ -402,9 +520,21 @@ function highlightLine(
   theme: string,
   colors: ReturnType<typeof useThemeColors>,
   viewMode: DiffViewMode,
-  highlighter: Highlighter | null
-): Array<{ text: string; color?: string; backgroundColor?: string; bold?: boolean; italic?: boolean }> {
-  const segments: Array<{ text: string; color?: string; backgroundColor?: string; bold?: boolean; italic?: boolean }> = []
+  highlighter: Highlighter | null,
+): Array<{
+  text: string
+  color?: string
+  backgroundColor?: string
+  bold?: boolean
+  italic?: boolean
+}> {
+  const segments: Array<{
+    text: string
+    color?: string
+    backgroundColor?: string
+    bold?: boolean
+    italic?: boolean
+  }> = []
 
   let prefix = ''
   let prefixColor = colors.textMuted
@@ -442,18 +572,26 @@ function highlightLine(
   }
 
   if (lineBg) {
-    segments.forEach(s => { s.backgroundColor = lineBg })
+    segments.forEach((s) => {
+      s.backgroundColor = lineBg
+    })
   }
 
   return segments
 }
 
 /** Get color for line type */
-function getLineColor(type: 'context' | 'add' | 'remove', colors: ReturnType<typeof useThemeColors>): string {
+function getLineColor(
+  type: 'context' | 'add' | 'remove',
+  colors: ReturnType<typeof useThemeColors>,
+): string {
   switch (type) {
-    case 'add': return colors.success
-    case 'remove': return colors.error
-    default: return colors.textPrimary
+    case 'add':
+      return colors.success
+    case 'remove':
+      return colors.error
+    default:
+      return colors.textPrimary
   }
 }
 
@@ -489,11 +627,12 @@ export function SimpleDiffViewer({
 
   if (!diffResult) return <Text color={colors.textMuted}>Computing diff...</Text>
 
-  const formatted = viewMode === 'side-by-side'
-    ? formatSideBySideDiff(diffResult)
-    : viewMode === 'inline'
-    ? formatInlineDiff(diffResult)
-    : formatUnifiedDiff(diffResult)
+  const formatted =
+    viewMode === 'side-by-side'
+      ? formatSideBySideDiff(diffResult)
+      : viewMode === 'inline'
+        ? formatInlineDiff(diffResult)
+        : formatUnifiedDiff(diffResult)
 
   return (
     <Box
@@ -512,5 +651,16 @@ export function SimpleDiffViewer({
   )
 }
 
-export { computeDiff, formatUnifiedDiff, formatSideBySideDiff, formatInlineDiff } from '../../../core/dist/diff'
-export type { DiffResultStructured, DiffHunk, DiffLine, ComputeDiffOptions } from '../../../core/dist/diff'
+export {
+  computeDiff,
+  formatUnifiedDiff,
+  formatSideBySideDiff,
+  formatInlineDiff,
+} from '../../../core/dist/diff'
+export type {
+  DiffResultStructured,
+  DiffHunk,
+  DiffLine,
+  ComputeDiffOptions,
+} from '../../../core/dist/diff'
+

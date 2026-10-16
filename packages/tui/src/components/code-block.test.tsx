@@ -1,5 +1,4 @@
-import { describe, expect, it } from 'bun:test'
-import React from 'react'
+import { describe, it } from 'bun:test'
 import { render } from 'ink'
 import { CodeBlock, InlineCode } from './code-block'
 
@@ -28,22 +27,14 @@ describe('CodeBlock', () => {
 
   it('renders code block with language', () => {
     const { unmount } = render(
-      <CodeBlock
-        code="const x = 1"
-        language="typescript"
-        themeColors={mockThemeColors}
-      />
+      <CodeBlock code="const x = 1" language="typescript" themeColors={mockThemeColors} />,
     )
     unmount()
   })
 
   it('renders code block without language', () => {
     const { unmount } = render(
-      <CodeBlock
-        code="plain text"
-        language="text"
-        themeColors={mockThemeColors}
-      />
+      <CodeBlock code="plain text" language="text" themeColors={mockThemeColors} />,
     )
     unmount()
   })
@@ -55,7 +46,7 @@ describe('CodeBlock', () => {
         language="typescript"
         themeColors={mockThemeColors}
         isIncomplete={true}
-      />
+      />,
     )
     unmount()
   })
@@ -67,18 +58,14 @@ describe('CodeBlock', () => {
         language="typescript"
         themeColors={mockThemeColors}
         showLineNumbers={false}
-      />
+      />,
     )
     unmount()
   })
 
   it('handles empty code', () => {
     const { unmount } = render(
-      <CodeBlock
-        code=""
-        language="typescript"
-        themeColors={mockThemeColors}
-      />
+      <CodeBlock code="" language="typescript" themeColors={mockThemeColors} />,
     )
     unmount()
   })
@@ -89,7 +76,7 @@ describe('CodeBlock', () => {
         code="function test() {\n  return 42\n}"
         language="typescript"
         themeColors={mockThemeColors}
-      />
+      />,
     )
     unmount()
   })
@@ -119,11 +106,7 @@ describe('InlineCode', () => {
   }
 
   it('renders inline code', () => {
-    const { unmount } = render(
-      <InlineCode themeColors={mockThemeColors}>
-        console.log
-      </InlineCode>
-    )
+    const { unmount } = render(<InlineCode themeColors={mockThemeColors}>console.log</InlineCode>)
     unmount()
   })
 })
