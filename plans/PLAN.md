@@ -2465,6 +2465,8 @@ Each phase contains:
 
 **Testing:** Run command in E2B sandbox. Run in Daytona sandbox. Verify both work.
 
+**Status (2026-10-17):** Implemented (two cloud adapters, both implementing the Phase-125 `SandboxProvider` with injectable `fetchImpl` + overridable `baseUrl`: `packages/sandbox/src/remote/e2b.ts` - `E2BSandboxProvider`: `E2B_API_KEY` auth, POST /sandboxes create (templateId), POST /sandboxes/{id}/commands execution (cwd/env/timeout passed through) mapped into `SandboxExecutionResult`, DELETE teardown, sandbox reuse across executes (create once), `checkIsolation()` remote probes (home write allowed, /etc write denied - cloud VM runs as non-root); `packages/sandbox/src/remote/daytona.ts` - `DaytonaSandboxProvider`: Bearer auth, POST /workspace create (image), POST /workspace/{id}/exec, DELETE teardown, same result-mapping + probes. Missing API keys keep providers inert (`unsupportedReason`, execute → error result, no throw). Tests: 4 green against real local mock cloud APIs (Bun.serve) - E2B create-once reuse + command mapping + teardown + missing-key inertness + remote isolation probes; Daytona same contract w/ Bearer auth + DELETE verification. Live cloud runs = API-key step (E2B_API_KEY / DAYTONA_API_KEY). sandbox 29/29, tsc 0, lint 0; barrel + dist rebuilt. Stage 11 COMPLETE (125-130) 6/6.
+
 **Estimated Hours:** 8–10 hours.
 
 ---
