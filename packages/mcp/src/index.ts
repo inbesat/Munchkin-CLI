@@ -12,6 +12,15 @@ export {
   type McpSpawnOptions,
 } from './client/stdio'
 export {
+  LazyToolIndex,
+  type LazyResult,
+  type LazyStats,
+  type LazyToolEntry,
+  type SchemaLoader,
+  type SearchResult,
+  type ToolSchema,
+} from './client/lazy'
+export {
   MCP_PROTOCOL_VERSION,
   McpToolClient,
   type McpCallResult,
