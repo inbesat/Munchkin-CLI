@@ -75,6 +75,12 @@ export {
   type SandboxPathMode,
 } from './plugin/sandbox'
 export {
+  VersionManager,
+  type VersionEntry,
+  type VersionIndex,
+  type VersionResult,
+} from './plugin/versioning'
+export {
   createPolicyGate,
   feedbackFrom,
   registerToolPolicy,
