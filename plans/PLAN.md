@@ -2323,6 +2323,8 @@ Each phase contains:
 
 **Testing:** Connect to multiple servers. Run `/mcp`. Verify status display.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/client/manager.ts` - `McpConnectionManager`: live registry over the Phase-117 client and Phase-120 lazy index; `connect(id, spec)` spawns + handshakes + indexes the catalog (tool COUNT only - schemas stay lazy); a failed handshake removes the live entry and records an `error` status with `lastError`; `disconnect(id)` kills the child and drops the tool index (frees context) leaving an inert `disconnected` dashboard row; `statuses()` sorted by id; `loadTools(id, names)` lazily materializes schemas through the index, failing cleanly when the server is down). TUI `/mcp`: dashboard rows `id: state - N tools (serverName) - last error` over live + disconnected entries plus `configured - not connected` rows for preset installs never started; `/mcp connect <id>` brings a configured server live; `/mcp disconnect <id>` frees it; palette entry added. Tests: 4 green - multiple servers at once (two live mock servers + one dead → `dead:error:0`, `mock-a:connected:4`, `mock-b:connected:4`, error row carries `lastError`), disconnect frees (state `disconnected`, toolCount 0, double-disconnect and unknown-id rejected), reconnect repairs (state + tool count restored), lazy tool loading through the manager + clean failure when down. mcp 36/36, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0.
+
 **Estimated Hours:** 4–5 hours.
 
 ---

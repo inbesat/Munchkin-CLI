@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 122 - Connector Wizard /connect (Complete); Phases 87-122 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-122 - Stages 7-9 closed, Stage 10 (MCP + Connectors, 117-124) 6/8 done
-- **Next action:** Phase 123 - MCP Server Health Dashboard (Stage 10)
+- **Current phase:** Phase 123 - MCP Server Health Dashboard (Complete); Phases 87-123 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-123 - Stages 7-9 closed, Stage 10 (MCP + Connectors, 117-124) 7/8 done
+- **Next action:** Phase 124 - Ship Our Own MCP Server (Stage 10 finale)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
