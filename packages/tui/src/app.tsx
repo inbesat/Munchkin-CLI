@@ -22,6 +22,7 @@ import {
   getPreset,
   installPreset,
 } from '../../mcp/dist/index'
+import { type CheckpointEntry, CheckpointEngine, RewindService } from '../../git/dist/index'
 import { ContextGrid } from './components/context-grid'
 import { createDefaultBindings, getKeyboardManager } from './keyboard'
 import { type ChatMessage, MainLayout, type SidebarItem } from './layout/main'
@@ -92,6 +93,11 @@ export function App() {
   const wizardRef = useRef<ConnectorWizard | null>(null)
   /** Phase 123: live MCP connections for the health dashboard. */
   const mcpConnectionsRef = useRef(new McpConnectionManager())
+  /** Phase 132: rewind state - conversation snapshots + the file engine. */
+  const checkpointEngineRef = useRef(new CheckpointEngine(process.cwd()))
+  const rewindServiceRef = useRef(new RewindService(checkpointEngineRef.current))
+  const conversationSnapshotsRef = useRef<{ id: string; savedAt: number; messages: ChatMessage[] }[]>([])
+  const rewindTargetRef = useRef<string | null>(null)
 
   useEffect(() => {
     budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
@@ -265,6 +271,67 @@ export function App() {
         appendSystem(lines.join('\n'))
         return
       }
+      if (command === 'rewind') {
+        const engine = checkpointEngineRef.current
+        const service = rewindServiceRef.current
+        if (argsText === 'cancel' && rewindTargetRef.current !== null) {
+          rewindTargetRef.current = null
+          appendSystem('Rewind cancelled.')
+          return
+        }
+        const targetId = argsText.trim().length > 0 ? argsText.trim() : undefined
+        if (targetId === undefined) {
+          const points = service.listPoints()
+          if (points.length === 0) {
+            appendSystem('No checkpoints recorded - nothing to rewind to yet.')
+            return
+          }
+          // Phase 132: pick the latest point; the wizard-style multi-step
+          // selection is a plain id list in the message-driven UI.
+          rewindTargetRef.current = points[points.length - 1]?.id ?? null
+          const snapshot = conversationSnapshotsRef.current.findLast?.(
+            (cs) => cs.savedAt <= (points[points.length - 1]?.savedAt ?? 0),
+          )
+          appendSystem(
+            [
+              `Rewind target: checkpoint ${rewindTargetRef.current} (${points.length} checkpoints in journal).`,
+              snapshot !== undefined
+                ? `Conversation will restore to snapshot ${snapshot.id} (${snapshot.messages.length} messages).`
+                : 'No matching conversation snapshot - only files will rewind.',
+              `Confirm with /rewind ${rewindTargetRef.current} - /rewind cancel aborts.`,
+            ].join('\n'),
+          )
+          return
+        }
+        if (rewindTargetRef.current !== null && rewindTargetRef.current !== targetId) {
+          appendSystem(`Rewind target mismatch - confirm with /rewind ${rewindTargetRef.current} or /rewind cancel.`)
+          return
+        }
+        const rewind = service.rewindTo({ id: targetId })
+        if (!rewind.ok) {
+          appendSystem(`Rewind failed: ${rewind.error}`)
+          return
+        }
+        // Conversation restore: latest conversation snapshot at-or-before
+        // the checkpoint moment.
+        const snapshot = [...conversationSnapshotsRef.current]
+          .reverse()
+          .find((cs) => cs.savedAt <= rewind.point.savedAt)
+        let conversationNote = 'no conversation snapshot matched - messages unchanged'
+        if (snapshot !== undefined) {
+          setState((s) => ({ ...s, messages: [...snapshot.messages] }))
+          conversationNote = `conversation restored to snapshot ${snapshot.id} (${snapshot.messages.length} messages)`
+        }
+        rewindTargetRef.current = null
+        const results = rewind.files
+          .map(
+            (file) =>
+              `  ${file.file}: ${file.restored ? (file.alreadyReverted ? 'already reverted' : 'restored') : `SKIPPED (${file.error ?? 'unknown'})`}`,
+          )
+          .join('\n')
+        appendSystem(`Rewound to checkpoint ${rewind.point.id}.\n${results}\n${conversationNote}`)
+        return
+      }
       if (command === 'answer') {
         const wizard = wizardRef.current
         if (wizard === null) {
@@ -417,6 +484,14 @@ export function App() {
       loading: true,
       error: null,
     }))
+
+    // Phase 132: conversation snapshot captured before processing the turn
+    // (rewind pairs these with file checkpoints by savedAt).
+    conversationSnapshotsRef.current.push({
+      id: `conv-${conversationSnapshotsRef.current.length}`,
+      savedAt: Date.now(),
+      messages: [...state.messages],
+    })
 
     // Simulate assistant response
     try {

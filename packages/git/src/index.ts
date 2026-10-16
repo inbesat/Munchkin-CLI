@@ -8,3 +8,11 @@ export {
   type RollbackResult,
   type SnapshotResult,
 } from './checkpoints/engine'
+
+// Rewind service (Phase 132)
+export {
+  RewindService,
+  type FileRewindResult,
+  type RewindPoint,
+  type RewindResult,
+} from './checkpoints/rewind'
