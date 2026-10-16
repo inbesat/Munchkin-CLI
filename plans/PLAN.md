@@ -2306,6 +2306,8 @@ Each phase contains:
 
 **Testing:** Run `/connect`, select server, complete wizard, verify connection.
 
+**Status (2026-10-17):** Implemented (`packages/mcp/src/presets/wizard.ts` - `ConnectorWizard` state machine over the Phase-121 presets: ordered steps for required-env secrets (empty = inherit from host), expected args, optional scopes, and a read-only confirm (`FORGE_CONNECTOR_READ_ONLY`)/`MCP_SCOPES` env markers; required answers validated (empty required → error); `finish()` assembles the Phase-121 spec only when complete; `connectSpec(spec)` verifies the connection with a real Phase-117 initialize handshake (server name surfaced; dead commands and timeouts → `{ok:false,error}` with diagnostics; never throws). TUI: `/connect <id>` starts the wizard when the preset needs input (missing host env or expected args) and falls back to 121's direct path otherwise; `/answer <value>` advances, `/answer cancel` aborts; completion installs via `McpPresetsConfig` and the connection is tested automatically with the result reported in-chat; palette description updated. Tests: 7 green - step generation (github = 3 steps), required-answer validation + full flow w/ spec assembly, incomplete-finish refusal, optional-env/read-only=no omission, live handshake probe w/ server name, dead-command + timeout failures without throwing. The interactive rendering is message-driven (multi-turn): the blueprint's modal list is the `/connect` listing. mcp 32/32, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0.
+
 **Estimated Hours:** 5–6 hours.
 
 ---
