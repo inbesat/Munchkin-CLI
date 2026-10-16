@@ -13,6 +13,11 @@ import {
   MarketplaceClient,
   MarketplaceRegistry,
 } from '../../plugin-kernel/dist/index'
+import {
+  CONNECTOR_PRESETS,
+  McpPresetsConfig,
+  installPreset,
+} from '../../mcp/dist/index'
 import { ContextGrid } from './components/context-grid'
 import { createDefaultBindings, getKeyboardManager } from './keyboard'
 import { type ChatMessage, MainLayout, type SidebarItem } from './layout/main'
@@ -77,6 +82,8 @@ export function App() {
   /** Phase 110: plugin marketplace state. */
   const pluginRegistryRef = useRef(new MarketplaceRegistry(join(process.cwd(), '.forge')))
   const marketplaceSourceRef = useRef<string | null>(null)
+  /** Phase 121: MCP connector presets. */
+  const mcpPresetsRef = useRef(new McpPresetsConfig(join(process.cwd(), '.forge')))
 
   useEffect(() => {
     budgeterRef.current.setConversationHistory(state.messages.map((m) => m.content))
@@ -197,6 +204,35 @@ export function App() {
         }
         setGoal(argsText)
         appendSystem(`Goal set: ${argsText} — ends when the agent reports [GOAL_MET].`)
+        return
+      }
+      if (command === 'connect') {
+        if (argsText === '' || argsText === 'list') {
+          const installed = mcpPresetsRef.current.installedIds()
+          appendSystem(
+            CONNECTOR_PRESETS.map(
+              (preset) =>
+                `${installed.includes(preset.id) ? '[installed]' : '[available]'} ${preset.id} - ${preset.description}`,
+            ).join('\n'),
+          )
+          return
+        }
+        const presetName = argsText.split(/\s+/)[0] ?? ''
+        const extraArgs = argsText.split(/\s+/).slice(1).filter((arg) => arg.length > 0)
+        const installed = installPreset(presetName, mcpPresetsRef.current, extraArgs)
+        if (!installed.ok) {
+          appendSystem(`connect failed: ${installed.error ?? 'unknown error'}`)
+          return
+        }
+        const warnings = installed.warnings ?? []
+        appendSystem(
+          [
+            `MCP server '${presetName}' configured (${installed.spec?.command ?? ''} ${(
+              installed.spec?.args ?? []
+            ).join(' ')}).`,
+            ...warnings,
+          ].join('\n'),
+        )
         return
       }
       if (command === 'plugin') {

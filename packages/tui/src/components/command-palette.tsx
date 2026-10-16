@@ -53,6 +53,12 @@ export const defaultCommands: Command[] = [
     description: 'Plugin marketplace (`/plugin installed`, `/plugin marketplace add owner/repo`)',
     group: 'builtin',
   },
+  {
+    id: 'connect',
+    title: 'connect',
+    description: 'Install a bundled MCP connector preset (`/connect github`, `/connect list`)',
+    group: 'builtin',
+  },
   { id: 'init', title: 'init', description: 'Generate project configuration', group: 'builtin' },
   { id: 'review', title: 'review', description: 'Run a code review on the diff', group: 'builtin' },
   { id: 'terminal', title: 'terminal', description: 'Open an interactive shell', group: 'builtin' },

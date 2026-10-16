@@ -11,6 +11,19 @@ export {
   type JsonRpcResponse,
   type McpSpawnOptions,
 } from './client/stdio'
+
+// Bundled connector presets (Phase 121)
+export {
+  CONNECTOR_PRESETS,
+  McpPresetsConfig,
+  getPreset,
+  installPreset,
+  resolveServerSpec,
+  type ConnectorPreset,
+  type InstallPresetResult,
+  type McpServersConfig,
+  type ResolvedServerSpec,
+} from './presets'
 export {
   LazyToolIndex,
   type LazyResult,
