@@ -2579,6 +2579,8 @@ Each phase contains:
 
 **Testing:** Run `/review` on a PR. Verify analysis and comments.
 
+**Status (2026-10-17):** Implemented (`packages/git/src/tools/review-workflow.ts` - `ReviewWorkflowTool` + pure `formatReviewReport`: `gh pr diff` fetch (with/without PR number) → Phase-133 `reviewDiff` → markdown report (verdict header w/ PR number + counts, findings grouped by severity under Critical issues/Suggestions/Notes, plus a run-the-tests suggestion footer); `post: true` escalates via `gh pr review [n]` using `--request-changes` when risk is high, `--comment` otherwise; gh-missing/diff-failures/post-failures all `{ok:false, output}` with report retained when posting fails - no-throw). TUI `/review [prNumber]` dispatch runs the workflow and echoes the report in-chat (per-line safe); palette entry added. Tests: 4 green - grouped markdown report w/ PR title + verdict + severity grouping, finding-free variant, gh-missing degradation + post handling (no-throw). Live PR comment = gh-authenticated machine (tests guard). git 38/38, tsc 0, lint 0; barrel + dist rebuilt; tui typecheck 0; palette entry. Stage 12 CLOSED (131-136) 6/6.
+
 **Estimated Hours:** 6–8 hours.
 
 ---

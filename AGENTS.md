@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 135 - Worktree Manager CLI (Complete); Phases 87-135 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-135 - Stages 7-11 closed, Stage 12 (Git Deep Integration, 131-136) 5/6 done
-- **Next action:** Phase 136 - PR Review Workflow (closes Stage 12)
+- **Current phase:** Phase 136 - PR Review Workflow (Complete); Phases 87-136 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-136 - Stages 7-12 closed
+- **Next action:** Stage 13 - Headless/CI/Editors (Phases 137-142), starting Phase 137
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
