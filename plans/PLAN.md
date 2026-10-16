@@ -2525,6 +2525,8 @@ Each phase contains:
 
 **Testing:** Make changes, smart commit → verify conventional commit message. Create PR → verify it works.
 
+**Status (2026-10-17):** Implemented (`packages/git/src/tools/` - three `Tool`-shaped classes for the Phase-34 host registry: `SmartCommitTool` (smart-commit.ts) - optional `git add -A`, conventional message GENERATED from the working tree via pure `generateCommitMessage`/`classifyChangeType` (type heuristics: test/spec paths -> test, all-md/docs -> docs, otherwise feat+scope from the parent dir; subject lists added/modified/deleted counts; feat! on breaking markers; explicit non-conventional messages get gently prefixed), dry-run mode, clean-tree + spawn-failure errors; `CreatePrTool` (create-pr.ts) - pushes -u origin HEAD, `gh pr create` with `buildPrBody` (Context section from conversation context + Changes from the last 10 commit subjects) and `buildCreatePrArgs` (base/draft); `ReviewPrTool` (review-pr.ts) - `gh pr diff` + pure `reviewDiff`: secret patterns (high), debug residue (low), >50 additions without test files (medium), >400-line-hunk warnings, risk verdict + counts. All spawn paths degrade to {ok:false, output|error}; no-throw. Tests: 13 green - conventional message generation + classification, end-to-end commit in a temp repo w/ log verification, dry-run + explicit-message passthrough, clean-tree behavior, PR body/context + argv assembly (base/draft), secret/coverage/clean diff reviews, gh-missing/unauthenticated degradation (conditional live legs). git 23/23, tsc 0, lint 0; git dist rebuilt. Live PR creation = machine with gh authenticated (tests guard).
+
 **Estimated Hours:** 6–8 hours.
 
 ---
