@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 148 - `/doctor` Diagnostics Command (Complete); Phases 87-148 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-148 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) 6/6 done - Stage 14 complete
-- **Next action:** Phase 149 - Single Binary Compile (Stage 15)
+- **Current phase:** Phase 149 - Single Binary Compile (Complete); Phases 87-149 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-149 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) complete, Stage 15 (Distribution & Polish, 149-154) 1/6 done
+- **Next action:** Phase 150 - Package Manager Distribution (Stage 15)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
