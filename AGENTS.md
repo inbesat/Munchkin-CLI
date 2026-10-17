@@ -79,13 +79,14 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
   - Phase 154 note: issue templates + ROADMAP.md + docs/bounty.md shipped; the only remaining launch triggers are human steps: push tag `v0.1.0` (fires the release) and enable GitHub Pages (docs/landing), both listed in launch/README.md
 - **Next action:** user decision point - all planned phases (87-154) are implemented. Human launch triggers (tag push, Pages enablement, Discord/npm publication) per launch/README.md; stretch phases 155-204 only "if traction justifies" per plans/PLAN.md
 - **Blockers:**
-  - Config key persistence (GET after POST returns 404)
-  - Revoked key GET returns 401 instead of 404
-  - Config key DELETE returns 401 instead of 404
-  - Test environment limitations (OpenAI API key, bash on Windows)
-  - SSE TextDecoder expects ArrayBuffer
-  - Scalar docs returns 401/500
-  - TUI app.tsx:300 committed syntax error + ~14 pre-existing test failures (markdown/theme regressions) - pending TUI repair stream
+  - TUI repair stream (committed `app.tsx:300` defect + test failures) — separate stream, do not touch
+  - **Release gate secret (human):** `gh secret set ANTHROPIC_API_KEY -b "<key>"` — the release workflow's regression eval needs it; the v0.1.0 tag exists and its workflow run failed only on this. After setting, run: `gh run rerun 39012346025 --failed`
+  - Test environment limitations (no live OpenAI key; Windows: `executes a tool directly` integration tests + EBUSY flake fail — documented, pre-existing)
+  - ~~Config key persistence (GET after POST returns 404)~~ — fixed; regression-tested in `packages/server/tests/blockers-regression.test.ts`
+  - ~~Revoked key GET returns 401 instead of 404~~ — fixed; regression-tested (same file)
+  - ~~Config key DELETE returns 401 instead of 404~~ — fixed; regression-tested (same file)
+  - ~~SSE TextDecoder expects ArrayBuffer~~ — fixed; SDK stream handles string + Uint8Array, sdk suite 0 fail
+  - ~~Scalar docs returns 401/500~~ — verified 200 with auth in `blockers-regression.test.ts` (without auth, 401 is correct behavior)
 
 ## How to Update This File
 
