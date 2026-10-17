@@ -2745,6 +2745,8 @@ Each phase contains:
 
 **Testing:** Run eval suite. Verify results are accurate and reproducible.
 
+**Status (2026-10-17):** Implemented. `packages/evals/src/tasks/index.ts` ships three built-in benchmark tasks (create-file, fix-off-by-one, rename-across-files) - each a prompt, fixture files, and a pure workspace checker; `packages/evals/src/runner.ts` (`runEvalTask` / `runEvalSuite`) runs a task against a model in a fresh temp workspace with file tools bound to it, verifies the workspace, and records pass/fail, stop reason, turns, tokens, estimated cost (core pricing table), and duration; suites aggregate completion rate and totals with an `onResult` callback. `forge eval <list|run>` (`packages/server/src/eval/command.ts`, dispatched from `cli.ts`) lists tasks, runs the suite or `--task` selections against a resolved model (env keys; `--model` / `$FORGE_MODEL`), prints per-task lines or `--json`, and exits 1 when any task fails (ready for the Phase 146 regression gate). Tests: evals 9 green (task well-formedness; exact-content, behavioral, and multi-file checkers; pass/fail/checker-error paths; suite aggregation; reproducibility); server 5 green (list; JSON run; failing run exits 1; unknown task; CLI dispatcher). Evals suite 16 pass / 0 fail; server suite 241 pass / 3 fail (2 known bash-on-Windows + 1 known-flaky EBUSY); tsc 0 both; biome 0 on new code; builds clean; built-CLI smoke: `forge eval list` (3 tasks), help lines, unknown-task and missing-key errors exit 1. Note: the behavioral checker imports a uniquely-named copy because bun caches `file://` module imports by path and ignores query strings.
+
 **Estimated Hours:** 10–12 hours.
 
 ---
