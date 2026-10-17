@@ -72,9 +72,10 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 151 - Onboarding Wizard (`setup`) (Complete); Phases 87-151 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-151 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) complete, Stage 15 (Distribution & Polish, 149-154) 3/6 done
-- **Next action:** Phase 152 - Documentation Site + Landing Page (Stage 15)
+- **Current phase:** Phase 152 - Documentation Site + Landing Page (Complete); Phases 87-152 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-152 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) complete, Stage 15 (Distribution & Polish, 149-154) 4/6 done
+  - Phase 152 note: docs ship as VitePress (`packages/docs`, `/docs/`), landing as Astro (`packages/landing`, site root), demo GIFs pre-rendered from verbatim CLI transcripts; `docs-pages.yml` assembles landing + docs + plugin docs into one Pages artifact (Pages enablement still a manual repo setting). Framework choice recorded as ADR-046
+- **Next action:** Phase 153 - Launch Materials (Stage 15)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
