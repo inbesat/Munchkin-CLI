@@ -72,9 +72,9 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 145 - Built-in Eval Runner (Complete); Phases 87-145 implemented
-  - Completed this engagement: audit repair (all packages), then Phases 87-145 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) 3/6 done
-- **Next action:** Phase 146 - Regression Suite per Release (Stage 14)
+- **Current phase:** Phase 146 - Regression Suite per Release (Complete); Phases 87-146 implemented
+  - Completed this engagement: audit repair (all packages), then Phases 87-146 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) 4/6 done
+- **Next action:** Phase 147 - Telemetry Opt-in + Privacy Policy (Stage 14)
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
