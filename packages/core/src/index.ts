@@ -164,6 +164,9 @@ export * from './stats'
 // Telemetry (Phase 147)
 export * from './telemetry'
 
+// Auto-update checker (Phase 150)
+export * from './update'
+
 // Agent Loop (Phase 33)
 export * from './agent'
 
