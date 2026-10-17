@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'bun:test'
+﻿import { beforeAll, describe, expect, it } from 'bun:test'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 import {
   type WebSearchConfig,
@@ -81,14 +81,6 @@ describe('webSearchTool with mocked providers', () => {
   let mockExa: MockExaProvider
   let mockBrave: MockBraveProvider
 
-  function createTestTool(): ReturnType<typeof createWebSearchTool> {
-    const mockConfig: WebSearchConfig = { ...testConfig }
-    return createWebSearchTool({
-      ...mockConfig,
-      // Override default provider resolution by monkey-patching
-    })
-  }
-
   beforeAll(() => {
     mockExa = new MockExaProvider()
     mockBrave = new MockBraveProvider()
@@ -119,13 +111,13 @@ describe('webSearchTool with mocked providers', () => {
 
     const testTool = createWebSearchTool(testConfig)
     // Monkey-patch the internal createProvider via a closure
-    const originalExecute = testTool.execute
+    const _originalExecute = testTool.execute
     testTool.execute = async (input, signal) => {
       if (signal?.aborted) {
         const { ToolError, ErrorCode } = await import('../errors')
         throw new ToolError(ErrorCode.CANCELLED, 'WebSearch cancelled', 'webSearch')
       }
-      const { query, provider, maxResults = 10 } = input as any
+      const { query, provider, maxResults = 10 } = input as SearchArgs
       if (!query?.trim()) {
         const { ToolError, ErrorCode } = await import('../errors')
         throw new ToolError(
@@ -178,7 +170,7 @@ describe('webSearchTool with mocked providers', () => {
         const { ToolError, ErrorCode } = await import('../errors')
         throw new ToolError(ErrorCode.CANCELLED, 'WebSearch cancelled', 'webSearch')
       }
-      const { query, provider, maxResults = 10 } = input as any
+      const { query, provider, maxResults = 10 } = input as SearchArgs
       if (!query?.trim()) {
         const { ToolError, ErrorCode } = await import('../errors')
         throw new ToolError(
@@ -222,7 +214,7 @@ describe('webSearchTool with mocked providers', () => {
 
     const testTool = createWebSearchTool(testConfig)
     testTool.execute = async (input) => {
-      const { query, maxResults = 10 } = input as any
+      const { query, maxResults = 10 } = input as SearchArgs
       const results = await mockExa.search(query, { maxResults })
       return {
         success: true,
@@ -245,7 +237,7 @@ describe('webSearchTool with mocked providers', () => {
 
     const testTool = createWebSearchTool(testConfig)
     testTool.execute = async (input) => {
-      const { query } = input as any
+      const { query } = input as SearchArgs
       const results = await mockExa.search(query, {})
       return {
         success: true,
@@ -298,13 +290,18 @@ describe('WebSearchSchema structure', () => {
   })
 
   it('has provider enum with exa and brave', () => {
-    const providerProp = WebSearchSchema.properties.provider as any
-    expect(providerProp.anyOf?.some?.((o: any) => o.const === 'exa')).toBe(true)
-    expect(providerProp.anyOf?.some?.((o: any) => o.const === 'brave')).toBe(true)
+    const providerProp = WebSearchSchema.properties.provider as {
+      anyOf?: Array<{ const?: string }>
+    }
+    expect(providerProp.anyOf?.some?.((o: { const?: string }) => o.const === 'exa')).toBe(true)
+    expect(providerProp.anyOf?.some?.((o: { const?: string }) => o.const === 'brave')).toBe(true)
   })
 
   it('has maxResults with min/max', () => {
-    const maxResultsProp = WebSearchSchema.properties.maxResults as any
+    const maxResultsProp = WebSearchSchema.properties.maxResults as {
+      minimum?: number
+      maximum?: number
+    }
     expect(maxResultsProp.minimum).toBe(1)
     expect(maxResultsProp.maximum).toBe(50)
   })

@@ -202,7 +202,7 @@ describe('exportSession', () => {
     })
 
     const parsed = JSON.parse(result.content)
-    const types = parsed.events.map((e: any) => e.type)
+    const types = parsed.events.map((e: { type: string }) => e.type)
     expect(types).toContain('session.created')
     expect(types).toContain('session.message')
     expect(types).toContain('session.tool_call')

@@ -1,4 +1,4 @@
-import * as path from 'path'
+import * as path from 'node:path'
 
 /** Configuration for path boundaries. */
 export interface PathBoundaryConfig {
@@ -98,7 +98,7 @@ export function checkPathBoundary(
 
   // Check temp directory if allowed
   if (config.allowTemp) {
-    const tempDir = normalizePath(require('os').tmpdir(), base)
+    const tempDir = normalizePath(require('node:os').tmpdir(), base)
     const tempPrefix = tempDir.endsWith(path.sep) ? tempDir : tempDir + path.sep
     if (checkPath === tempDir || checkPath.startsWith(tempPrefix)) {
       return {

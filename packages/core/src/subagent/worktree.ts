@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AgentModel, AgentTool } from '../agent/types'
-import { spawnSubagent, type SpawnSubagentOptions, type SubagentRunResult } from './spawn'
+import { type SpawnSubagentOptions, type SubagentRunResult, spawnSubagent } from './spawn'
 
 /**
  * Git worktree isolation for subagents (Phase 96): run a subagent in a

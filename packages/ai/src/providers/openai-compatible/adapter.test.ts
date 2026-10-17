@@ -637,9 +637,9 @@ describe('forge-free preset', () => {
   const TOKEN = process.env.FORGE_GATEWAY_TOKEN
 
   afterEach(() => {
-    if (GATEWAY === undefined) delete process.env.FORGE_GATEWAY_URL
+    if (GATEWAY === undefined) Reflect.deleteProperty(process.env, 'FORGE_GATEWAY_URL')
     else process.env.FORGE_GATEWAY_URL = GATEWAY
-    if (TOKEN === undefined) delete process.env.FORGE_GATEWAY_TOKEN
+    if (TOKEN === undefined) Reflect.deleteProperty(process.env, 'FORGE_GATEWAY_TOKEN')
     else process.env.FORGE_GATEWAY_TOKEN = TOKEN
   })
 
@@ -684,8 +684,8 @@ describe('forge-free preset', () => {
   })
 
   it('targets the default gateway URL when env is unset', async () => {
-    delete process.env.FORGE_GATEWAY_URL
-    delete process.env.FORGE_GATEWAY_TOKEN
+    Reflect.deleteProperty(process.env, 'FORGE_GATEWAY_URL')
+    Reflect.deleteProperty(process.env, 'FORGE_GATEWAY_TOKEN')
     const model = createPresetModel('forge-free', 'nvidia/llama-3.1-nemotron-70b-instruct')
     expect(model).toBeDefined()
     expect(forgeFreeBaseUrl()).toBe('http://localhost:8787')

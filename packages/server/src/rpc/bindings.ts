@@ -185,7 +185,7 @@ export function registerRpcMethods(
     if (!session) throw { code: -32004, message: 'Session not found' }
 
     const notifier: RpcNotifier | undefined = (method, params) => {
-      server.notify(`$/progress`, { requestId: req.id, method, params })
+      server.notify('$/progress', { requestId: req.id, method, params })
     }
 
     const result = await agentExecutor.executePrompt(

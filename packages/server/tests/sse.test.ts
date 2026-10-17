@@ -9,7 +9,8 @@ async function readUntil(
   predicate: (buf: string) => boolean,
   timeoutMs = 5000,
 ): Promise<string> {
-  const reader = res.body!.getReader()
+  const reader = res.body?.getReader()
+  if (reader === null) throw new Error('sse response has no body')
   const decoder = new TextDecoder()
   let buffer = ''
   const timer = setTimeout(() => {

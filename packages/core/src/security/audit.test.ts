@@ -184,6 +184,7 @@ describe('Audit Log', () => {
       auditLog.logToolCall('session-1', 'agent', 'bash', {}, 'call-2')
 
       // Tamper with the first entry's hash directly
+      // biome-ignore lint/suspicious/noExplicitAny: entries is private; the test mutates it directly to break integrity
       const entries = (auditLog as any).entries
       entries[0].hash = 'invalid-hash'
 
@@ -195,6 +196,7 @@ describe('Audit Log', () => {
     it('verifyIntegrity detects tampered hash', () => {
       auditLog.logToolCall('session-1', 'agent', 'bash', {}, 'call-1')
 
+      // biome-ignore lint/suspicious/noExplicitAny: entries is private; the test mutates it directly to break integrity
       const entries = (auditLog as any).entries
       entries[0].hash = 'invalid-hash'
 
@@ -204,7 +206,7 @@ describe('Audit Log', () => {
     })
 
     it('getChainHead returns last hash', () => {
-      const entry1 = auditLog.logToolCall('session-1', 'agent', 'bash', {}, 'call-1')
+      const _entry1 = auditLog.logToolCall('session-1', 'agent', 'bash', {}, 'call-1')
       const entry2 = auditLog.logToolCall('session-1', 'agent', 'bash', {}, 'call-2')
 
       expect(auditLog.getChainHead()).toBe(entry2.hash)

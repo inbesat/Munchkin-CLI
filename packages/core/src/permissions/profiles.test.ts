@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import type { CircuitBreakerResult } from './circuit-breakers'
+﻿import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import type { CircuitBreakerResult, CircuitBreakerTrigger } from './circuit-breakers'
 import type { PermissionMode, ToolCategory } from './modes'
 import {
   DEFAULT_CI_PRE_APPROVALS,
@@ -16,6 +16,10 @@ import {
   isProfileMode,
   setProfileEngine,
 } from './profiles'
+
+function trigger(id: string, name: string): CircuitBreakerTrigger {
+  return { id, name, description: `test: ${name}`, riskThreshold: 'high', action: 'deny' }
+}
 
 describe('Permission Profiles', () => {
   let profileEngine: PermissionProfileEngine
@@ -135,7 +139,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'deny',
-        breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
+        breaker: trigger('rm-rf-root', 'Delete Root'),
       }
       const result = evaluateDontAskProfile(
         'bash',
@@ -152,7 +156,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'prompt',
-        breaker: { id: 'git-force-push-main', name: 'Git Force Push' } as any,
+        breaker: trigger('git-force-push-main', 'Git Force Push'),
       }
       const result = evaluateDontAskProfile(
         'bash',
@@ -170,7 +174,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'deny',
-        breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
+        breaker: trigger('rm-rf-root', 'Delete Root'),
       }
       const result = evaluateDontAskProfile(
         'bash',
@@ -201,7 +205,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'deny',
-        breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
+        breaker: trigger('rm-rf-root', 'Delete Root'),
       }
       const result = evaluateBypassProfile(
         'bash',
@@ -218,7 +222,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'prompt',
-        breaker: { id: 'git-force-push-main', name: 'Git Force Push' } as any,
+        breaker: trigger('git-force-push-main', 'Git Force Push'),
       }
       const result = evaluateBypassProfile(
         'bash',
@@ -235,7 +239,7 @@ describe('Permission Profiles', () => {
       const cbResult: CircuitBreakerResult = {
         triggered: true,
         action: 'deny',
-        breaker: { id: 'rm-rf-root', name: 'Delete Root' } as any,
+        breaker: trigger('rm-rf-root', 'Delete Root'),
       }
       const result = evaluateBypassProfile(
         'bash',
@@ -264,6 +268,7 @@ describe('Permission Profiles', () => {
     it('returns ask for non-profile modes', () => {
       const config = { mode: 'default' as PermissionMode, customRules: [] }
       // This is a type test - the function expects ProfileConfig
+      // biome-ignore lint/suspicious/noExplicitAny: deliberately off-profile mode to exercise the ask fallback
       const result = evaluateProfile('bash', 'bash', { command: 'ls' }, config as any)
       expect(result.decision).toBe('ask')
     })
@@ -311,8 +316,8 @@ describe('Permission Profiles', () => {
       const modeConfig = {
         mode: 'dontAsk' as PermissionMode,
         customRules: [
-          { target: 'read' as ToolCategory, decision: 'allow' as any },
-          { target: 'write' as ToolCategory, decision: 'allow' as any },
+          { target: 'read' as ToolCategory, decision: 'allow' },
+          { target: 'write' as ToolCategory, decision: 'allow' },
         ],
       }
       const config = getProfileConfig(modeConfig)

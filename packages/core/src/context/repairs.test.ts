@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test'
 import { toRequestMessages } from '../agent/context'
-import { createEvent, type SessionEvent } from '../events'
+import { type SessionEvent, createEvent } from '../events'
 import { assembleMessages, hydrateMessages } from '../session/hydration'
 import { CompactCommand } from './compact-command'
 import { AutoCompactor } from './compaction'
@@ -22,10 +22,14 @@ const toolEvents = (count = 4): SessionEvent[] =>
   Array.from({ length: count }, (_, i) => [
     createEvent('session.message', 's1', { role: 'assistant', content: `run ${i}` }),
     createEvent('session.tool_call', 's1', {
-      toolCallId: `call-${i}`, toolName: 'read', args: { path: '中文.ts' },
+      toolCallId: `call-${i}`,
+      toolName: 'read',
+      args: { path: '中文.ts' },
     }),
     createEvent('session.tool_result', 's1', {
-      toolCallId: `call-${i}`, toolName: 'read', result: '😀 output '.repeat(300),
+      toolCallId: `call-${i}`,
+      toolName: 'read',
+      result: '😀 output '.repeat(300),
     }),
   ]).flat()
 
@@ -35,12 +39,16 @@ describe('microcompact effective context regressions', () => {
     const original = structuredClone(events)
     const result = await new Microcompactor({ maxToolResultsToKeep: 2 }).microcompact(events)
     expect(result.messages).toBeDefined()
-    expect(JSON.stringify(toRequestMessages(result.messages)).length)
-      .toBeLessThan(JSON.stringify(toRequestMessages(assembleMessages(events))).length)
+    expect(JSON.stringify(toRequestMessages(result.messages)).length).toBeLessThan(
+      JSON.stringify(toRequestMessages(assembleMessages(events))).length,
+    )
     expect(result.messages.slice(-4)).toEqual(assembleMessages(events).slice(-4))
-    expect(result.messages.flatMap((m) => m.role === 'user' ? m.parts : [])
-      .filter((p) => p.type === 'tool_result').map((p) => p.toolCallId))
-      .toEqual(['call-0', 'call-1', 'call-2', 'call-3'])
+    expect(
+      result.messages
+        .flatMap((m) => (m.role === 'user' ? m.parts : []))
+        .filter((p) => p.type === 'tool_result')
+        .map((p) => p.toolCallId),
+    ).toEqual(['call-0', 'call-1', 'call-2', 'call-3'])
     expect(events).toEqual(original)
   })
 
@@ -50,25 +58,37 @@ describe('microcompact effective context regressions', () => {
     const second = await mc.microcompactMessages(first.messages)
     expect(second.messages).toEqual(first.messages)
     expect(second.tokensSaved).toBe(0)
-    const short = [createEvent('session.tool_result', 's1', {
-      toolCallId: 'short', toolName: 'read', result: null,
-    })]
+    const short = [
+      createEvent('session.tool_result', 's1', {
+        toolCallId: 'short',
+        toolName: 'read',
+        result: null,
+      }),
+    ]
     const skipped = await mc.microcompact(short)
     expect(skipped.messages).toEqual(assembleMessages(short))
     expect(skipped.tokensSaved).toBe(0)
   })
 
   it('preserves pairs even with summarization disabled', async () => {
-    const result = await new Microcompactor({ maxToolResultsToKeep: 1, summarizeToolResults: false })
-      .microcompact(toolEvents())
-    expect(result.messages.flatMap((m) => m.role === 'user' ? m.parts : [])
-      .filter((p) => p.type === 'tool_result')).toHaveLength(4)
+    const result = await new Microcompactor({
+      maxToolResultsToKeep: 1,
+      summarizeToolResults: false,
+    }).microcompact(toolEvents())
+    expect(
+      result.messages
+        .flatMap((m) => (m.role === 'user' ? m.parts : []))
+        .filter((p) => p.type === 'tool_result'),
+    ).toHaveLength(4)
   })
 
-  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])('rejects invalid keep count %s', (keep) => {
-    expect(() => new Microcompactor({ maxToolResultsToKeep: keep })).toThrow()
-    expect(() => new Microcompactor().updateOptions({ maxToolResultsToKeep: keep })).toThrow()
-  })
+  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid keep count %s',
+    (keep) => {
+      expect(() => new Microcompactor({ maxToolResultsToKeep: keep })).toThrow()
+      expect(() => new Microcompactor().updateOptions({ maxToolResultsToKeep: keep })).toThrow()
+    },
+  )
 })
 
 describe('compaction model-context regressions', () => {
@@ -91,8 +111,12 @@ describe('compaction model-context regressions', () => {
 
   it('manual compact works below auto threshold and passes focus to the model', async () => {
     const model = fakeModel()
-    const command = new CompactCommand({ model, modelInfo: { ...modelInfo, contextWindow: 200000 },
-      config: { ...config, maxTokens: 200000 }, events: history() })
+    const command = new CompactCommand({
+      model,
+      modelInfo: { ...modelInfo, contextWindow: 200000 },
+      config: { ...config, maxTokens: 200000 },
+      events: history(),
+    })
     expect(command.shouldCompact()).toBe(false)
     const before = command.getBudgetSummary()
     const result = await command.execute('retain auth details 中文 🔑')
@@ -106,15 +130,23 @@ describe('compaction model-context regressions', () => {
   })
 
   it('manual compact without focus also works below threshold', async () => {
-    const command = new CompactCommand({ model: fakeModel(), modelInfo,
-      config: { ...config, maxTokens: 200000 }, events: history(4) })
+    const command = new CompactCommand({
+      model: fakeModel(),
+      modelInfo,
+      config: { ...config, maxTokens: 200000 },
+      events: history(4),
+    })
     expect((await command.execute()).success).toBe(true)
   })
 
   it('keeps recent tool results with their call across the summary boundary', async () => {
     const events = [...history(), ...toolEvents(1)]
-    const compactor = new AutoCompactor({ model: fakeModel(), modelInfo, config,
-      keepRecentMessages: 1 })
+    const compactor = new AutoCompactor({
+      model: fakeModel(),
+      modelInfo,
+      config,
+      keepRecentMessages: 1,
+    })
     const result = await compactor.compact(events)
     const projected = hydrateMessages([...events, result.compactionEvent], { format: 'openai' })
     expect(result.success).toBe(true)
@@ -133,14 +165,19 @@ describe('compaction model-context regressions', () => {
   })
 
   it('handles empty input and model failure without inventing effective summaries', async () => {
-    const model = { generate: mock(async () => { throw new Error('offline') }) }
+    const model = {
+      generate: mock(async () => {
+        throw new Error('offline')
+      }),
+    }
     const compactor = new AutoCompactor({ model, modelInfo, config })
     expect((await compactor.compact([])).success).toBe(false)
     expect((await compactor.compact(history())).error).toContain('offline')
   })
 
   it.each([-1, 0, 1.5, Number.NaN])('rejects invalid recent count %s', (keep) => {
-    expect(() => new AutoCompactor({ model: fakeModel(), modelInfo, config,
-      keepRecentMessages: keep })).toThrow()
+    expect(
+      () => new AutoCompactor({ model: fakeModel(), modelInfo, config, keepRecentMessages: keep }),
+    ).toThrow()
   })
 })

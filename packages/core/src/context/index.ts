@@ -77,7 +77,11 @@ export {
 export { exploreAgent } from '../subagent/builtins/explore'
 export { planAgent } from '../subagent/builtins/plan'
 export { generalAgent } from '../subagent/builtins/general'
-export { BackgroundTaskManager, type BackgroundTask, type BackgroundTaskStatus } from '../subagent/background'
+export {
+  BackgroundTaskManager,
+  type BackgroundTask,
+  type BackgroundTaskStatus,
+} from '../subagent/background'
 export {
   SessionMessageBus,
   type SessionInbox,

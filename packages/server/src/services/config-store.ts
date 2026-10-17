@@ -2,7 +2,11 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
-  DEFAULT_CONFIG, ForgeConfig, getGlobalConfigPath, getLocalConfigPath, getProjectConfigPath,
+  DEFAULT_CONFIG,
+  ForgeConfig,
+  getGlobalConfigPath,
+  getLocalConfigPath,
+  getProjectConfigPath,
 } from '@forge/core'
 
 type ConfigObject = Record<string, unknown>
@@ -15,7 +19,9 @@ function isObject(value: unknown): value is ConfigObject {
 }
 
 function validSegment(key: string): boolean {
-  return /^[a-zA-Z0-9_-]+$/.test(key) && !Object.hasOwn(Object.prototype, key) && key !== 'prototype'
+  return (
+    /^[a-zA-Z0-9_-]+$/.test(key) && !Object.hasOwn(Object.prototype, key) && key !== 'prototype'
+  )
 }
 
 export function configKeyParts(key: string): string[] {
@@ -30,7 +36,7 @@ function merge(base: ConfigObject, override: ConfigObject): ConfigObject {
   for (const [key, value] of Object.entries(override)) {
     if (!validSegment(key)) throw new ConfigInputError('Unsafe config property')
     result[key] = isObject(value) ? merge(isObject(result[key]) ? result[key] : {}, value) : value
-    if (Array.isArray(value)) result[key] = value.map((v) => isObject(v) ? merge({}, v) : v)
+    if (Array.isArray(value)) result[key] = value.map((v) => (isObject(v) ? merge({}, v) : v))
   }
   return result
 }
@@ -58,7 +64,8 @@ export class ConfigStore {
 
   async all(): Promise<ConfigObject> {
     let config = merge({}, DEFAULT_CONFIG)
-    for (const scope of ['global', 'project', 'local']) config = merge(config, await readConfig(this.path(scope)))
+    for (const scope of ['global', 'project', 'local'])
+      config = merge(config, await readConfig(this.path(scope)))
     return config
   }
 
@@ -76,14 +83,24 @@ export class ConfigStore {
     const file = this.path(scope)
     const prior = pendingWrites.get(file) ?? Promise.resolve()
     const operation = prior.catch(() => {}).then(() => this.modify(file, parts, value, remove))
-    const tail = operation.then(() => {}, () => {})
+    const tail = operation.then(
+      () => {},
+      () => {},
+    )
     pendingWrites.set(file, tail)
-    try { return await operation } finally {
+    try {
+      return await operation
+    } finally {
       if (pendingWrites.get(file) === tail) pendingWrites.delete(file)
     }
   }
 
-  private async modify(file: string, parts: string[], value: unknown, remove: boolean): Promise<boolean> {
+  private async modify(
+    file: string,
+    parts: string[],
+    value: unknown,
+    remove: boolean,
+  ): Promise<boolean> {
     const config = await readConfig(file)
     let target = config
     for (const part of parts.slice(0, -1)) {

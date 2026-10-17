@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+﻿import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -60,6 +60,7 @@ async function createTestSession(sessionId: string) {
   )
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
 function mockFetch(capturedBody: { current: any }) {
   return mock((_url: string | URL | Request, init?: RequestInit) => {
     if (init?.body && typeof init.body === 'string') {
@@ -251,6 +252,7 @@ describe('shareSession', () => {
       }),
     )
 
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const body = JSON.parse(capturedInit?.body as string) as any
     expect(body.public).toBe(false)
     expect(body.description).toBe('My Debug Session')
@@ -260,6 +262,7 @@ describe('shareSession', () => {
   it('sanitizes sensitive data before upload', async () => {
     await createTestSession('s3')
 
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const captured = { current: null as any }
     globalThis.fetch = mockFetch(captured)
 
@@ -294,6 +297,7 @@ describe('shareSession', () => {
   it('uses default title when not provided', async () => {
     await createTestSession('s5')
 
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const captured = { current: null as any }
     globalThis.fetch = mockFetch(captured)
 
@@ -309,6 +313,7 @@ describe('shareSession', () => {
   it('respects anonymize flag', async () => {
     await createTestSession('s6')
 
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const captured = { current: null as any }
     globalThis.fetch = mockFetch(captured)
 

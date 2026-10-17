@@ -65,12 +65,12 @@ export class Semaphore {
 
   /** Release a permit, potentially unblocking a waiter. */
   release(): void {
-    if (this.waiters.length > 0) {
-      const waiter = this.waiters.shift()!
-      waiter()
-    } else {
+    const waiter = this.waiters.shift()
+    if (waiter === undefined) {
       this.permits++
+      return
     }
+    waiter()
   }
 
   /** Current number of available permits. */
@@ -121,14 +121,14 @@ export async function executeParallel(
     // Create timeout controller if needed
     const timeoutController = opts.callTimeout ? new AbortController() : null
     const timeoutId = timeoutController
-      ? setTimeout(() => timeoutController!.abort(), opts.callTimeout)
+      ? setTimeout(() => timeoutController?.abort(), opts.callTimeout)
       : null
 
     // Combine external abort signal with timeout
     const combinedSignal = call.signal
       ? (() => {
           const controller = new AbortController()
-          call.signal!.addEventListener('abort', () => controller.abort())
+          call.signal?.addEventListener('abort', () => controller.abort())
           timeoutController?.signal.addEventListener('abort', () => controller.abort())
           return controller.signal
         })()

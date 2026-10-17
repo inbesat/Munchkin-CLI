@@ -102,9 +102,9 @@ export interface NotebookEditResult extends ToolResult {
 /** Normalize source to string array. */
 function normalizeSource(source: string | string[]): string[] {
   if (typeof source === 'string') {
-    return source.split('\n').map((line) => (line.endsWith('\n') ? line : line + '\n'))
+    return source.split('\n').map((line) => (line.endsWith('\n') ? line : `${line}\n`))
   }
-  return source.map((line) => (line.endsWith('\n') ? line : line + '\n'))
+  return source.map((line) => (line.endsWith('\n') ? line : `${line}\n`))
 }
 
 /** Create a new cell with defaults. */
@@ -220,8 +220,8 @@ function applyOperations(
               cell.outputs = []
               cell.execution_count = null
             } else {
-              delete cell.outputs
-              delete cell.execution_count
+              cell.outputs = undefined
+              cell.execution_count = undefined
             }
           }
           results.push({ op: 'edit', index: operation.index, success: true })

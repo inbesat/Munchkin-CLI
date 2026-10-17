@@ -128,7 +128,7 @@ describe('InterruptController', () => {
   describe('withInterrupt', () => {
     it('runs operation and returns result', async () => {
       controller = new InterruptController()
-      const { result, interrupt } = await withInterrupt(controller, async (signal) => {
+      const { result, interrupt } = await withInterrupt(controller, async () => {
         return 'success'
       })
       expect(result).toBe('success')
@@ -137,7 +137,7 @@ describe('InterruptController', () => {
 
     it('handles interrupt during operation', async () => {
       controller = new InterruptController()
-      const { result, interrupt } = await withInterrupt(controller, async (signal) => {
+      const { result, interrupt } = await withInterrupt(controller, async () => {
         controller.requestInterrupt('user-cancel')
         await new Promise((r) => setTimeout(r, 10))
         return 'should not reach'
@@ -249,7 +249,7 @@ describe('createLinkedAbortSignal', () => {
 
   it('handles undefined signals', () => {
     const s1 = new AbortController().signal
-    const linked = createLinkedAbortSignal(s1, undefined, null as any)
+    const linked = createLinkedAbortSignal(s1, undefined, null as never)
     expect(linked.aborted).toBe(false)
   })
 

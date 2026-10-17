@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import type { AgentChunk, AgentTool } from '../../agent/types'
 import { definitionToSpawnOptions } from '../definitions'
-import { exploreAgent } from './explore'
-import { planAgent } from './plan'
-import { generalAgent } from './general'
 import type { SpawnSubagentOptions } from '../spawn'
 import { spawnSubagent } from '../spawn'
+import { exploreAgent } from './explore'
+import { generalAgent } from './general'
+import { planAgent } from './plan'
 
 const REGISTRY: AgentTool[] = [
   { name: 'read', description: 'read', execute: async () => 'body' },
@@ -16,7 +16,10 @@ const REGISTRY: AgentTool[] = [
   { name: 'bash', description: 'bash', execute: async () => 'ran' },
 ]
 
-function scriptedModel(turns: AgentChunk[][]): { model: Parameters<typeof spawnSubagent>[0]['model']; requests: unknown[] } {
+function scriptedModel(turns: AgentChunk[][]): {
+  model: Parameters<typeof spawnSubagent>[0]['model']
+  requests: unknown[]
+} {
   const requests: unknown[] = []
   let call = 0
   const model = {
@@ -63,7 +66,11 @@ describe('built-in subagents (Phase 95)', () => {
   it('general has full tool access (no allowlist restriction)', () => {
     const agent = generalAgent()
     expect(agent.name).toBe('general')
-    const options = definitionToSpawnOptions(agent, { tools: REGISTRY, model: scriptedModel([[finish()]]).model }, { task: 't' })
+    const options = definitionToSpawnOptions(
+      agent,
+      { tools: REGISTRY, model: scriptedModel([[finish()]]).model },
+      { task: 't' },
+    )
     expect(options.allowedTools).toBeUndefined()
     expect(options.tools).toHaveLength(REGISTRY.length)
   })
@@ -88,7 +95,11 @@ describe('built-in subagents spawn end-to-end (Phase 95)', () => {
   ] as const) {
     it(`spawns the ${name} subagent and returns its summary`, async () => {
       const { model, requests } = scriptedModel([[text(`${name} finished.`), finish()]])
-      const options = definitionToSpawnOptions(build(), { tools: REGISTRY, model }, { task: `Run as ${name}.` })
+      const options = definitionToSpawnOptions(
+        build(),
+        { tools: REGISTRY, model },
+        { task: `Run as ${name}.` },
+      )
       const result = await spawnSubagent(options)
       expect(result.summary).toBe(`${name} finished.`)
       expect(result.stopReason).toBe('complete')

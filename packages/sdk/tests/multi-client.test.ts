@@ -65,8 +65,10 @@ describe('Multi-client SSE attach (integration)', () => {
     const connectedB = b.find((s) => s.startsWith('connected'))
     expect(connectedA).toBeDefined()
     expect(connectedB).toBeDefined()
-    const clientIdA = JSON.parse(connectedA!.split(':').slice(1).join(':')).clientId
-    const clientIdB = JSON.parse(connectedB!.split(':').slice(1).join(':')).clientId
+    // biome noNonNullAssertion: the two expects above fail the test already
+    if (connectedA === undefined || connectedB === undefined) return
+    const clientIdA = JSON.parse(connectedA.split(':').slice(1).join(':')).clientId
+    const clientIdB = JSON.parse(connectedB.split(':').slice(1).join(':')).clientId
 
     // Both attach to the same session.
     await client.sse.attach('S-room-1', { clientId: clientIdA })

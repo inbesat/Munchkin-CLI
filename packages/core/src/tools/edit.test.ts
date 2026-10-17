@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { EditSchema, createEditTool } from './edit'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
-const testDir = join(tmpdir(), 'forge-edit-test-' + Date.now())
+const testDir = join(tmpdir(), `forge-edit-test-${Date.now()}`)
 const testFile = join(testDir, 'test.txt')
 
 const originalContent = `function hello() {

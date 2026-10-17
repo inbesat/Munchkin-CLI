@@ -1,7 +1,7 @@
 import { toRequestMessages } from '../agent/context'
 import type { AgentGenerateOptions } from '../agent/types'
 import type { ForgeConfig } from '../config/schema'
-import { createEvent, type SessionEvent } from '../events'
+import { type SessionEvent, createEvent } from '../events'
 import { assembleContextMessages } from '../session/hydration'
 import type { Message } from '../session/message'
 import { ContextBudgeter, type ModelInfo } from './budget'
@@ -75,11 +75,16 @@ export class AutoCompactor {
     this.setBudgetMessages(messages)
     try {
       if (!options.force && !this.budgeter.shouldCompact()) {
-        return this.failure(events, messages, 'Compaction not needed - context usage below threshold')
+        return this.failure(
+          events,
+          messages,
+          'Compaction not needed - context usage below threshold',
+        )
       }
       const boundary = recentContextBoundary(messages, this.keepRecentMessages)
       const older = messages.slice(0, boundary).filter((m) => m.role !== 'system')
-      if (older.length < 2) return this.failure(events, messages, 'No messages to summarize into a smaller context')
+      if (older.length < 2)
+        return this.failure(events, messages, 'No messages to summarize into a smaller context')
       const summary = await this.generateSummary(older, options.focusInstruction)
       const kept = messages.slice(boundary)
       const systems = messages.slice(0, boundary).filter((m) => m.role === 'system')
@@ -92,14 +97,25 @@ export class AutoCompactor {
         return this.failure(events, messages, 'Summary is empty or does not reduce context')
       }
       return {
-        success: true, summary, tokensSaved, messagesRemoved: older.length, messages: effective,
+        success: true,
+        summary,
+        tokensSaved,
+        messagesRemoved: older.length,
+        messages: effective,
         compactionEvent: createEvent('session.compaction', events[0].sessionId, {
-          beforeCount: messages.length, afterCount: effective.length, summary, tokensSaved,
+          beforeCount: messages.length,
+          afterCount: effective.length,
+          summary,
+          tokensSaved,
         }),
       }
     } catch (error) {
       this.setBudgetMessages(messages)
-      return this.failure(events, messages, error instanceof Error ? error.message : 'Unknown compaction error')
+      return this.failure(
+        events,
+        messages,
+        error instanceof Error ? error.message : 'Unknown compaction error',
+      )
     }
   }
 
@@ -108,9 +124,16 @@ export class AutoCompactor {
   }
 
   private async generateSummary(messages: Message[], focus?: string): Promise<string> {
-    const instruction = focus ? `${this.summarizationPrompt}\nFocus on: ${focus}` : this.summarizationPrompt
+    const instruction = focus
+      ? `${this.summarizationPrompt}\nFocus on: ${focus}`
+      : this.summarizationPrompt
     const result = await this.model.generate({
-      messages: [{ role: 'user', content: `${instruction}\n\nConversation:\n${JSON.stringify(toRequestMessages(messages))}\n\nSummary:` }],
+      messages: [
+        {
+          role: 'user',
+          content: `${instruction}\n\nConversation:\n${JSON.stringify(toRequestMessages(messages))}\n\nSummary:`,
+        },
+      ],
       maxTokens: 2048,
       temperature: 0.3,
     })
@@ -119,9 +142,17 @@ export class AutoCompactor {
 
   private failure(events: SessionEvent[], messages: Message[], error: string): CompactionResult {
     return {
-      success: false, summary: '', tokensSaved: 0, messagesRemoved: 0, messages, error,
+      success: false,
+      summary: '',
+      tokensSaved: 0,
+      messagesRemoved: 0,
+      messages,
+      error,
       compactionEvent: createEvent('session.compaction', events[0]?.sessionId ?? '', {
-        beforeCount: 0, afterCount: 0, summary: '', tokensSaved: 0,
+        beforeCount: 0,
+        afterCount: 0,
+        summary: '',
+        tokensSaved: 0,
       }),
     }
   }
@@ -141,6 +172,9 @@ export function createAutoCompactor(options: CompactionOptions): AutoCompactor {
   return new AutoCompactor(options)
 }
 
-export async function compactIfNeeded(compactor: AutoCompactor, events: SessionEvent[]): Promise<CompactionResult | null> {
+export async function compactIfNeeded(
+  compactor: AutoCompactor,
+  events: SessionEvent[],
+): Promise<CompactionResult | null> {
   return compactor.shouldCompact(events) ? compactor.compact(events) : null
 }

@@ -228,7 +228,8 @@ export function matchRules(
   for (const rule of rules) {
     const result = matchRule(rule, toolName, category, args)
     if (result.matched && result.rule) {
-      if (!bestMatch.matched || result.rule.priority > bestMatch.rule!.priority) {
+      const bestRule = bestMatch.matched ? bestMatch.rule : undefined
+      if (bestRule === undefined || result.rule.priority > bestRule.priority) {
         bestMatch = result
       }
     }

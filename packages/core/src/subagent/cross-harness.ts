@@ -121,7 +121,7 @@ function defaultSpawner(request: HarnessSpawnRequest): HarnessLineProcess {
 
   return {
     write: (line: string) => {
-      if (child.stdin !== null && child.stdin.writable) child.stdin.write(`${line}\n`)
+      if (child.stdin?.writable) child.stdin.write(`${line}\n`)
     },
     readLines,
     waitExit: () =>

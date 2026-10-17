@@ -75,7 +75,11 @@ describe('CacheStatsTracker (Phase 91)', () => {
 
   it('keeps savings at zero when a provider has no cache-read rate', () => {
     const tracker = new CacheStatsTracker()
-    tracker.record('openai', { inputTokens: 100, cachedTokens: 100, rates: { inputPerToken: 5e-7 } })
+    tracker.record('openai', {
+      inputTokens: 100,
+      cachedTokens: 100,
+      rates: { inputPerToken: 5e-7 },
+    })
     expect(tracker.snapshot().savingsUsd).toBe(0)
   })
 

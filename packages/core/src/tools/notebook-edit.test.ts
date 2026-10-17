@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdirSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
+﻿import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { type Notebook, NotebookEditSchema, createNotebookEditTool } from './notebook-edit'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
@@ -34,7 +34,7 @@ function writeTestNotebook(nb: Notebook = createTestNotebook()) {
 }
 
 function readTestNotebook(): Notebook {
-  return JSON.parse(require('fs').readFileSync(TEST_NOTEBOOK, 'utf8'))
+  return JSON.parse(require('node:fs').readFileSync(TEST_NOTEBOOK, 'utf8'))
 }
 
 beforeEach(() => {
@@ -271,6 +271,7 @@ describe('NotebookEditSchema structure', () => {
 
   it('create operation has required fields', () => {
     const createOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'create',
     )
     expect(createOp).toBeDefined()
@@ -280,6 +281,7 @@ describe('NotebookEditSchema structure', () => {
 
   it('edit operation has required index', () => {
     const editOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'edit',
     )
     expect(editOp).toBeDefined()
@@ -288,6 +290,7 @@ describe('NotebookEditSchema structure', () => {
 
   it('delete operation has required index', () => {
     const deleteOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'delete',
     )
     expect(deleteOp).toBeDefined()
@@ -296,6 +299,7 @@ describe('NotebookEditSchema structure', () => {
 
   it('reorder operation has fromIndex and toIndex', () => {
     const reorderOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'reorder',
     )
     expect(reorderOp).toBeDefined()
@@ -305,6 +309,7 @@ describe('NotebookEditSchema structure', () => {
 
   it('read operation exists', () => {
     const readOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'read',
     )
     expect(readOp).toBeDefined()
@@ -312,9 +317,11 @@ describe('NotebookEditSchema structure', () => {
 
   it('cell_type enum includes code, markdown, raw', () => {
     const createOp = NotebookEditSchema.properties.operations.items.anyOf?.find(
+      // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
       (o: any) => o.properties?.op?.const === 'create',
     )
     const cellTypeProp = createOp?.properties?.cell_type
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const enumValues = cellTypeProp?.anyOf?.map((o: any) => o.const) ?? []
     expect(enumValues).toContain('code')
     expect(enumValues).toContain('markdown')

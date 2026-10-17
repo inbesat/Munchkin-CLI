@@ -141,7 +141,7 @@ export function createBashTool(manager: BashManager = new BashManager()): Tool {
       let output = ''
       if (result.stdout) output += result.stdout
       if (result.stderr) output += (output ? '\n' : '') + result.stderr
-      if (!output) output = `(no output)`
+      if (!output) output = '(no output)'
 
       if (result.timedOut) {
         output += `\n[Command timed out after ${timeout ?? 120000}ms]`

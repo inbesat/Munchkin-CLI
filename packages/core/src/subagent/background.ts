@@ -17,10 +17,8 @@ export interface BackgroundTask<T = unknown> {
   error?: string
 }
 
-export interface BackgroundTaskRunner {
-  /** Execute the task; `signal` aborts on cancellation. */
-  (signal: AbortSignal): Promise<unknown>
-}
+/** Execute the task; `signal` aborts on cancellation. */
+export type BackgroundTaskRunner = (signal: AbortSignal) => Promise<unknown>
 
 interface InternalTask<T = unknown> extends BackgroundTask<T> {
   controller?: AbortController

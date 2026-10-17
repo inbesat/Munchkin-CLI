@@ -4,8 +4,8 @@
  * workers complete, and results are integrated both on the board and into a
  * Phase-97 BackgroundTaskManager so either API can retrieve them.
  */
-import { SessionMessageBus } from './messaging'
 import type { BackgroundTaskManager } from './background'
+import type { SessionMessageBus } from './messaging'
 
 export interface TeamTask {
   id: string

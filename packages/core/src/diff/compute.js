@@ -26,7 +26,6 @@ export function computeDiff(oldContent, newContent, options = {}) {
     case 'chars':
       rawDiff = diffChars(oldContent, newContent, { ignoreWhitespace: opts.ignoreWhitespace })
       break
-    case 'lines':
     default:
       rawDiff = diffLines(oldContent, newContent, { ignoreWhitespace: opts.ignoreWhitespace })
       break
@@ -195,7 +194,6 @@ export function formatDiff(diff, oldName = 'a', newName = 'b') {
       return formatSideBySideDiff(diff)
     case 'inline':
       return formatInlineDiff(diff)
-    case 'unified':
     default:
       return formatUnifiedDiff(diff, oldName, newName)
   }

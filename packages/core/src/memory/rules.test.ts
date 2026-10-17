@@ -15,7 +15,11 @@ describe('loadRules (Phase 89)', () => {
     writeFileSync(join(rulesDir, 'typescript-conventions.md'), 'Use strict types.', 'utf-8')
     writeFileSync(join(rulesDir, 'testing-standards.md'), 'Tests before code.', 'utf-8')
     writeFileSync(join(rulesDir, 'style.md'), 'No semicolons needed.', 'utf-8')
-    writeFileSync(join(rulesDir, 'with-imports.md'), 'Base rule.\n@import ./shared/terms.md', 'utf-8')
+    writeFileSync(
+      join(rulesDir, 'with-imports.md'),
+      'Base rule.\n@import ./shared/terms.md',
+      'utf-8',
+    )
     mkdirSync(join(rulesDir, 'shared'), { recursive: true })
     writeFileSync(join(rulesDir, 'shared', 'terms.md'), 'Shared terms live here.', 'utf-8')
     writeFileSync(join(rulesDir, 'cyclic-a.md'), 'A\n@import ./cyclic-b.md', 'utf-8')

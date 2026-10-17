@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { createOfflineModel } from '../tests/fixtures/offline-model'
 
 describe('ForgeServer — Full Integration Suite', () => {
+  // biome-ignore lint/suspicious/noExplicitAny: assigned in beforeAll via a dynamic import (avoids a static import cycle); exercised per test at runtime
   let server: any
   let baseDir: string
   let authHeader: string
@@ -69,7 +70,7 @@ describe('ForgeServer — Full Integration Suite', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(Array.isArray(body)).toBe(true)
-    expect(body.some((t: any) => t.name === 'read')).toBe(true)
+    expect(body.some((t: { name: string }) => t.name === 'read')).toBe(true)
   })
 
   // ── Session lifecycle ──
@@ -119,12 +120,10 @@ describe('ForgeServer — Full Integration Suite', () => {
       body: JSON.stringify({ cwd: '/tmp' }),
     })
     const session = await create.json()
-    const del = await server
-      .getApp()
-      .request(`/api/sessions/${session.id}`, {
-        method: 'DELETE',
-        headers: { authorization: authHeader },
-      })
+    const del = await server.getApp().request(`/api/sessions/${session.id}`, {
+      method: 'DELETE',
+      headers: { authorization: authHeader },
+    })
     expect(del.status).toBe(200)
     const get = await server.getApp().request(`/api/sessions/${session.id}`, {
       headers: { authorization: authHeader },
@@ -173,7 +172,7 @@ describe('ForgeServer — Full Integration Suite', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(Array.isArray(body)).toBe(true)
-    expect(body.some((t: any) => t.name === 'bash')).toBe(true)
+    expect(body.some((t: { name: string }) => t.name === 'bash')).toBe(true)
   })
 
   it('executes a tool directly', async () => {
@@ -219,12 +218,10 @@ describe('ForgeServer — Full Integration Suite', () => {
       headers: { 'content-type': 'application/json', authorization: authHeader },
       body: JSON.stringify({ key: 'delete.me', value: 'x' }),
     })
-    const del = await server
-      .getApp()
-      .request('/api/config/delete.me', {
-        method: 'DELETE',
-        headers: { authorization: authHeader },
-      })
+    const del = await server.getApp().request('/api/config/delete.me', {
+      method: 'DELETE',
+      headers: { authorization: authHeader },
+    })
     expect(del.status).toBe(200)
     const get = await server.getApp().request('/api/config/delete.me', {
       headers: { authorization: authHeader },
@@ -275,12 +272,10 @@ describe('ForgeServer — Full Integration Suite', () => {
       body: JSON.stringify({ name: 'to-revoke' }),
     })
     const { key } = await create.json()
-    const del = await server
-      .getApp()
-      .request(`/api/auth/keys/${key.id}`, {
-        method: 'DELETE',
-        headers: { authorization: authHeader },
-      })
+    const del = await server.getApp().request(`/api/auth/keys/${key.id}`, {
+      method: 'DELETE',
+      headers: { authorization: authHeader },
+    })
     expect(del.status).toBe(200)
     const get = await server.getApp().request(`/api/auth/keys/${key.id}`, {
       headers: { authorization: authHeader },
@@ -297,10 +292,11 @@ describe('ForgeServer — Full Integration Suite', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('text/event-stream')
     const reader = res.body?.getReader()
-    const { value } = await reader!.read()
+    if (reader === undefined) throw new Error('sse response has no body')
+    const { value } = await reader.read()
     const text = new TextDecoder().decode(value)
     expect(text).toContain('event: connected')
-    await reader!.cancel()
+    await reader.cancel()
   })
 
   // ── Auth middleware ──

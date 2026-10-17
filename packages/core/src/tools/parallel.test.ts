@@ -292,7 +292,7 @@ describe('createParallelExecutor', () => {
   it('merges default options with call options', async () => {
     const mockRegistry = {
       execute: async (_name: string, _input: Record<string, unknown>, signal?: AbortSignal) => {
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((_resolve, reject) => {
           signal?.addEventListener('abort', () => reject(new Error('Aborted')), { once: true })
           setTimeout(() => reject(new Error('Timeout')), 50)
         })

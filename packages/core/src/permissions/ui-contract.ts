@@ -154,7 +154,10 @@ export interface SDKUIConfig extends UIConfig {
 export class MockPermissionUI implements PermissionUI {
   private responses: Map<string, PermissionResponse> = new Map()
   private defaultDecision: PermissionDecision = 'allow'
-  private callLog: Array<{ request: PermissionRequest; response: PermissionResponse }> = []
+  private callLog: Array<{
+    request: PermissionRequest | Pick<PermissionRequest, 'id'>
+    response: PermissionResponse | Pick<PermissionResponse, 'decision'>
+  }> = []
 
   constructor(
     defaultDecision: PermissionDecision = 'allow',
@@ -170,10 +173,9 @@ export class MockPermissionUI implements PermissionUI {
     const specificResponse = this.responses.get(request.id)
     if (specificResponse) {
       decision = specificResponse.decision
-    } else if (this.responsesMap?.has(request.id)) {
-      decision = this.responsesMap.get(request.id)!
-    } else if (this.responsesMap?.has(request.tool.name)) {
-      decision = this.responsesMap.get(request.tool.name)!
+    } else {
+      const mapped = this.responsesMap?.get(request.id) ?? this.responsesMap?.get(request.tool.name)
+      if (mapped !== undefined) decision = mapped
     }
 
     const response: PermissionResponse = {
@@ -194,8 +196,8 @@ export class MockPermissionUI implements PermissionUI {
 
   notifyToolResult(_requestId: string, success: boolean, _result?: unknown, _error?: string): void {
     this.callLog.push({
-      request: { id: _requestId } as any,
-      response: { decision: success ? 'allow' : 'deny' } as any,
+      request: { id: _requestId },
+      response: { decision: success ? 'allow' : 'deny' },
     })
   }
 
@@ -264,10 +266,11 @@ export class MockPermissionUI implements PermissionUI {
 export class AutoApproveUI extends MockPermissionUI {
   constructor(config: HeadlessUIConfig = {}) {
     super('allow')
-    if (config.customDecider) {
+    const customDecider = config.customDecider
+    if (customDecider) {
       // Override requestPermission to use custom decider
       this.requestPermission = async (request) => {
-        const decision = await config.customDecider!(request)
+        const decision = await customDecider(request)
         return { requestId: request.id, decision }
       }
     }
@@ -341,7 +344,7 @@ export abstract class InteractivePermissionUI implements PermissionUI {
     return Object.entries(args)
       .map(
         ([k, v]) =>
-          `${k}: ${typeof v === 'string' && v.length > 100 ? v.slice(0, 100) + '...' : v}`,
+          `${k}: ${typeof v === 'string' && v.length > 100 ? `${v.slice(0, 100)}...` : v}`,
       )
       .join(', ')
   }

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { Microcompactor, createMicrocompactor, microcompactIfNeeded } from './microcompact'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import type { SessionEvent } from '../events'
+import { Microcompactor, createMicrocompactor, microcompactIfNeeded } from './microcompact'
 
 const createSessionEvents = (messageCount: number, toolResultsPerMessage = 1): SessionEvent[] => {
   const events: SessionEvent[] = [
@@ -46,15 +46,22 @@ const createSessionEvents = (messageCount: number, toolResultsPerMessage = 1): S
 
       for (const result of toolResults) {
         events.push({
-          id: `${result.toolCallId}-call`, sessionId: 'session-1', timestamp: Date.now(),
-          schemaVersion: 1, type: 'session.tool_call',
+          id: `${result.toolCallId}-call`,
+          sessionId: 'session-1',
+          timestamp: Date.now(),
+          schemaVersion: 1,
+          type: 'session.tool_call',
           payload: { toolCallId: result.toolCallId, toolName: 'bash', args: {} },
         })
       }
       for (const result of toolResults) {
         events.push({
-          id: `${result.toolCallId}-result`, sessionId: 'session-1', timestamp: Date.now(),
-          schemaVersion: 1, type: 'session.tool_result', payload: result,
+          id: `${result.toolCallId}-result`,
+          sessionId: 'session-1',
+          timestamp: Date.now(),
+          schemaVersion: 1,
+          type: 'session.tool_result',
+          payload: result,
         })
       }
     }

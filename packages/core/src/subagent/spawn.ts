@@ -97,10 +97,9 @@ export async function spawnSubagent(options: SpawnSubagentOptions): Promise<Suba
     // The loop honors `signal`, but a model may ignore it — the timeout must
     // still terminate the spawn regardless (stress-suite finding, Phase 102).
     const timeoutPromise = new Promise<never>((_resolve, reject) => {
-      controller.signal.addEventListener('abort', () =>
-        reject(new Error('subagent timed out')),
-        { once: true },
-      )
+      controller.signal.addEventListener('abort', () => reject(new Error('subagent timed out')), {
+        once: true,
+      })
     })
     const run = await Promise.race([runPromise, timeoutPromise])
     return {

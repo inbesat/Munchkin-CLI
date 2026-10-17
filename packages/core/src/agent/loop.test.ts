@@ -6,9 +6,6 @@ import type { AgentChunk } from './types'
 function userMsg(content: string): Message {
   return { role: 'user', parts: [{ type: 'text', text: content }], content }
 }
-function assistantMsg(content: string): Message {
-  return { role: 'assistant', parts: [{ type: 'text', text: content }], content }
-}
 function systemMsg(content: string): Message {
   return { role: 'system', parts: [{ type: 'text', text: content }], content }
 }

@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash } from 'node:crypto'
 
 /** Type of audit event. */
 export type AuditEventType =

@@ -44,7 +44,7 @@ describe('openapi spec', () => {
     for (const [path, item] of Object.entries(spec.paths ?? {})) {
       for (const [method, op] of Object.entries(item ?? {})) {
         if (method === 'parameters') continue
-        const responses = (op as any).responses ?? {}
+        const responses = (op as { responses?: Record<string, unknown> }).responses ?? {}
         const codes = Object.keys(responses)
         expect(
           codes.some((c) => c.startsWith('2')),

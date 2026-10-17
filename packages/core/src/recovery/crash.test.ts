@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'bun:test'
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
-import { join } from 'path'
+﻿import { describe, expect, it } from 'bun:test'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ensureTokenUsageTable } from '../cost/schema'
 import { CostTracker } from '../cost/tracker'
 import { type SessionEvent, SessionLog, createEvent } from '../events'
@@ -10,6 +10,11 @@ import { forkSession } from '../session/fork'
 import { getResumePoint, hasIncompleteToolCalls, resumeSession } from '../session/resume'
 import { SessionStore, openDatabase } from '../store'
 import { StoreSync } from '../store/sync'
+
+function requireState<T>(state: T | null): T {
+  if (state === null) throw new Error('resumed state was null')
+  return state
+}
 
 function ctx() {
   const dir = join(tmpdir(), `crash-${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -25,10 +30,6 @@ function ctx() {
     } catch {}
   }
   return { dir, dbPath, db, cleanup }
-}
-
-async function writeAll(log: SessionLog, events: SessionEvent[]) {
-  for (const e of events) await log.append(e)
 }
 
 async function readAll(log: SessionLog): Promise<SessionEvent[]> {
@@ -80,7 +81,7 @@ describe('Crash Recovery: Event Append', () => {
       const logPath = log.getFilePath()
       const content = readFileSync(logPath, 'utf-8')
       const lines = content.trim().split('\n')
-      writeFileSync(logPath, lines.slice(0, 3).join('\n') + '\n{"corrupted')
+      writeFileSync(logPath, `${lines.slice(0, 3).join('\n')}\n{"corrupted`)
 
       const recovered = new SessionLog(c.dir, sessionId)
       const recoveredEvents = await readAll(recovered)
@@ -121,7 +122,7 @@ describe('Crash Recovery: Event Append', () => {
       const lines = content.trim().split('\n')
       writeFileSync(
         log.getFilePath(),
-        lines.slice(0, -1).join('\n') + '\n' + lines[lines.length - 1].slice(0, 20),
+        `${lines.slice(0, -1).join('\n')}\n${lines[lines.length - 1].slice(0, 20)}`,
       )
 
       const recovered = new SessionLog(c.dir, sessionId)
@@ -152,7 +153,7 @@ describe('Crash Recovery: Event Append', () => {
       for (const e of events) await log.append(e)
 
       const content = readFileSync(log.getFilePath(), 'utf-8')
-      writeFileSync(log.getFilePath(), content + '\ngarbage data\nmore garbage\n')
+      writeFileSync(log.getFilePath(), `${content}\ngarbage data\nmore garbage\n`)
 
       const recovered = new SessionLog(c.dir, sessionId)
       const result = await readAll(recovered)
@@ -186,9 +187,9 @@ describe('Crash Recovery: Tool Call/Result Pairs', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      expect(hasIncompleteToolCalls(state!)).toBe(true)
-      expect(state!.pendingToolCalls).toHaveLength(1)
-      expect(state!.pendingToolCalls[0].toolCallId).toBe('tc-1')
+      expect(hasIncompleteToolCalls(requireState(state))).toBe(true)
+      expect(state?.pendingToolCalls).toHaveLength(1)
+      expect(state?.pendingToolCalls[0].toolCallId).toBe('tc-1')
     } finally {
       c.cleanup()
     }
@@ -216,7 +217,7 @@ describe('Crash Recovery: Tool Call/Result Pairs', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      const rp = getResumePoint(state!)
+      const rp = getResumePoint(requireState(state))
       expect(rp.canResume).toBe(true)
       expect(rp.reason).toContain('incomplete tool call')
     } finally {
@@ -251,7 +252,7 @@ describe('Crash Recovery: Tool Call/Result Pairs', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      expect(hasIncompleteToolCalls(state!)).toBe(false)
+      expect(hasIncompleteToolCalls(requireState(state))).toBe(false)
     } finally {
       c.cleanup()
     }
@@ -293,9 +294,9 @@ describe('Crash Recovery: Tool Call/Result Pairs', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      expect(hasIncompleteToolCalls(state!)).toBe(true)
-      expect(state!.pendingToolCalls).toHaveLength(1)
-      expect(state!.pendingToolCalls[0].toolCallId).toBe('tc-2')
+      expect(hasIncompleteToolCalls(requireState(state))).toBe(true)
+      expect(state?.pendingToolCalls).toHaveLength(1)
+      expect(state?.pendingToolCalls[0].toolCallId).toBe('tc-2')
     } finally {
       c.cleanup()
     }
@@ -321,8 +322,8 @@ describe('Crash Recovery: Tool Call/Result Pairs', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      expect(hasIncompleteToolCalls(state!)).toBe(false)
-      expect(state!.messages.length).toBeGreaterThanOrEqual(2)
+      expect(hasIncompleteToolCalls(requireState(state))).toBe(false)
+      expect(state?.messages.length).toBeGreaterThanOrEqual(2)
     } finally {
       c.cleanup()
     }
@@ -340,8 +341,8 @@ describe('Crash Recovery: Session State', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'only-created' })
       expect(state).not.toBeNull()
-      expect(state!.ended).toBe(false)
-      expect(getResumePoint(state!).canResume).toBe(true)
+      expect(state?.ended).toBe(false)
+      expect(getResumePoint(requireState(state)).canResume).toBe(true)
     } finally {
       c.cleanup()
     }
@@ -367,8 +368,8 @@ describe('Crash Recovery: Session State', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId })
       expect(state).not.toBeNull()
-      expect(state!.ended).toBe(true)
-      expect(getResumePoint(state!).canResume).toBe(false)
+      expect(state?.ended).toBe(true)
+      expect(getResumePoint(requireState(state)).canResume).toBe(false)
     } finally {
       c.cleanup()
     }
@@ -385,7 +386,7 @@ describe('Crash Recovery: Session State', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'int-user' })
       expect(state).not.toBeNull()
-      expect(getResumePoint(state!).reason).toContain('user')
+      expect(getResumePoint(requireState(state)).reason).toContain('user')
     } finally {
       c.cleanup()
     }
@@ -405,7 +406,7 @@ describe('Crash Recovery: Session State', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'int-asst' })
       expect(state).not.toBeNull()
-      expect(getResumePoint(state!).reason).toContain('interrupted')
+      expect(getResumePoint(requireState(state)).reason).toContain('interrupted')
     } finally {
       c.cleanup()
     }
@@ -431,8 +432,8 @@ describe('Crash Recovery: Session State', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'with-error' })
       expect(state).not.toBeNull()
-      expect(state!.errors.length).toBe(1)
-      expect(state!.errors[0].code).toBe('FORGE_3001')
+      expect(state?.errors.length).toBe(1)
+      expect(state?.errors[0].code).toBe('FORGE_3001')
     } finally {
       c.cleanup()
     }
@@ -504,7 +505,7 @@ describe('Crash Recovery: SQLite Store', () => {
 
       const session = store.getSession('upsert-test')
       expect(session).not.toBeNull()
-      expect(session!.eventCount).toBe(3)
+      expect(session?.eventCount).toBe(3)
     } finally {
       c.cleanup()
     }
@@ -630,9 +631,9 @@ describe('Crash Recovery: Compaction', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'compact-test' })
       expect(state).not.toBeNull()
-      expect(state!.compactions.length).toBe(1)
-      expect(state!.compactions[0].summary).toBe('User asked about files.')
-      expect(state!.compactions[0].tokensSaved).toBe(500)
+      expect(state?.compactions.length).toBe(1)
+      expect(state?.compactions[0].summary).toBe('User asked about files.')
+      expect(state?.compactions[0].tokensSaved).toBe(500)
     } finally {
       c.cleanup()
     }
@@ -675,7 +676,7 @@ describe('Crash Recovery: Compaction', () => {
 
       const state = await resumeSession({ baseDir: c.dir, sessionId: 'multi-compact' })
       expect(state).not.toBeNull()
-      expect(state!.compactions.length).toBe(2)
+      expect(state?.compactions.length).toBe(2)
     } finally {
       c.cleanup()
     }
@@ -703,7 +704,7 @@ describe('Crash Recovery: Large Sessions', () => {
       const elapsed = Date.now() - start
 
       expect(state).not.toBeNull()
-      expect(state!.messages.length).toBe(499)
+      expect(state?.messages.length).toBe(499)
       expect(elapsed).toBeLessThan(1000)
     } finally {
       c.cleanup()
@@ -738,7 +739,7 @@ describe('Crash Recovery: Large Sessions', () => {
       const elapsed = Date.now() - start
 
       expect(state).not.toBeNull()
-      expect(hasIncompleteToolCalls(state!)).toBe(true)
+      expect(hasIncompleteToolCalls(requireState(state))).toBe(true)
       expect(elapsed).toBeLessThan(1000)
     } finally {
       c.cleanup()
@@ -831,7 +832,7 @@ describe('Crash Recovery: Export Integrity', () => {
       await log.append(createEvent('session.created', sessionId, { model: 'gpt-4o', cwd: '/tmp' }))
       await log.append(createEvent('session.message', sessionId, { role: 'user', content: 'hi' }))
 
-      writeFileSync(log.getFilePath(), readFileSync(log.getFilePath(), 'utf-8') + '\nbroken json')
+      writeFileSync(log.getFilePath(), `${readFileSync(log.getFilePath(), 'utf-8')}\nbroken json`)
 
       const result = await exportSession({ baseDir: c.dir, sessionId, format: 'json' })
       const parsed = JSON.parse(result.content)

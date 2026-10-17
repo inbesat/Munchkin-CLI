@@ -205,7 +205,7 @@ describe('webFetchTool', () => {
 
   it('uses default timeout when not specified', async () => {
     const tool = createWebFetchTool()
-    const start = Date.now()
+    const _start = Date.now()
     try {
       await tool.execute({ url: `${baseUrl}/slow` })
     } catch {

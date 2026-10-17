@@ -60,7 +60,7 @@ describe('steeringToMessage', () => {
 
   it('preserves metadata in steering message', () => {
     const steering: SteeringMessage = { content: 'test', metadata: { source: 'user' } }
-    const msg = steeringToMessage(steering)
+    steeringToMessage(steering)
     // metadata is not preserved in the message, but the steering message retains it
     expect(steering.metadata?.source).toBe('user')
   })
@@ -162,7 +162,6 @@ describe('Agent loop with steering', () => {
   it('injects steering message mid-loop', async () => {
     // First turn: model returns some text
     // Second turn: after steering injection, model finishes
-    const turn = 0
     model.setResponses([
       { type: 'text-delta', delta: 'Working on it...' },
       { type: 'finish', reason: 'stop' },
@@ -217,7 +216,7 @@ describe('Agent loop with steering', () => {
     const steering = new SteeringController()
     const events: LoopEvent[] = []
 
-    const result = await runAgentLoop({
+    await runAgentLoop({
       ...options,
       steering,
       onEvent: (e) => events.push(e),
@@ -229,7 +228,6 @@ describe('Agent loop with steering', () => {
   })
 
   it('injects steering before next turn when pushed during turn', async () => {
-    const turnCount = 0
     // First turn: model calls a tool (doesn't finish)
     // Second turn: after steering, model finishes
     model.setResponses([

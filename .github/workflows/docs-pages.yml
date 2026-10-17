@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Build site packages
-        run: bunx turbo build --filter=@forge/landing --filter=@forge/docs
+        run: bunx turbo build --filter=@forge/server... --filter=@forge/docs --filter=@forge/landing
       - name: Assemble Pages artifact
         run: bun run scripts/assemble-pages-site.ts
       - name: Verify all pages load and every link resolves

@@ -104,8 +104,8 @@ describe('diff/compute', () => {
   })
 
   it('respects context lines option', () => {
-    const longOld = 'a\n'.repeat(20) + 'CHANGE\n' + 'b\n'.repeat(20)
-    const longNew = 'a\n'.repeat(20) + 'CHANGED\n' + 'b\n'.repeat(20)
+    const longOld = `${'a\n'.repeat(20)}CHANGE\n${'b\n'.repeat(20)}`
+    const longNew = `${'a\n'.repeat(20)}CHANGED\n${'b\n'.repeat(20)}`
     const diff1 = computeDiff(longOld, longNew, { contextLines: 1 })
     const diff2 = computeDiff(longOld, longNew, { contextLines: 5 })
     // More context = more lines in hunks
@@ -195,7 +195,7 @@ console.log("done")
 
   it('large diff still renders', async () => {
     const oldFile = 'line\n'.repeat(100)
-    const newFile = 'line\n'.repeat(50) + 'CHANGED\n' + 'line\n'.repeat(49)
+    const newFile = `${'line\n'.repeat(50)}CHANGED\n${'line\n'.repeat(49)}`
     const diff = computeDiff(oldFile, newFile, { format: 'unified', contextLines: 3 })
     const rendered = await renderDiff(diff, {
       language: 'text',

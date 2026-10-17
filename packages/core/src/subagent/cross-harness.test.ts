@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  delegateToHarness,
   type HarnessLineProcess,
   type HarnessSpawnRequest,
   type HarnessSpawner,
-  resolveHarnessBinary,
   RUNNING_HARNESS_BINARIES,
+  delegateToHarness,
+  resolveHarnessBinary,
 } from './cross-harness'
 
 type RecordedHarnessRequest = HarnessSpawnRequest & { stdinLines: string[] }

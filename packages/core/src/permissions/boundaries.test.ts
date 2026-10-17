@@ -192,6 +192,7 @@ describe('Path Boundaries', () => {
     })
 
     it('rejects undefined allowedPaths', () => {
+      // biome-ignore lint/suspicious/noExplicitAny: intentionally malformed config to exercise validation
       const config = { allowedPaths: undefined as any, resolveSymlinks: true }
       expect(validateBoundaryConfig(config)).toEqual({
         valid: false,
@@ -278,7 +279,7 @@ describe('Path Boundaries', () => {
         allowTemp: true,
       }
 
-      const tempDir = require('os').tmpdir()
+      const tempDir = require('node:os').tmpdir()
       const tempFile = `${tempDir}\\test-file.txt`
 
       const result = checkPathBoundary(tempFile, config, TEST_CWD)
@@ -292,7 +293,7 @@ describe('Path Boundaries', () => {
         allowTemp: false,
       }
 
-      const tempDir = require('os').tmpdir()
+      const tempDir = require('node:os').tmpdir()
       const tempFile = `${tempDir}\\test-file.txt`
 
       const result = checkPathBoundary(tempFile, config, TEST_CWD)

@@ -28,7 +28,7 @@ describe('SSEBridge', () => {
 
     const msg = c.messages.find((m) => m.includes('event: text_delta'))
     expect(msg).toBeDefined()
-    expect(msg!).toInclude('delta')
+    expect(msg).toInclude('delta')
   })
 
   it('translates tool-call and tool-result into typed frames', () => {
@@ -39,8 +39,8 @@ describe('SSEBridge', () => {
 
     bridge.emitLoopEvent('s1', {
       type: 'tool-call',
-      toolCall: { id: 't1', name: 'read', arguments: {}, callId: 't1' } as any,
-    } as LoopEvent)
+      toolCall: { id: 't1', name: 'read', arguments: {}, callId: 't1' },
+    } as unknown as LoopEvent)
     bridge.emitLoopEvent('s1', {
       type: 'tool-result',
       toolCallId: 't1',

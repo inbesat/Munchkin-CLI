@@ -184,7 +184,7 @@ describe('BashManager', () => {
   })
 
   it('deletes sessions', () => {
-    const session = manager.getOrCreateSession({ id: 'delete-me' })
+    const _session = manager.getOrCreateSession({ id: 'delete-me' })
     expect(manager.deleteSession('delete-me')).toBe(true)
     expect(manager.getSession('delete-me')).toBeUndefined()
   })

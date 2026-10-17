@@ -256,7 +256,7 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentRunR
         if (!tool) {
           toolError = `unknown tool: ${call.name}`
         } else if (!allowed) {
-          toolError = `permission denied by user or policy`
+          toolError = 'permission denied by user or policy'
         } else {
           try {
             result = await tool.execute(call.args, signal)

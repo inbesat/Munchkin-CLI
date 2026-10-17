@@ -50,7 +50,7 @@ describe('CLI - forge auth subcommand (Phase 81)', () => {
     const keysFile = join(baseDir, 'auth', 'keys.json')
     const { readFileSync } = await import('node:fs')
     const stored = readFileSync(keysFile, 'utf-8')
-    expect(stored).not.toContain(secret!) // secret never persisted
+    expect(stored).not.toContain(secret) // secret never persisted
 
     const out3: string[] = []
     const code3 = await run(['auth', 'list', '--base-dir', baseDir], { write: (l) => out3.push(l) })
@@ -58,9 +58,10 @@ describe('CLI - forge auth subcommand (Phase 81)', () => {
     const idLine = out3.find((l) => /^[a-f0-9]{16}/.test(l))
     const id = idLine ? idLine.match(/^[a-f0-9]{16}/)?.[0] : undefined
     expect(id).toBeDefined()
+    if (id === undefined) throw new Error('key id not found in auth list output')
 
     const out4: string[] = []
-    const code4 = await run(['auth', 'revoke', id!, '--base-dir', baseDir], {
+    const code4 = await run(['auth', 'revoke', id, '--base-dir', baseDir], {
       write: (l) => out4.push(l),
     })
     expect(code4).toBe(0)

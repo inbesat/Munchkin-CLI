@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
+import { type GoalResult, clearGoal, goalIsActive, runGoalLoop, setGoal } from './goal'
 import type { AgentChunk, AgentModel } from './types'
-import { clearGoal, type GoalResult, goalIsActive, runGoalLoop, setGoal } from './goal'
 
 /** Scripted model: each stream() call plays the next turn's chunks. */
 function scriptedModel(turns: AgentChunk[][]): {
@@ -58,9 +58,7 @@ describe('runGoalLoop (Phase 101)', () => {
   })
 
   it('stops after maxGoalRounds without the sentinel', async () => {
-    const { model } = scriptedModel([
-      [text('still working'), finish()],
-    ])
+    const { model } = scriptedModel([[text('still working'), finish()]])
     const result: GoalResult = await runGoalLoop({
       model,
       task: 'impossible goal',
@@ -103,9 +101,7 @@ describe('runGoalLoop (Phase 101)', () => {
 
   it('aborts immediately when the signal fires before a round', async () => {
     const controller = new AbortController()
-    const { model, requests } = scriptedModel([
-      [text('working'), finish()],
-    ])
+    const { model, requests } = scriptedModel([[text('working'), finish()]])
     controller.abort()
     const result: GoalResult = await runGoalLoop({
       model,
@@ -135,7 +131,10 @@ describe('runGoalLoop (Phase 101)', () => {
               resolve()
             })
           })
-          yield { type: 'finish' as const, reason: sawAbort ? ('abort' as const) : ('stop' as const) }
+          yield {
+            type: 'finish' as const,
+            reason: sawAbort ? ('abort' as const) : ('stop' as const),
+          }
         })()
       },
     }

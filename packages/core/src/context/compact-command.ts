@@ -1,5 +1,10 @@
 import type { SessionEvent } from '../events'
-import { type AutoCompactor, type CompactionOptions, type CompactionResult, createAutoCompactor } from './compaction'
+import {
+  type AutoCompactor,
+  type CompactionOptions,
+  type CompactionResult,
+  createAutoCompactor,
+} from './compaction'
 
 export interface CompactCommandOptions extends CompactionOptions {
   events: SessionEvent[]
@@ -30,8 +35,10 @@ export class CompactCommand {
     const result = await this.compactor.compact(this.events, { force: true, focusInstruction })
     if (!result.success) {
       return {
-        success: false, message: `Compaction not needed or failed: ${result.error}`,
-        error: result.error, budgetSummary: this.getBudgetSummary(),
+        success: false,
+        message: `Compaction not needed or failed: ${result.error}`,
+        error: result.error,
+        budgetSummary: this.getBudgetSummary(),
       }
     }
     this.events = [...this.events, result.compactionEvent]
@@ -39,7 +46,8 @@ export class CompactCommand {
     return {
       success: true,
       message: `Compaction complete. ${result.messagesRemoved} messages summarized into 1 summary message. Tokens saved: ${result.tokensSaved.toLocaleString()}. Usage: ${Math.round(budget.usagePercent * 100)}%`,
-      compactionResult: result, budgetSummary: this.getBudgetSummary(),
+      compactionResult: result,
+      budgetSummary: this.getBudgetSummary(),
     }
   }
 
@@ -52,6 +60,8 @@ export class CompactCommand {
   }
 }
 
-export async function runCompactCommand(options: CompactCommandOptions): Promise<CompactCommandResult> {
+export async function runCompactCommand(
+  options: CompactCommandOptions,
+): Promise<CompactCommandResult> {
   return new CompactCommand(options).execute(options.focusInstruction)
 }

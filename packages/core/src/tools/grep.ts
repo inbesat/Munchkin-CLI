@@ -236,18 +236,15 @@ function parseGrepOutput(output: string): GrepMatch[] {
 function formatMatch(match: GrepMatch): string {
   const loc = `${match.file}:${match.line}`
   let out = `${loc}: ${match.content}`
-  if (match.context?.before.length) {
-    out =
-      match.context.before
-        .map((l, i) => `${match.file}:${match.line - match.context!.before.length + i}: ${l}`)
-        .join('\n') +
-      '\n' +
-      out
+  const before = match.context?.before
+  if (before !== undefined && before.length > 0) {
+    out = `${before
+      .map((l, i) => `${match.file}:${match.line - before.length + i}: ${l}`)
+      .join('\n')}\n${out}`
   }
-  if (match.context?.after.length) {
-    out +=
-      '\n' +
-      match.context.after.map((l, i) => `${match.file}:${match.line + i + 1}: ${l}`).join('\n')
+  const after = match.context?.after
+  if (after !== undefined && after.length > 0) {
+    out += `\n${after.map((l, i) => `${match.file}:${match.line + i + 1}: ${l}`).join('\n')}`
   }
   return out
 }

@@ -1,6 +1,7 @@
 import { ErrorCode, type Logger, getLogger, isForgeError } from '@forge/core'
 import type { Context, Next } from 'hono'
 import { HTTPException } from 'hono/http-exception'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import type { ErrorResponse } from '../types'
 
 export function createErrorHandlerMiddleware(logger?: Logger) {
@@ -17,7 +18,7 @@ export function createErrorHandlerMiddleware(logger?: Logger) {
           error: { code: 'HTTP_ERROR', message: err.message, details: { status: err.status } },
         }
         log.warn('HTTP exception', { requestId, status: err.status, message: err.message })
-        return c.json(response, err.status as any)
+        return c.json(response, err.status)
       }
 
       if (isForgeError(err)) {
@@ -30,7 +31,7 @@ export function createErrorHandlerMiddleware(logger?: Logger) {
           },
         }
         log.warn('Forge error', { requestId, code: err.code, message: err.message })
-        return c.json(response, status as any)
+        return c.json(response, status)
       }
 
       const message = err instanceof Error ? err.message : 'Internal server error'
@@ -47,7 +48,7 @@ export function createErrorHandlerMiddleware(logger?: Logger) {
   }
 }
 
-function forgeErrorToStatus(code: ErrorCode): number {
+function forgeErrorToStatus(code: ErrorCode): ContentfulStatusCode {
   switch (code) {
     case ErrorCode.CONFIG_INVALID:
     case ErrorCode.CONFIG_MISSING_FIELD:

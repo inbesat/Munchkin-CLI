@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { type Static, Type } from '@sinclair/typebox'
+import { Type } from '@sinclair/typebox'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 import type { PermissionMode, Tool, ToolRiskLevel, ToolScope } from './types'
 
@@ -19,10 +19,6 @@ const BashSchema = Type.Object({
   command: Type.String(),
   timeout: Type.Optional(Type.Integer({ minimum: 1000, maximum: 300000 })),
 })
-
-type ReadInput = Static<typeof ReadSchema>
-type WriteInput = Static<typeof WriteSchema>
-type BashInput = Static<typeof BashSchema>
 
 function makeTool(
   name: string,
@@ -73,7 +69,9 @@ describe('ToolRegistry', () => {
       registry.register(
         makeTool('bash', BashSchema, { scope: 'user', risk: 'high', requiresPermission: true }),
       )
-      const tool = registry.get('bash')!
+      const tool = registry.get('bash')
+      expect(tool).toBeDefined()
+      if (tool === undefined) throw new Error('bash tool missing')
       expect(tool.scope).toBe('user')
       expect(tool.risk).toBe('high')
       expect(tool.requiresPermission).toBe(true)

@@ -46,7 +46,8 @@ describe('server repair regressions', () => {
 
   it('round-trips extension config keys across server restarts', async () => {
     const response = await server.getApp().request('/api/config', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ key: 'extension.example', value: { enabled: true } }),
     })
     expect(response.status).toBe(200)
@@ -58,12 +59,20 @@ describe('server repair regressions', () => {
   })
 
   it('rejects inherited config keys and prototype pollution on every config method', async () => {
-    for (const key of ['__proto__.polluted', 'constructor.prototype.polluted', 'toString', 'a..b']) {
+    for (const key of [
+      '__proto__.polluted',
+      'constructor.prototype.polluted',
+      'toString',
+      'a..b',
+    ]) {
       for (const method of ['GET', 'DELETE', 'POST']) {
-        const res = await server.getApp().request(method === 'POST' ? '/api/config' : `/api/config/${key}`, {
-          method, headers: { 'content-type': 'application/json' },
-          ...(method === 'POST' ? { body: JSON.stringify({ key, value: true }) } : {}),
-        })
+        const res = await server
+          .getApp()
+          .request(method === 'POST' ? '/api/config' : `/api/config/${key}`, {
+            method,
+            headers: { 'content-type': 'application/json' },
+            ...(method === 'POST' ? { body: JSON.stringify({ key, value: true }) } : {}),
+          })
         expect(res.status).toBe(400)
       }
     }
@@ -88,7 +97,9 @@ describe('server repair regressions', () => {
   it('keeps docs authenticated and renders Scalar for authorized clients', async () => {
     const { secret } = await server.getAuthStore().createKey({ name: 'fixture' })
     expect((await server.getApp().request('/docs')).status).toBe(401)
-    const res = await server.getApp().request('/docs', { headers: { authorization: `Bearer ${secret}` } })
+    const res = await server
+      .getApp()
+      .request('/docs', { headers: { authorization: `Bearer ${secret}` } })
     expect(res.status).toBe(200)
     expect(await res.text()).toContain('Scalar')
   })

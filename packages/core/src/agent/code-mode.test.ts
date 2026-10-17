@@ -45,7 +45,7 @@ const mockTools: readonly AgentTool[] = [
         path: { type: 'string' },
       },
     },
-    execute: async (args) => ['file1.ts', 'file2.ts'],
+    execute: async () => ['file1.ts', 'file2.ts'],
   },
 ]
 

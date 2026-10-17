@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { mkdir, rm, writeFile } from 'fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { GlobSchema, createGlobTool } from './glob'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
-const testDir = join(tmpdir(), 'forge-glob-test-' + Date.now())
+const testDir = join(tmpdir(), `forge-glob-test-${Date.now()}`)
 
 beforeEach(async () => {
   await mkdir(testDir, { recursive: true })

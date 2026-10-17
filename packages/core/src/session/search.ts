@@ -1,4 +1,4 @@
-import type { Database } from 'bun:sqlite'
+﻿import type { Database } from 'bun:sqlite'
 import { type SessionRow, openDatabase } from '../store/schema'
 import type { SessionMeta } from '../store/session-store'
 
@@ -27,7 +27,7 @@ export class SessionSearch {
 
   search(filters: SearchFilters): SearchResult {
     const conditions: string[] = []
-    const params: any[] = []
+    const params: (string | number)[] = []
 
     if (filters.title) {
       conditions.push('title LIKE ?')

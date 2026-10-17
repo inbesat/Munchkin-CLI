@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import type { AgentChunk, AgentModel, AgentTool } from './types'
 import { BackgroundTaskManager } from './background'
-import { SessionMessageBus } from './messaging'
-import { AgentTeam } from './teams'
-import { spawnSubagent, type SpawnSubagentOptions } from './spawn'
 import { withDeadline } from './deadline'
+import { SessionMessageBus } from './messaging'
+import { type SpawnSubagentOptions, spawnSubagent } from './spawn'
+import { AgentTeam } from './teams'
+import type { AgentChunk, AgentModel, AgentTool } from './types'
 
 const text = (delta: string): AgentChunk => ({ type: 'text-delta', delta })
 const finish = (): AgentChunk => ({ type: 'finish', reason: 'stop' as const })
@@ -141,9 +141,9 @@ describe('orchestration stress tests (Phase 102)', () => {
       expect(manager.result(task.id)).toBe(`result for ${task.id}`)
     }
 
-    const workerInboxes = bus.allMessages().filter(
-      (m) => (m.to.startsWith('w') || m.to === 'coordinator') && m.to !== '*',
-    )
+    const workerInboxes = bus
+      .allMessages()
+      .filter((m) => (m.to.startsWith('w') || m.to === 'coordinator') && m.to !== '*')
     expect(workerInboxes.length).toBeGreaterThanOrEqual(delegated.length * 2)
     void results
   })

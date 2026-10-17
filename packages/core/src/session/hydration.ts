@@ -1,5 +1,5 @@
-import type { SessionEvent } from '../events'
 import { recentContextBoundary, summaryMessage } from '../context/projection'
+import type { SessionEvent } from '../events'
 import type {
   AssistantMessage,
   Message,
@@ -139,8 +139,14 @@ export function assembleMessages(events: SessionEvent[], applyCompaction = false
           flushAssistant()
           flushUser()
           const { summary, beforeCount, afterCount } = event.payload
-          if (!summary.trim() || !Number.isInteger(afterCount) || afterCount < 1 ||
-            beforeCount <= afterCount || beforeCount !== messages.length) break
+          if (
+            !summary.trim() ||
+            !Number.isInteger(afterCount) ||
+            afterCount < 1 ||
+            beforeCount <= afterCount ||
+            beforeCount !== messages.length
+          )
+            break
           const boundary = recentContextBoundary(messages, afterCount - 1)
           const systems = messages.slice(0, boundary).filter((m) => m.role === 'system')
           messages.splice(0, boundary, ...systems, summaryMessage(summary))

@@ -168,7 +168,7 @@ export class ForgeClient {
     createKey: (req: CreateKeyRequest): Promise<CreateKeyResponse> =>
       this.request<CreateKeyResponse>('POST', '/api/auth/keys', { body: req }),
     revokeKey: (id: string): Promise<RevokeKeyResponse> =>
-      this.request<RevokeKeyResponse>('DELETE', '/api/auth/keys/' + encode(id)),
+      this.request<RevokeKeyResponse>('DELETE', `/api/auth/keys/${encode(id)}`),
     usage: (): Promise<UsageResponse> => this.request<UsageResponse>('GET', '/api/auth/keys/usage'),
   }
 

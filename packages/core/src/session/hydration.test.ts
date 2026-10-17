@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+﻿import { describe, expect, it } from 'bun:test'
 import { type SessionEvent, createEvent } from '../events'
 import { assembleMessages, hydrateMessages } from './hydration'
 import { isAssistantMessage, isUserMessage } from './message'
@@ -186,12 +186,18 @@ describe('hydrateMessages', () => {
       createEvent('session.message', 's1', { role: 'assistant', content: 'old answer' }),
       createEvent('session.message', 's1', { role: 'user', content: 'recent question' }),
       createEvent('session.compaction', 's1', {
-        beforeCount: 3, afterCount: 2, summary: 'first summary', tokensSaved: 1,
+        beforeCount: 3,
+        afterCount: 2,
+        summary: 'first summary',
+        tokensSaved: 1,
       }),
       createEvent('session.message', 's1', { role: 'assistant', content: 'recent answer' }),
       createEvent('session.message', 's1', { role: 'user', content: 'latest question' }),
       createEvent('session.compaction', 's1', {
-        beforeCount: 4, afterCount: 2, summary: 'second summary', tokensSaved: 1,
+        beforeCount: 4,
+        afterCount: 2,
+        summary: 'second summary',
+        tokensSaved: 1,
       }),
     ]
     const result = hydrateMessages(events, { format: 'openai' })
@@ -206,9 +212,14 @@ describe('hydrateMessages', () => {
   it('does not apply empty failure compaction markers', () => {
     const events = makeEvents()
     const before = hydrateMessages(events, { format: 'openai' })
-    events.push(createEvent('session.compaction', 's1', {
-      beforeCount: 0, afterCount: 0, summary: '', tokensSaved: 0,
-    }))
+    events.push(
+      createEvent('session.compaction', 's1', {
+        beforeCount: 0,
+        afterCount: 0,
+        summary: '',
+        tokensSaved: 0,
+      }),
+    )
     expect(hydrateMessages(events, { format: 'openai' })).toEqual(before)
   })
 
@@ -229,11 +240,14 @@ describe('hydrateMessages', () => {
       (m) =>
         m.role === 'assistant' &&
         Array.isArray(m.content) &&
+        // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
         m.content.some((p: any) => p.type === 'tool_use'),
     )
 
     expect(assistantWithToolUse.length).toBe(1)
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const content = assistantWithToolUse[0].content as any[]
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const toolUse = content.find((p: any) => p.type === 'tool_use')
     expect(toolUse.name).toBe('bash')
     expect(toolUse.input).toEqual({ command: 'ls -la' })
@@ -287,11 +301,14 @@ describe('hydrateMessages', () => {
       (m) =>
         m.role === 'model' &&
         Array.isArray(m.content) &&
+        // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
         m.content.some((p: any) => p.type === 'functionCall'),
     )
 
     expect(modelWithFnCall.length).toBe(1)
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const content = modelWithFnCall[0].content as any[]
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
     const fnCall = content.find((p: any) => p.type === 'functionCall')
     expect(fnCall.functionCall.name).toBe('bash')
     expect(fnCall.functionCall.args).toEqual({ command: 'ls -la' })
@@ -305,6 +322,7 @@ describe('hydrateMessages', () => {
       (m) =>
         m.role === 'user' &&
         Array.isArray(m.content) &&
+        // biome-ignore lint/suspicious/noExplicitAny: test fixture shape (loosely typed mock data)
         m.content.some((p: any) => p.type === 'functionResponse'),
     )
 

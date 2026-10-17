@@ -80,7 +80,6 @@ export function computeDiff(
     case 'chars':
       rawDiff = diffChars(oldContent, newContent, { ignoreWhitespace: opts.ignoreWhitespace })
       break
-    case 'lines':
     default:
       rawDiff = diffLines(oldContent, newContent, { ignoreWhitespace: opts.ignoreWhitespace })
       break
@@ -115,7 +114,7 @@ function buildHunks(
     }
   }
 
-  function startHunk() {
+  function startHunk(): DiffHunk {
     currentHunk = {
       oldStart: oldIdx + 1,
       oldLines: 0,
@@ -123,6 +122,11 @@ function buildHunks(
       newLines: 0,
       lines: [],
     }
+    return currentHunk
+  }
+
+  function activeHunk(): DiffHunk {
+    return currentHunk ?? startHunk()
   }
 
   for (const part of rawDiff) {
@@ -130,39 +134,39 @@ function buildHunks(
     const lastEmpty = lines[lines.length - 1] === '' ? lines.pop() : null
 
     if (part.added) {
-      if (!currentHunk) startHunk()
+      const hunk = activeHunk()
       for (const line of lines) {
-        currentHunk!.lines.push({
+        hunk.lines.push({
           type: 'add',
           content: line,
           newLineNumber: newIdx + 1,
         })
-        currentHunk!.newLines++
+        hunk.newLines++
         newIdx++
       }
     } else if (part.removed) {
-      if (!currentHunk) startHunk()
+      const hunk = activeHunk()
       for (const line of lines) {
-        currentHunk!.lines.push({
+        hunk.lines.push({
           type: 'remove',
           content: line,
           oldLineNumber: oldIdx + 1,
         })
-        currentHunk!.oldLines++
+        hunk.oldLines++
         oldIdx++
       }
     } else {
       // Context lines
       for (const line of lines) {
-        if (!currentHunk) startHunk()
-        currentHunk!.lines.push({
+        const hunk = activeHunk()
+        hunk.lines.push({
           type: 'context',
           content: line,
           oldLineNumber: oldIdx + 1,
           newLineNumber: newIdx + 1,
         })
-        currentHunk!.oldLines++
-        currentHunk!.newLines++
+        hunk.oldLines++
+        hunk.newLines++
         oldIdx++
         newIdx++
       }
@@ -290,7 +294,6 @@ export function formatDiff(diff: DiffResultStructured, oldName = 'a', newName = 
       return formatSideBySideDiff(diff)
     case 'inline':
       return formatInlineDiff(diff)
-    case 'unified':
     default:
       return formatUnifiedDiff(diff, oldName, newName)
   }

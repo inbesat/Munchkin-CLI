@@ -14,13 +14,13 @@ import { VERSION, loadConfig } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { AuthStore } from './auth/store'
 import { runDoctorCommand } from './doctor/command'
-import { runUpdateCommand } from './update/command'
-import { runSetupCommand } from './setup/command'
 import { runEvalCommand } from './eval/command'
 import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
+import { runSetupCommand } from './setup/command'
 import { runStatsCommand } from './stats/command'
 import { runTelemetryCommand } from './telemetry/command'
+import { runUpdateCommand } from './update/command'
 
 export type Subcommand = 'serve' | 'rpc' | 'auth' | 'worktree' | 'help' | 'version'
 
@@ -402,7 +402,7 @@ export async function runAuthCommand(
     const keys = await store.listKeys()
     if (keys.length === 0) {
       write('No API keys configured.')
-      write(`  Create one with: forge auth create --name <name>`)
+      write('  Create one with: forge auth create --name <name>')
       return 0
     }
     write(
@@ -734,19 +734,21 @@ function parseAuthCreateFlags(argv: string[]): ParsedCreateOptions {
       const v = argv[++i]
       if (!v) return { options: { name: '' }, error: '--rate requires a value' }
       const [cap, rps] = v.split(':')
-      capacity = Number.parseInt(cap ?? '', 10)
-      refillPerSec = Number.parseFloat(rps ?? '')
+      const capacityValue = Number.parseInt(cap ?? '', 10)
+      const refillValue = Number.parseFloat(rps ?? '')
       if (
-        !Number.isFinite(capacity) ||
-        capacity! <= 0 ||
-        !Number.isFinite(refillPerSec!) ||
-        refillPerSec! <= 0
+        !Number.isFinite(capacityValue) ||
+        capacityValue <= 0 ||
+        !Number.isFinite(refillValue) ||
+        refillValue <= 0
       ) {
         return {
           options: { name: '' },
           error: `--rate expects "capacity:refillPerSec" (got "${v}")`,
         }
       }
+      capacity = capacityValue
+      refillPerSec = refillValue
     } else if (a === '--base-dir') {
       i++ // skip the value; the dispatch reads it separately
     } else if (a?.startsWith('--')) {

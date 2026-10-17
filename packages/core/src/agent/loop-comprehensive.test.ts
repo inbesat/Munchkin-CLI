@@ -1,10 +1,4 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import type {
-  AssistantMessage,
-  ToolCallPart,
-  ToolResultPart,
-  UserMessage,
-} from '../session/message'
 import { InterruptController } from './interrupt'
 import { type AgentLoopOptions, type LoopEvent, runAgentLoop } from './loop'
 import { SteeringController } from './steering'
@@ -84,24 +78,6 @@ class MockModel implements AgentModel {
 // Test Helpers
 // ============================================================================
 
-function createUserMessage(content: string): UserMessage {
-  return { role: 'user', parts: [{ type: 'text', text: content }], content }
-}
-
-function createAssistantMessage(content: string, toolCalls?: ToolCallPart[]): AssistantMessage {
-  const parts: MessagePart[] = [{ type: 'text', text: content }]
-  if (toolCalls) parts.push(...toolCalls)
-  return { role: 'assistant', parts, content, toolCalls }
-}
-
-function createToolResultMessage(results: ToolResultPart[]): UserMessage {
-  return {
-    role: 'user',
-    parts: results,
-    content: results.map((r) => `[${r.toolName}] ${r.error ?? r.result}`).join('\n'),
-  }
-}
-
 // ============================================================================
 // Mock Tools
 // ============================================================================
@@ -139,15 +115,6 @@ const slowTool: AgentTool = {
       )
     })
     return 'done'
-  },
-}
-
-const readFileTool: AgentTool = {
-  name: 'readFile',
-  description: 'Read a file',
-  parameters: { type: 'object', properties: { path: { type: 'string' } } },
-  execute: async (args: Record<string, unknown>) => {
-    return `Content of ${args.path}`
   },
 }
 
@@ -558,7 +525,7 @@ describe('Agent Loop - Comprehensive Tests', () => {
       const events: LoopEvent[] = []
       let injectCount = 0
 
-      const result = await runAgentLoop({
+      await runAgentLoop({
         ...baseOptions,
         tools: [echoTool],
         maxIterations: 5,
@@ -839,9 +806,11 @@ describe('Agent Loop - Comprehensive Tests', () => {
       })
 
       // Verify tool call IDs are preserved (property is toolCallId)
-      const toolCalls = partialResult.messages.flatMap((m) => (m as any).toolCalls ?? [])
+      const toolCalls = partialResult.messages.flatMap((m) =>
+        m.role === 'assistant' ? (m.toolCalls ?? []) : [],
+      )
       expect(toolCalls.length).toBe(1)
-      expect(toolCalls[0].toolCallId).toBe('call-1')
+      expect(toolCalls[0] !== undefined ? toolCalls[0].toolCallId : '').toBe('call-1')
     })
   })
 })

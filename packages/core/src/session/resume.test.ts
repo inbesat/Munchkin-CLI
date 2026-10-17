@@ -3,7 +3,31 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { SessionLog, createEvent } from '../events'
-import { getResumePoint, hasIncompleteToolCalls, resumeSession } from './resume'
+import {
+  type ResumedSession,
+  getResumePoint,
+  hasIncompleteToolCalls,
+  resumeSession,
+} from './resume'
+
+/** Build a full ResumedSession from a partial override (test fixture). */
+function resumeState(overrides: Record<string, unknown>): ResumedSession {
+  return {
+    sessionId: 's-test',
+    model: 'test-model',
+    cwd: '/tmp',
+    messages: [],
+    pendingToolCalls: [],
+    completedToolCalls: [],
+    errors: [],
+    compactions: [],
+    lastEventTimestamp: 0,
+    eventCount: 0,
+    totalTokens: { input: 0, output: 0 },
+    ended: false,
+    ...overrides,
+  } as ResumedSession
+}
 
 let tempDir: string
 
@@ -316,60 +340,70 @@ describe('resumeSession', () => {
 describe('hasIncompleteToolCalls', () => {
   it('returns true when pending tool calls exist', () => {
     expect(
-      hasIncompleteToolCalls({
-        pendingToolCalls: [{ toolCallId: 'tc-1', toolName: 'bash', args: {}, calledAt: 0 }],
-      } as any),
+      hasIncompleteToolCalls(
+        resumeState({
+          pendingToolCalls: [{ toolCallId: 'tc-1', toolName: 'bash', args: {}, calledAt: 0 }],
+        }),
+      ),
     ).toBe(true)
   })
 
   it('returns false when no pending tool calls', () => {
-    expect(hasIncompleteToolCalls({ pendingToolCalls: [] } as any)).toBe(false)
+    expect(hasIncompleteToolCalls(resumeState({ pendingToolCalls: [] }))).toBe(false)
   })
 })
 
 describe('getResumePoint', () => {
   it('reports cannot resume if ended', () => {
-    const result = getResumePoint({ ended: true, pendingToolCalls: [], messages: [] } as any)
+    const result = getResumePoint(resumeState({ ended: true, pendingToolCalls: [], messages: [] }))
     expect(result.canResume).toBe(false)
     expect(result.reason).toContain('ended')
   })
 
   it('reports pending tool calls', () => {
-    const result = getResumePoint({
-      ended: false,
-      pendingToolCalls: [{ toolCallId: 'tc-1', toolName: 'bash', args: {}, calledAt: 0 }],
-      messages: [],
-    } as any)
+    const result = getResumePoint(
+      resumeState({
+        ended: false,
+        pendingToolCalls: [{ toolCallId: 'tc-1', toolName: 'bash', args: {}, calledAt: 0 }],
+        messages: [],
+      }),
+    )
     expect(result.canResume).toBe(true)
     expect(result.reason).toContain('incomplete tool call')
   })
 
   it('reports pending assistant response after user message', () => {
-    const result = getResumePoint({
-      ended: false,
-      pendingToolCalls: [],
-      messages: [{ role: 'user', content: 'hello' }],
-    } as any)
+    const result = getResumePoint(
+      resumeState({
+        ended: false,
+        pendingToolCalls: [],
+        messages: [{ role: 'user', content: 'hello' }],
+      }),
+    )
     expect(result.canResume).toBe(true)
     expect(result.reason).toContain('user')
   })
 
   it('reports interrupted after assistant message', () => {
-    const result = getResumePoint({
-      ended: false,
-      pendingToolCalls: [],
-      messages: [{ role: 'assistant', content: 'hi' }],
-    } as any)
+    const result = getResumePoint(
+      resumeState({
+        ended: false,
+        pendingToolCalls: [],
+        messages: [{ role: 'assistant', content: 'hi' }],
+      }),
+    )
     expect(result.canResume).toBe(true)
     expect(result.reason).toContain('interrupted')
   })
 
   it('reports can resume with no messages', () => {
-    const result = getResumePoint({
-      ended: false,
-      pendingToolCalls: [],
-      messages: [],
-    } as any)
+    const result = getResumePoint(
+      resumeState({
+        ended: false,
+        pendingToolCalls: [],
+        messages: [],
+      }),
+    )
     expect(result.canResume).toBe(true)
   })
 })

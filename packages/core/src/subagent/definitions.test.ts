@@ -83,7 +83,10 @@ describe('loadAgentDefinitions (Phase 94)', () => {
     }
 
     const options = definitionToSpawnOptions(
-      reviewer ?? (() => { throw new Error('reviewer definition not loaded') })(),
+      reviewer ??
+        (() => {
+          throw new Error('reviewer definition not loaded')
+        })(),
       { model, tools: registry },
       { task: 'Review the diff.' },
     )

@@ -57,11 +57,10 @@ export class SessionMessageBus {
   /** Get (and lazily create) the inbox for a session. */
   inbox(sessionId: string): SessionInbox {
     if (!this.cursors.has(sessionId)) this.cursors.set(sessionId, 0)
-    const bus = this
     return {
-      receive: (filter?: SessionMessageFilter) => bus.receive(sessionId, filter),
+      receive: (filter?: SessionMessageFilter) => this.receive(sessionId, filter),
       subscribe: (listener: (message: SessionMessage) => void) =>
-        bus.subscribe(sessionId, undefined, listener),
+        this.subscribe(sessionId, undefined, listener),
     }
   }
 

@@ -51,7 +51,7 @@ export class CostQueries {
       FROM token_usage
     `
     const conditions: string[] = []
-    const params: any[] = []
+    const params: string[] = []
 
     if (startDate) {
       conditions.push("date(timestamp / 1000, 'unixepoch', 'localtime') >= ?")
@@ -82,7 +82,7 @@ export class CostQueries {
       FROM token_usage
       WHERE model = ?
     `
-    const params: any[] = [model]
+    const params: string[] = [model]
 
     if (startDate) {
       query += " AND date(timestamp / 1000, 'unixepoch', 'localtime') >= ?"

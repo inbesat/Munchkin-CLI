@@ -21,7 +21,10 @@ export function createConfigRoutes(logger?: Logger, baseDir?: string) {
     configKeyParts(key)
     const value = await store.get(key)
     if (value === undefined) {
-      return c.json({ error: { code: 'CONFIG_NOT_FOUND', message: `Config key ${key} not found` } }, 404)
+      return c.json(
+        { error: { code: 'CONFIG_NOT_FOUND', message: `Config key ${key} not found` } },
+        404,
+      )
     }
     return c.json<ConfigResponse>({ key, value })
   })
@@ -34,7 +37,10 @@ export function createConfigRoutes(logger?: Logger, baseDir?: string) {
   app.delete('/:key', async (c) => {
     const key = c.req.param('key')
     if (!(await store.update(key, undefined, c.req.query('scope'), true))) {
-      return c.json({ error: { code: 'CONFIG_NOT_FOUND', message: `Config key ${key} not found` } }, 404)
+      return c.json(
+        { error: { code: 'CONFIG_NOT_FOUND', message: `Config key ${key} not found` } },
+        404,
+      )
     }
     log.info('Config deleted', { key })
     return c.json({ success: true })

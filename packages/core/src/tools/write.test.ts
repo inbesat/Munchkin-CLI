@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { mkdir, readFile, rm } from 'fs/promises'
+import { mkdir, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 import { WriteSchema, createWriteTool } from './write'
 
-const testDir = join(tmpdir(), 'forge-write-test-' + Date.now())
+const testDir = join(tmpdir(), `forge-write-test-${Date.now()}`)
 const newFile = join(testDir, 'new.txt')
 const existingFile = join(testDir, 'existing.txt')
 

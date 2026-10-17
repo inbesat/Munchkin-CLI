@@ -244,19 +244,19 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
     })
 
     it('redacts access_token: value', () => {
-      const text = `access_token: abcdefghijklmnopqrstuvwxyz123456`
+      const text = 'access_token: abcdefghijklmnopqrstuvwxyz123456'
       const result = redact(text, defaultConfig)
       expect(result.count).toBe(1)
     })
 
     it('redacts password=value', () => {
-      const text = `password=mypassword123`
+      const text = 'password=mypassword123'
       const result = redact(text, defaultConfig)
       expect(result.count).toBe(1)
     })
 
     it('redacts secret_key=value', () => {
-      const text = `secret_key=abcdefghijklmnopqrstuvwxyz`
+      const text = 'secret_key=abcdefghijklmnopqrstuvwxyz'
       const result = redact(text, defaultConfig)
       expect(result.count).toBe(1)
     })

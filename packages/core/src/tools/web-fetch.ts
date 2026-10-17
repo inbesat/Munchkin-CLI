@@ -77,31 +77,25 @@ export function htmlToMarkdown(html: string): string {
 
   // Lists
   md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_m: string, inner: string) => {
-    return (
-      inner.replace(
-        /<li[^>]*>([\s\S]*?)<\/li>/gi,
-        (_m: string, content: string) => `- ${content}\n`,
-      ) + '\n'
-    )
+    return `${inner.replace(
+      /<li[^>]*>([\s\S]*?)<\/li>/gi,
+      (_m: string, content: string) => `- ${content}\n`,
+    )}\n`
   })
   md = md.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m: string, inner: string) => {
     let i = 0
-    return (
-      inner.replace(
-        /<li[^>]*>([\s\S]*?)<\/li>/gi,
-        (_m: string, content: string) => `${++i}. ${content}\n`,
-      ) + '\n'
-    )
+    return `${inner.replace(
+      /<li[^>]*>([\s\S]*?)<\/li>/gi,
+      (_m: string, content: string) => `${++i}. ${content}\n`,
+    )}\n`
   })
 
   // Blockquotes
   md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_m: string, inner: string) => {
-    return (
-      inner
-        .split('\n')
-        .map((l: string) => `> ${l.trim()}`)
-        .join('\n') + '\n\n'
-    )
+    return `${inner
+      .split('\n')
+      .map((l: string) => `> ${l.trim()}`)
+      .join('\n')}\n\n`
   })
 
   // Horizontal rule

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { mkdir, rm, writeFile } from 'fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ReadSchema, createReadTool } from './read'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
-const testDir = join(tmpdir(), 'forge-read-test-' + Date.now())
+const testDir = join(tmpdir(), `forge-read-test-${Date.now()}`)
 const testFile = join(testDir, 'test.txt')
 const multiLineFile = join(testDir, 'multiline.txt')
 
