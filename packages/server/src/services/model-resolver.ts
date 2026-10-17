@@ -6,7 +6,7 @@ import {
 } from '@forge/ai'
 import type { AgentModel } from '@forge/core'
 import { ForgeError } from '@forge/core'
-import { ErrorCode } from '@forge/core'
+import { ErrorCode, loadConfig } from '@forge/core'
 
 /**
  * Resolves a model identifier to a runnable {@link AgentModel}.
@@ -23,6 +23,11 @@ export interface ModelResolverOptions {
   googleApiKey?: string
   forgeFreeApiKey?: string
   forgeFreeBaseUrl?: string
+  /**
+   * Phase 151: config-stored key lookup (`providers.<name>.apiKey`). Defaults
+   * to reading the on-disk config; tests inject a stub.
+   */
+  configKeyLookup?: (provider: string) => string | undefined
 }
 
 const KNOWN_PROVIDERS: Record<string, string[]> = {
@@ -40,8 +45,35 @@ function guessProvider(modelId: string): string {
   return 'openai'
 }
 
-function requireKey(provider: string, key: string | undefined, env: string): string {
-  const value = key ?? process.env[env]
+/**
+ * Expands a `$ENV_VAR` reference stored in config (`providers.<n>.apiKey`);
+ * literal values pass through. Exported for tests.
+ */
+export function expandKeyReference(
+  raw: string,
+  env: Record<string, string | undefined> = process.env,
+): string | undefined {
+  return raw.startsWith('$') ? env[raw.slice(1)] : raw
+}
+
+/** Reads `providers.<name>.apiKey` from the on-disk config, if present. */
+function configKeyFromDisk(provider: string): string | undefined {
+  try {
+    const { config } = loadConfig()
+    const raw = config.providers?.[provider]?.apiKey
+    return raw === undefined ? undefined : expandKeyReference(raw)
+  } catch {
+    return undefined
+  }
+}
+
+function requireKey(
+  provider: string,
+  key: string | undefined,
+  env: string,
+  configKeyLookup?: (provider: string) => string | undefined,
+): string {
+  const value = key ?? process.env[env] ?? configKeyLookup?.(provider)
   if (!value) {
     throw new ForgeError(
       ErrorCode.PROVIDER_AUTH_FAILED,
@@ -64,6 +96,7 @@ function assertModel(model: unknown, provider: string, name: string): AgentModel
  * provider) to a preset model built from the AI package's preset factories.
  */
 export function createModelResolver(options: ModelResolverOptions = {}): ModelResolver {
+  const configKeyLookup = options.configKeyLookup ?? configKeyFromDisk
   return async (modelId: string): Promise<AgentModel> => {
     const segments = modelId.split('/')
     const provider = (segments.length > 1 ? segments[0] : guessProvider(modelId)).toLowerCase()
@@ -71,15 +104,20 @@ export function createModelResolver(options: ModelResolverOptions = {}): ModelRe
 
     switch (provider) {
       case 'anthropic': {
-        const key = requireKey('anthropic', options.anthropicApiKey, 'ANTHROPIC_API_KEY')
+        const key = requireKey(
+          'anthropic',
+          options.anthropicApiKey,
+          'ANTHROPIC_API_KEY',
+          configKeyLookup,
+        )
         return assertModel(createAnthropicPresetModel(name, key), 'anthropic', name)
       }
       case 'openai': {
-        const key = requireKey('openai', options.openaiApiKey, 'OPENAI_API_KEY')
+        const key = requireKey('openai', options.openaiApiKey, 'OPENAI_API_KEY', configKeyLookup)
         return assertModel(createOpenAIPresetModel(name, key), 'openai', name)
       }
       case 'google': {
-        const key = requireKey('google', options.googleApiKey, 'GOOGLE_API_KEY')
+        const key = requireKey('google', options.googleApiKey, 'GOOGLE_API_KEY', configKeyLookup)
         return assertModel(createGooglePresetModel(name, key), 'google', name)
       }
       case 'forge-free':

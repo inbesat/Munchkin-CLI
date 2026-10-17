@@ -10,11 +10,12 @@
  */
 
 import { join } from 'node:path'
-import { VERSION } from '@forge/core'
+import { VERSION, loadConfig } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { AuthStore } from './auth/store'
 import { runDoctorCommand } from './doctor/command'
 import { runUpdateCommand } from './update/command'
+import { runSetupCommand } from './setup/command'
 import { runEvalCommand } from './eval/command'
 import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
@@ -51,6 +52,7 @@ Usage:
   forge telemetry <status|on|off>
   forge doctor [--json] [--online]
   forge update [--json]
+  forge setup [--yes]
   forge help
   forge version
 
@@ -87,6 +89,7 @@ Examples:
   forge doctor                       # diagnose the installation
   forge doctor --json --online       # machine-readable, probe provider reachability
   forge update                       # check npm for a newer forge version
+  forge setup                        # first-run onboarding wizard
 `
 
 /**
@@ -288,6 +291,10 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   // Phase 150: `forge update [--json]` - check npm for a newer version.
   if (argv[0] === 'update') {
     return runUpdateCommand(argv, { write })
+  }
+  // Phase 151: `forge setup [--yes]` - first-run onboarding wizard.
+  if (argv[0] === 'setup') {
+    return runSetupCommand(argv, { write })
   }
   // Phase 137/139: `forge -p "prompt"` - one-shot print mode; `--json` emits
   // structured output for automation. Piped stdin combines with the prompt.
@@ -503,6 +510,19 @@ async function readPipedStdin(): Promise<string | undefined> {
  * success / 1 on error. `opts.model` is injectable for tests.
  * Phase 138: `opts.stdin` (piped input) is combined with the prompt.
  */
+/**
+ * Phase 151: default model from the user/project config (`provider/model`),
+ * used by print mode when neither `--model` nor `FORGE_MODEL` is set.
+ */
+function configuredModelId(): string | undefined {
+  try {
+    const { config } = loadConfig()
+    return `${config.model.provider}/${config.model.model}`
+  } catch {
+    return undefined
+  }
+}
+
 export async function runPrintMode(
   prompt: string,
   opts: {
@@ -537,7 +557,9 @@ export async function runPrintMode(
         openaiApiKey: process.env.OPENAI_API_KEY,
         googleApiKey: process.env.GOOGLE_API_KEY,
       })
-      model = await resolve(opts.modelId ?? process.env.FORGE_MODEL ?? 'claude-sonnet-4-6')
+      model = await resolve(
+        opts.modelId ?? process.env.FORGE_MODEL ?? configuredModelId() ?? 'claude-sonnet-4-6',
+      )
     } catch (error) {
       errorWrite(`error: ${error instanceof Error ? error.message : String(error)}`)
       return 1
