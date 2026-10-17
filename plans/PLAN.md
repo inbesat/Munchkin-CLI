@@ -2962,7 +2962,7 @@ Each phase contains:
 - API module: connect succeeds against in-process ForgeServer (`/health` 200) and fails `{ok:false}` for unreachable ports; `listSessionSummaries` returns ≥1 after creating a session through the SDK; `sendPrompt` against the offline model returns the model's completion.
 - Typecheck + biome clean; no native toolchain required for the gate (device/emulator run documented as human step).
 
-**Status (2026-10-17):** Implemented — see the ledger row and commit `mobile:`.
+**Status (2026-10-17):** Implemented — ledger row in plans/AUDIT_REPAIR_STATUS.md; commit `f3e91fd` (CI green, run 39022784184).
 
 **Estimated Hours:** 8–12 hours.
 
