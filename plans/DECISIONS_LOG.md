@@ -692,3 +692,12 @@ ADR-041 through ADR-044 below are **reconstructed from session facts supplied by
 ### ADR-045 repair qualification (2026-10-16)
 
 The ADR-045 text above is retained as historical evidence, not a current acceptance decision. The audit disproved the Phase 84–86 completion claims. Phase 86 remains **implemented-under-repair** until the coordinator records final verification. Phase 87 remains pending; neither this historical ADR nor the recovered roadmap authorizes its implementation. Test counts quoted in old ADRs are historical and must not be substituted for fresh package/workspace verification.
+
+### ADR-046 Phase 152 site frameworks + demo capture (2026-10-17)
+
+- **Decision:** The documentation site uses **VitePress** (`packages/docs`, served under `<site>/docs/`) and the landing page uses **Astro** (`packages/landing`, served at the site root, replacing the plugin docs as the root page). GIF demos are pre-rendered assets: terminal-style HTML frames that replay verbatim, verified CLI output, captured with Playwright and assembled with the already-installed ffmpeg.
+- **Context:** STACK.md lists "VitePress or Docusaurus" and "Astro or Next.js" without a tie-break; Phase 152 requires both a docs site and a landing page plus GIF demos. GitHub Pages already deploys the `dist-docs` artifact via `.github/workflows/docs-pages.yml`.
+- **Alternatives rejected:**
+  - Docusaurus (docs) / Next.js (landing): heavier dependency and SSR footprint for two static properties. Both remain approved STACK options if the site later needs versioning/i18n (docs) or app routing (landing).
+  - Recording real terminal sessions with vhs/ttyd: requires installing a new tool on the dev machine; until that is agreed, frames replay real output captured in verified smoke runs instead.
+- **Consequences:** Two new private workspace packages holding their own dependencies; no runtime code depends on them. The Pages artifact becomes landing (root) + docs (`/docs/`) + generated plugin docs (`/plugins/`); enabling GitHub Pages remains a manual repository step.

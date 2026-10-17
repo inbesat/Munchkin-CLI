@@ -1,0 +1,18 @@
+{
+  "name": "@forge/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun run src/generate-cli-reference.ts && vitepress build src",
+    "dev": "vitepress dev src",
+    "test": "bun test",
+    "lint": "biome check src/ tests/",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "typescript": "^5.7.0",
+    "vitepress": "^1.6.3"
+  }
+}

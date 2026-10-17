@@ -10,6 +10,14 @@ coverage/
 __pycache__/
 .forge/
 
+# Docs site build outputs (Phase 152)
+packages/docs/build/
+packages/landing/.astro/
+dist-docs/
+
+# Playwright MCP session artifacts
+.playwright-mcp/
+
 # Single-binary build outputs (scripts/build-binary.ts)
 forge-linux-*
 forge-darwin-*
