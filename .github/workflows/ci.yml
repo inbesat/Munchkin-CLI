@@ -40,6 +40,9 @@ jobs:
       - name: Test
         run: bun run test
 
+      - name: Test build scripts
+        run: bun test scripts
+
   # Validate PR metadata
   pr-check:
     name: PR Check

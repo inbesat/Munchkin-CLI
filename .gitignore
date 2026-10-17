@@ -9,3 +9,8 @@ dist/
 coverage/
 __pycache__/
 .forge/
+
+# Single-binary build outputs (scripts/build-binary.ts)
+forge-linux-*
+forge-darwin-*
+forge-win-*

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "build:binary": "bun run scripts/build-binary.ts",
     "test": "turbo test",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",

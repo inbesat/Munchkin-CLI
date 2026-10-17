@@ -40,11 +40,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build
-        run: bun run build
+      # The TUI workspace is not needed for the CLI binary and its build is
+      # currently broken (separate repair stream); build only what the server
+      # binary imports.
+      - name: Build CLI dependencies
+        run: bunx turbo build --filter=@forge/server...
 
+      # Phase 149: compiles packages/server/src/bin/forge.ts (the real CLI
+      # entry) for the matrix target and smoke-runs it on native runners.
       - name: Compile binary
-        run: bun build --compile --target=bun-${{ matrix.target }} packages/server/src/index.ts --outfile forge-${{ matrix.target }}
+        run: bun run scripts/build-binary.ts --target ${{ matrix.target }} --smoke
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
