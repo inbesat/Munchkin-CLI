@@ -1,3 +1,7 @@
+import { randomUUID } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ErrorCode, ToolError } from '../errors'
 
 /** Shell session state. */
@@ -9,6 +13,8 @@ export interface ShellSession {
   env: Record<string, string | undefined>
   /** Working directory for this session. */
   cwd: string
+  /** Scratch directory for env/cwd capture files (created per session). */
+  readonly scratchDir: string
 }
 
 /** Options for creating a shell session. */
@@ -64,7 +70,9 @@ export class BashManager {
         lastUsedAt: Date.now(),
         env: { ...process.env, ...options.env },
         cwd: options.cwd ?? process.cwd(),
+        scratchDir: join(tmpdir(), `forge-shell-${id}-${randomUUID().slice(0, 8)}`),
       }
+      mkdirSync(session.scratchDir, { recursive: true })
       this.sessions.set(id, session)
     } else {
       // Update last used time
@@ -122,8 +130,19 @@ export class BashManager {
     const startTime = Date.now()
     let timedOut = false
 
+    // Wrap the command so the resulting environment + working directory are
+    // persisted to the session scratch dir. This is what makes the session
+    // actually persistent: `export FOO=…` / `cd …` survive across execute()
+    // calls, because each call re-reads the captured state.
+    const envFile = join(session.scratchDir, 'env.dump')
+    const cwdFile = join(session.scratchDir, 'cwd.txt')
+    // bash single-quoted literal; backslashes stay literal inside quotes
+    const envArg = envFile.replaceAll("'", "'\\''")
+    const cwdArg = cwdFile.replaceAll("'", "'\\''")
+    const wrapped = `${command}\n__forge_ec=$?\nenv -0 > '${envArg}' 2>/dev/null\npwd > '${cwdArg}' 2>/dev/null\nexit $__forge_ec`
+
     try {
-      const proc = Bun.spawn(['bash', '-c', command], {
+      const proc = Bun.spawn(['bash', '-c', wrapped], {
         cwd,
         env,
         stdout: 'pipe',
@@ -151,10 +170,23 @@ export class BashManager {
 
       const durationMs = Date.now() - startTime
 
-      // Update session state (cwd might have changed via `cd`)
+      // Update session state from the capture files (env exports, `cd`).
       session.lastUsedAt = Date.now()
-      // Note: In a real implementation, we'd track cwd changes from `cd` commands
-      // For now, we rely on explicit cwd option
+      if (!timedOut) {
+        if (existsSync(envFile)) {
+          const dump = readFileSync(envFile, 'utf8')
+          const captured: Record<string, string | undefined> = {}
+          for (const entry of dump.split('\0')) {
+            const eq = entry.indexOf('=')
+            if (eq > 0) captured[entry.slice(0, eq)] = entry.slice(eq + 1)
+          }
+          session.env = captured
+        }
+        if (existsSync(cwdFile)) {
+          const capturedCwd = readFileSync(cwdFile, 'utf8').trim()
+          if (capturedCwd !== '') session.cwd = capturedCwd
+        }
+      }
 
       return {
         exitCode: timedOut ? null : exitCode,

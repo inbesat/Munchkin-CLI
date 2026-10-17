@@ -40,8 +40,11 @@ export interface BashResult extends ToolResult {
   }
 }
 
+/** Shared default manager: sessions created via createShellSession are usable by tools that use the default manager. */
+const defaultManager = new BashManager()
+
 /** Create the Bash tool with a manager instance. */
-export function createBashTool(manager: BashManager = new BashManager()): Tool {
+export function createBashTool(manager: BashManager = defaultManager): Tool {
   return {
     name: 'bash',
     description: 'Execute shell commands. Supports persistent sessions for environment state.',
@@ -167,7 +170,7 @@ export function createBashTool(manager: BashManager = new BashManager()): Tool {
 /** Default bash tool instance. */
 export const bashTool = createBashTool()
 
-/** Helper to create a new shell session. */
+/** Helper to create a new shell session (attached to the shared default manager). */
 export function createShellSession(options?: CreateSessionOptions): ShellSession {
-  return new BashManager().getOrCreateSession(options)
+  return defaultManager.getOrCreateSession(options)
 }

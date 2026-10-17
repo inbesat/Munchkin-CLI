@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { BashSchema, createBashTool, createShellSession } from './bash'
+import { BashSchema, createBashTool } from './bash'
 import { BashManager } from './bash-manager'
 import { ToolRegistry, createToolRegistryConfig } from './registry'
 
@@ -67,8 +67,8 @@ describe('bashTool', () => {
   })
 
   it.skipIf(!hasBash)('isolates sessions - different sessions have different env', async () => {
-    const session1 = createShellSession()
-    const session2 = createShellSession()
+    const session1 = manager.getOrCreateSession()
+    const session2 = manager.getOrCreateSession()
 
     await tool.execute({ command: 'export MY_VAR=session1', sessionId: session1.id })
     await tool.execute({ command: 'export MY_VAR=session2', sessionId: session2.id })
@@ -105,7 +105,7 @@ describe('bashTool', () => {
   })
 
   it.skipIf(!hasBash)('creates new session when newShell=true', async () => {
-    const session1 = createShellSession()
+    const session1 = manager.getOrCreateSession()
     await tool.execute({ command: 'export FOO=bar', sessionId: session1.id })
 
     const result = await tool.execute({
