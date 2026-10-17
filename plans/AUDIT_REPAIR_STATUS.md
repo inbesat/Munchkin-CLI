@@ -439,3 +439,23 @@ See [Approved repair checklist](AUDIT_REPAIR_PLAN.md), [Recovered roadmap](PLAN.
 | 153 Launch Materials | root `launch/` (show-hn, twitter-thread, reddit-post, discord-setup + machine-validated `discord-config.json`, README index w/ pre-flight checklist) + root `README.md` (badges, hero, 3 demo GIFs, feature/package tables, honest status) + `scripts/launch-materials.test.ts` | 11/11 green (link resolution across all drafts, https-only externals, zero placeholder tokens, Discord config structure, GIF existence + magic, badge↔workflow match, grounded claims) | scripts suite 30/0; biome 0 new file; 142 assertions; publishing/Discord/Pages = documented human steps (launch/README.md) |
 | 154 Post-Launch: Community + Roadmap | `.github/ISSUE_TEMPLATE/{config,bug_report,feature_request}.yml`, root `ROADMAP.md` (shipped table, sharp edges, committed next, exploratory), `docs/bounty.md` (PROPOSED-tier charter + claim flow + quality bar), README cross-links, `scripts/governance.test.ts` | 10/10 green (template sections/labels, honesty guards, link resolution, PROPOSED-only dollar amounts, README links) | scripts suite 40/0; biome 0; v0.1.0 tag push + Pages enablement = the two human triggers (launch/README.md pre-flight); STAGE 15 CLOSED (149-154) |
 - Stage 15 (Distribution & Polish, 149-154) CLOSED: 6/6 phases implemented.
+
+---
+
+## CI platform-verification repairs (2026-10-17)
+
+First Linux CI run exercised suites that had only ever run on this Windows
+machine and exposed platform debt. All fixed and verified green (CI run
+39019789417, commit 336fc9e):
+
+| Area | Defect | Fix |
+| --- | --- | --- |
+| Workspace lint | 75+ stale files across sdk/ai/server/core (sdk stash was CI's first hard fail) | full biome pass + manual fixes; unsafe-fix regressions in rules.ts / ui-contract.ts correctly restored with narrowing guards |
+| git/checkpoints/rewind | same-millisecond savedAt collisions resolved wrong entries on fast machines | journal-position selection (rewindTo) |
+| core/permissions/boundaries | hasPathTraversal missed backslash traversal on POSIX; tests pinned Windows drive forms | separator-agnostic traversal split; tests are platform-parametric (drive vs POSIX root) |
+| server tools/execute | bash case used Bun $ tagged template - escaped interpolation spawned a binary named "echo hello" (exit 1 on every platform; misattributed as Windows-only) | real shell via Bun.spawn (cmd.exe /c | bash -c), preserving the 500 contract; server suite now 286+/0-fail locally (known-fail list retired) |
+| core/tools/bash sessions | persistent sessions never captured env/cwd mutations; createShellSession used a throwaway manager | session scratch-dir env -0/pwd capture on each execute; module-level default manager shared by createShellSession + default tool |
+| workflows | docs build raced @forge/core dist; CI inherited the broken TUI; ripgrep missing on runner | sequential server-closure build; @forge/tui carved out of CI gates pending its repair stream; apt ripgrep step |
+
+- Remaining human steps: ANTHROPIC_API_KEY secret (`gh secret set ANTHROPIC_API_KEY -b "<key>"`, then `gh run rerun 39012346025 --failed`) to publish v0.1.0 binaries; Discord server creation; npm rename + publish decision.
+- Next: user decision point (no executable blueprint phase remains).
