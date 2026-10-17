@@ -2799,6 +2799,8 @@ Each phase contains:
 
 **Testing:** Run `/doctor`. Verify all checks run and report correctly.
 
+**Status (2026-10-17):** Implemented as `forge doctor [--json] [--online]` (`packages/server/src/doctor/command.ts`, dispatched from `cli.ts`; the TUI `/doctor` slash command maps to it). Seven checks run in order and report ok/warn/fail: bun runtime (>= 1.2.0), OpenTUI (`@opentui/solid` version read from the TUI workspace, warn when absent), providers (configured env keys; `--online` adds HEAD reachability probes of configured provider base URLs, unreachable -> warn), MCP servers (configured/enabled counts), plugins (configured/enabled), config validity (global/project/local files must parse as JSON and pass schema validation against the merged defaults; problems fail the command), and permissions (mode + rule count). Human output is a labelled table plus `N checks: ok / warn / fail`; `--json` emits `{checks, ok, warn, fail, passed}`; the exit code is 1 only when a check fails. Tests: 8 green (all seven checks deterministic via injected config/env/tuiDir; OpenTUI version detection; invalid JSON and schema-error reporting; provider probes reachable/unreachable; human exit 0; fail exit 1; JSON shape; CLI dispatcher). Server suite 262 pass / 2 fail (known bash-on-Windows; the flaky EBUSY repairs test passed this run); tsc 0; biome 0 on new code; build clean; built-CLI smoke: `forge doctor` (6 ok / 1 warn, exit 0), `--json` shape, live `--online` probe reported `anthropic: reachable`.
+
 **Estimated Hours:** 4–5 hours.
 
 ---
