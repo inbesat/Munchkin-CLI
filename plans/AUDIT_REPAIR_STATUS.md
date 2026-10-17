@@ -458,4 +458,12 @@ machine and exposed platform debt. All fixed and verified green (CI run
 | workflows | docs build raced @forge/core dist; CI inherited the broken TUI; ripgrep missing on runner | sequential server-closure build; @forge/tui carved out of CI gates pending its repair stream; apt ripgrep step |
 
 - Remaining human steps: ANTHROPIC_API_KEY secret (`gh secret set ANTHROPIC_API_KEY -b "<key>"`, then `gh run rerun 39012346025 --failed`) to publish v0.1.0 binaries; Discord server creation; npm rename + publish decision.
-- Next: user decision point (no executable blueprint phase remains).
+
+---
+
+## Roadmap execution (2026-10-17): Phase 155 implemented (first stretch phase)
+
+| Phase | Deliverable | Tests | Checks |
+| --- | --- | --- | --- |
+| 155 Mobile Companion App Foundation | `packages/mobile` (Expo/React Native): Connect/Sessions/Session screens; `ConnectionStorage` seam (AsyncStorage-shaped, memory adapter); `ForgeMobileApi` (connect/listSessions/listEvents/sendPrompt) over plain fetch with SDK type-only imports; phase file elaborated in plans/PLAN.md on user instruction | mobile 18/18 green (config round-trip/overwrite/corrupt-recovery/clear/storage-failure-results; API wire contract via injected fetch: bearer header, health probe, unreachable + timeout paths, lazy session create + prompt reuse, agent-loop error surfacing, encoded event paths, empty-prompt rejection) | mobile tsc 0 (expo/tsconfig.base.json + esnext module); biome 0; suite runs headless — device/emulator run = human step (README) |
+- Next: stretch 156-164 remain placeholder titles — elaborate on explicit user instruction only; remaining human steps unchanged (release secret, Discord, npm rename).

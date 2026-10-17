@@ -1,0 +1,1 @@
+{"extends": "expo/tsconfig.base.json", "compilerOptions": {"module": "esnext", "moduleResolution": "bundler", "strict": true, "jsx": "react-jsx", "types": ["bun"]}, "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"]}

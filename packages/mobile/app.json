@@ -1,0 +1,1 @@
+{"expo": {"name": "forge", "slug": "forge-mobile", "version": "0.1.0", "orientation": "portrait", "userInterfaceStyle": "dark", "platforms": ["ios", "android"], "android": {"package": "dev.forge.mobile"}, "ios": {"bundleIdentifier": "dev.forge.mobile"}}}

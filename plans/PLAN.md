@@ -2928,13 +2928,43 @@ Each phase contains:
 
 # Stretch Phases (155–204)
 
-*These are future phases to be elaborated only if traction justifies. They're placeholder titles only.*
+*These are future phases to be elaborated only if traction justifies. They're placeholder titles only — except Phase 155, which is elaborated in full below (elaborated 2026-10-17 on explicit user instruction to continue the loop past Phase 154).*
 
 155–164: Mobile companion app (React Native), Voice input integration, Desktop app (Tauri), Real-time collaboration (multi-user sessions), Database-backed sessions (PostgreSQL option)
 165–174: Custom model fine-tuning hooks, RL evaluation framework, Marketplace revenue system, Enterprise analytics dashboard, SSO/SCIM integration
 175–184: Kubernetes deployment mode, Multi-tenant server, API rate limiting per-user, Webhook-triggered automations, Scheduled agent runs (cron)
 185–194: Visual diff editor (TUI), Inline code suggestions, Git bisect automation, Dependency update automation, Security vulnerability scanning
 195–204: Plugin development SDK, Plugin testing framework, Plugin certification program, Community plugin gallery, Annual security audit
+
+---
+
+## Phase 155: Mobile Companion App Foundation (React Native/Expo)
+
+**Description:** Stand up `packages/mobile` — the first stretch phase, elaborated on explicit user instruction. A React Native (Expo) companion app that connects a phone to a running forge server over HTTP: connect screen (server URL + API key), session list, and a per-session runner that sends a prompt and displays the streamed response. Device runs are a human step; everything testable in this workspace (config persistence, server-bound API layer) ships with tests, mirroring the Phase 141 VS Code extension precedent (client apps are thin peers over the HTTP API, logic is tool-tested).
+
+**Deliverables:**
+- `packages/mobile`: Expo-configured React Native app (`app.json`, `App.tsx`, screens: Connect / Sessions / Session)
+- Connection-state module: pluggable `Storage` interface (memory adapter tested; `@react-native-async-storage/async-storage` adapter wired behind the same interface)
+- Server-bound API module on `@forge/sdk`'s `ForgeClient`: health-probe connect, session list, prompt send with streamed-response collection
+- `README.md` with Expo run instructions and the forge-server prerequisites
+- Regression tests: config round-trip + malformed-storage recovery; API layer against an in-process `ForgeServer` with the offline model fixture (same pattern as `packages/vscode`)
+
+**Dependencies:** Phase 154 (launch artifacts exist); server API surface (Phases 102–148).
+
+**Contracts:**
+- `ConnectionConfig = { serverUrl: string; token: string; name?: string }` — heavily validated before any network call (URL shape, non-empty token).
+- `loadConnection(): Promise<ConnectionConfig | null>`, `saveConnection(): Promise<boolean>`, `clearConnection(): Promise<boolean>` — storage errors are results, never throws.
+- `connectToServer(config): Promise<{ ok: true; client: ForgeClient } | { ok: false; error: string }>` — probes `GET /health` with a hard 10s timeout.
+- No `packages/core|server` internals imported — only `@forge/sdk` + `@forge/core` types if any.
+
+**Testing (Tests Required):**
+- Config module: save/load round trip overwrites prior values; corrupt storage recovers to `null` (not a throw); clear empties.
+- API module: connect succeeds against in-process ForgeServer (`/health` 200) and fails `{ok:false}` for unreachable ports; `listSessionSummaries` returns ≥1 after creating a session through the SDK; `sendPrompt` against the offline model returns the model's completion.
+- Typecheck + biome clean; no native toolchain required for the gate (device/emulator run documented as human step).
+
+**Status (2026-10-17):** Implemented — see the ledger row and commit `mobile:`.
+
+**Estimated Hours:** 8–12 hours.
 
 ---
 
