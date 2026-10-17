@@ -25,12 +25,6 @@ export interface BoundaryCheckResult {
 /** Normalize and resolve a path. */
 export function normalizePath(inputPath: string, cwd?: string): string {
   const base = cwd ?? process.cwd()
-  // Drive-prefixed paths are absolute on every host. On POSIX,
-  // path.isAbsolute would treat them as relative names and pull them inside
-  // the workspace boundary - handle them explicitly instead.
-  if (/^[A-Za-z]:[\\/]/.test(inputPath)) {
-    return inputPath.replace(/\//g, '\\')
-  }
   // Normalize forward slashes to platform separators
   const normalizedInput = inputPath.replace(/\//g, path.sep)
   const resolved = path.isAbsolute(normalizedInput)

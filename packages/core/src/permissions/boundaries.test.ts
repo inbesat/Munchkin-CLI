@@ -15,7 +15,10 @@ import {
   validateBoundaryConfig,
 } from './boundaries'
 
-const TEST_CWD = 'C:\\Users\\test\\project'
+const IS_WIN = process.platform === 'win32'
+// Native absolute base per host: drive path on Windows, POSIX absolute elsewhere.
+const TEST_CWD = IS_WIN ? 'C:\\Users\\test\\project' : '/Users/test/project'
+const TMP_ALLOWED = IS_WIN ? 'C:\\shared' : '/shared'
 
 describe('Path Boundaries', () => {
   describe('normalizePath', () => {
@@ -25,11 +28,12 @@ describe('Path Boundaries', () => {
       )
     })
 
-    it('handles absolute paths', () => {
-      expect(normalizePath('C:\\absolute\\path.ts', TEST_CWD)).toBe('C:\\absolute\\path.ts')
+    it('keeps native absolute paths absolute', () => {
+      const absolute = IS_WIN ? 'C:\\absolute\\path.ts' : '/absolute/path.ts'
+      expect(normalizePath(absolute, TEST_CWD)).toBe(absolute)
     })
 
-    it('normalizes separators', () => {
+    it('normalizes separators in relative paths', () => {
       // src/../project/file.ts from TEST_CWD: goes to project/project/file.ts because src/.. = project, then project/file.ts
       expect(normalizePath('src/../project/file.ts', TEST_CWD)).toBe(
         nodePath.resolve(TEST_CWD, 'src/../project/file.ts'),
@@ -74,7 +78,7 @@ describe('Path Boundaries', () => {
     it('allows paths within allowed directory', () => {
       const result = checkPathBoundary('src/index.ts', baseConfig, TEST_CWD)
       expect(result.allowed).toBe(true)
-      expect(result.matchedBoundary).toBe('C:\\Users\\test\\project')
+      expect(result.matchedBoundary).toBe(nodePath.resolve(TEST_CWD))
     })
 
     it('allows the allowed directory itself', () => {
@@ -100,22 +104,20 @@ describe('Path Boundaries', () => {
     })
 
     it('denies absolute paths outside boundary', () => {
-      const result = checkPathBoundary('C:\\Windows\\System32\\config\\sam', baseConfig, TEST_CWD)
+      const outside = IS_WIN ? 'C:\\Windows\\System32\\config\\sam' : '/etc/passwd'
+      const result = checkPathBoundary(outside, baseConfig, TEST_CWD)
       expect(result.allowed).toBe(false)
     })
 
-    it('allows absolute paths within boundary', () => {
-      const result = checkPathBoundary(
-        'C:\\Users\\test\\project\\src\\file.ts',
-        baseConfig,
-        TEST_CWD,
-      )
+    it('allows native absolute paths within boundary', () => {
+      const inside = nodePath.join(TEST_CWD, 'src', 'file.ts')
+      const result = checkPathBoundary(inside, baseConfig, TEST_CWD)
       expect(result.allowed).toBe(true)
     })
 
     it('returns resolved path', () => {
       const result = checkPathBoundary('src/file.ts', baseConfig, TEST_CWD)
-      expect(result.resolvedPath).toBe('C:\\Users\\test\\project\\src\\file.ts')
+      expect(result.resolvedPath).toBe(nodePath.resolve(TEST_CWD, 'src/file.ts'))
     })
   })
 
@@ -137,10 +139,11 @@ describe('Path Boundaries', () => {
   describe('addAllowedPath', () => {
     it('adds new allowed path', () => {
       const config = createDefaultBoundaryConfig(TEST_CWD)
-      const newConfig = addAllowedPath(config, 'C:\\shared\\lib', TEST_CWD)
+      const absolute = nodePath.join(TEST_CWD, 'shared', 'lib')
+      const newConfig = addAllowedPath(config, absolute, TEST_CWD)
 
       expect(newConfig.allowedPaths.length).toBe(2)
-      expect(newConfig.allowedPaths).toContain('C:\\shared\\lib')
+      expect(newConfig.allowedPaths).toContain(absolute)
     })
 
     it('normalizes the new path', () => {
@@ -148,12 +151,12 @@ describe('Path Boundaries', () => {
       const newConfig = addAllowedPath(config, 'shared/../shared/lib', TEST_CWD)
 
       // Relative paths are normalized relative to cwd
-      expect(newConfig.allowedPaths).toContain('C:\\Users\\test\\project\\shared\\lib')
+      expect(newConfig.allowedPaths).toContain(nodePath.resolve(TEST_CWD, 'shared/lib'))
     })
 
     it('does not modify original config', () => {
       const config = createDefaultBoundaryConfig(TEST_CWD)
-      const newConfig = addAllowedPath(config, 'C:\\new\\path', TEST_CWD)
+      const newConfig = addAllowedPath(config, nodePath.join(TEST_CWD, 'new'), TEST_CWD)
 
       expect(config.allowedPaths.length).toBe(1)
       expect(newConfig.allowedPaths.length).toBe(2)
@@ -163,16 +166,17 @@ describe('Path Boundaries', () => {
   describe('removeAllowedPath', () => {
     it('removes existing allowed path', () => {
       const config = createDefaultBoundaryConfig(TEST_CWD)
-      const withExtra = addAllowedPath(config, 'C:\\shared', TEST_CWD)
-      const newConfig = removeAllowedPath(withExtra, 'C:\\shared', TEST_CWD)
+      const absolute = nodePath.join(TMP_ALLOWED, 'sub')
+      const withExtra = addAllowedPath(config, absolute, TEST_CWD)
+      const newConfig = removeAllowedPath(withExtra, absolute, TEST_CWD)
 
       expect(newConfig.allowedPaths.length).toBe(1)
-      expect(newConfig.allowedPaths).not.toContain('C:\\shared')
+      expect(newConfig.allowedPaths).not.toContain(absolute)
     })
 
     it('handles non-existent path gracefully', () => {
       const config = createDefaultBoundaryConfig(TEST_CWD)
-      const newConfig = removeAllowedPath(config, 'C:\\nonexistent', TEST_CWD)
+      const newConfig = removeAllowedPath(config, nodePath.join(TMP_ALLOWED, 'none'), TEST_CWD)
 
       expect(newConfig.allowedPaths.length).toBe(1)
     })
@@ -204,41 +208,46 @@ describe('Path Boundaries', () => {
 
   describe('isSubPath', () => {
     it('identifies subpaths', () => {
-      expect(isSubPath('C:\\Users\\test\\project\\src\\file.ts', 'C:\\Users\\test\\project')).toBe(
-        true,
-      )
-      expect(isSubPath('C:\\Users\\test\\project', 'C:\\Users\\test\\project')).toBe(true)
+      const parent = nodePath.join(TEST_CWD, 'sub')
+      expect(isSubPath(nodePath.join(parent, 'file.ts'), parent)).toBe(true)
+      expect(isSubPath(parent, parent)).toBe(true)
     })
 
     it('rejects non-subpaths', () => {
-      expect(isSubPath('C:\\Users\\other\\file.ts', 'C:\\Users\\test\\project')).toBe(false)
-      expect(isSubPath('C:\\Windows\\system32', 'C:\\Users')).toBe(false)
+      const root = IS_WIN ? 'C:\\Users\\test' : '/Users/test'
+      const other = IS_WIN ? 'C:\\Users\\other' : '/Users/other'
+      expect(isSubPath(nodePath.join(other, 'file.ts'), root)).toBe(false)
+      expect(isSubPath(IS_WIN ? 'D:\\data' : '/data', root)).toBe(false)
     })
 
     it('handles trailing separators', () => {
-      expect(isSubPath('C:\\project\\src', 'C:\\project\\')).toBe(true)
-      expect(isSubPath('C:\\project\\src', 'C:\\project')).toBe(true)
+      const src = nodePath.join(TEST_CWD, 'src')
+      const project = IS_WIN ? TEST_CWD + '\\' : TEST_CWD + '/'
+      expect(isSubPath(src, project)).toBe(true)
+      expect(isSubPath(src, TEST_CWD)).toBe(true)
     })
   })
 
   describe('getCommonAncestor', () => {
     it('finds common ancestor', () => {
-      expect(
-        getCommonAncestor('C:\\Users\\test\\project\\src', 'C:\\Users\\test\\project\\lib'),
-      ).toBe('C:\\Users\\test\\project')
+      const a = nodePath.join(TEST_CWD, 'a')
+      const b = nodePath.join(TEST_CWD, 'b')
+      expect(getCommonAncestor(a, b)).toBe(TEST_CWD)
     })
 
-    it('handles root paths', () => {
-      // On Windows, the common ancestor of C:\a\b and C:\x\y is C:\
-      // But path.resolve('C:\a\b') gives 'C:\a\b' which splits to ['C:', 'a', 'b']
-      // And path.resolve('C:\x\y') gives ['C:', 'x', 'y']
-      // Common is ['C:'] which joins to 'C:'
-      expect(getCommonAncestor('C:\\a\\b', 'C:\\x\\y')).toBe('C:')
+    it('handles different trees under one root', () => {
+      if (IS_WIN) {
+        expect(getCommonAncestor('C:\\x\\a', 'C:\\y\\b')).toBe('C:')
+      } else {
+        expect(getCommonAncestor('/x/a', '/y/b')).toBe('/')
+      }
     })
 
-    it('returns separator for completely different roots', () => {
-      // On Windows, different drives
-      expect(getCommonAncestor('C:\\a', 'D:\\b')).toBe('\\')
+    it('returns separator for different drive roots (Windows)', () => {
+      // POSIX has a single root, so different-drive roots only exist on Windows.
+      expect(getCommonAncestor(IS_WIN ? 'C:\\a' : '/a/1', IS_WIN ? 'D:\\b' : '/a/2')).toBe(
+        IS_WIN ? '\\' : '/a',
+      )
     })
   })
 
@@ -280,9 +289,7 @@ describe('Path Boundaries', () => {
         allowTemp: true,
       }
 
-      const tempDir = require('node:os').tmpdir()
-      const tempFile = `${tempDir}\\test-file.txt`
-
+      const tempFile = nodePath.join(require('node:os').tmpdir(), 'test-file.txt')
       const result = checkPathBoundary(tempFile, config, TEST_CWD)
       expect(result.allowed).toBe(true)
     })
@@ -294,9 +301,7 @@ describe('Path Boundaries', () => {
         allowTemp: false,
       }
 
-      const tempDir = require('node:os').tmpdir()
-      const tempFile = `${tempDir}\\test-file.txt`
-
+      const tempFile = nodePath.join(require('node:os').tmpdir(), 'test-file.txt')
       const result = checkPathBoundary(tempFile, config, TEST_CWD)
       expect(result.allowed).toBe(false)
     })
@@ -312,29 +317,35 @@ describe('Path Boundaries', () => {
       expect(result.reason).toContain('Path traversal detected')
     })
 
-    it('blocks write outside project', () => {
+    it('blocks native-absolute write outside project', () => {
       const config = createDefaultBoundaryConfig(TEST_CWD)
-
-      const result = checkPathBoundary('C:\\Users\\test\\other\\output.txt', config, TEST_CWD)
+      const outside = nodePath.join(nodePath.dirname(TEST_CWD), 'other', 'output.txt')
+      const result = checkPathBoundary(outside, config, TEST_CWD)
       expect(result.allowed).toBe(false)
     })
 
     it('allows additional configured directory', () => {
       let config = createDefaultBoundaryConfig(TEST_CWD)
-      config = addAllowedPath(config, 'C:\\shared\\data', TEST_CWD)
+      const shared = IS_WIN ? 'C:\\shared\\data' : '/shared/data'
+      config = addAllowedPath(config, shared, TEST_CWD)
 
-      const result = checkPathBoundary('C:\\shared\\data\\config.json', config, TEST_CWD)
+      const result = checkPathBoundary(nodePath.join(shared, 'config.json'), config, TEST_CWD)
       expect(result.allowed).toBe(true)
-      expect(result.matchedBoundary).toBe('C:\\shared\\data')
+      expect(result.matchedBoundary).toBe(shared)
     })
 
     it('handles nested allowed paths', () => {
       let config = createDefaultBoundaryConfig(TEST_CWD)
-      config = addAllowedPath(config, 'C:\\shared', TEST_CWD)
+      const shared = IS_WIN ? 'C:\\shared' : '/shared'
+      config = addAllowedPath(config, shared, TEST_CWD)
 
       // Both parent and child should work
-      expect(checkPathBoundary('C:\\shared\\file.txt', config, TEST_CWD).allowed).toBe(true)
-      expect(checkPathBoundary('C:\\shared\\subdir\\file.txt', config, TEST_CWD).allowed).toBe(true)
+      expect(checkPathBoundary(nodePath.join(shared, 'file.txt'), config, TEST_CWD).allowed).toBe(
+        true,
+      )
+      expect(
+        checkPathBoundary(nodePath.join(shared, 'subdir', 'file.txt'), config, TEST_CWD).allowed,
+      ).toBe(true)
     })
   })
 })
