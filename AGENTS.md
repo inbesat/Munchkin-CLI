@@ -72,11 +72,12 @@ A from-scratch, fully customizable, open-source CLI coding agent — a Claude Co
 
 ## Current Phase Status
 
-- **Current phase:** Phase 153 - Launch Materials (Complete); Phases 87-153 implemented - Stage 15 5/6, Phase 154 remains
-  - Completed this engagement: audit repair (all packages), then Phases 87-153 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) complete, Stage 15 (Distribution & Polish, 149-154) 5/6 done
+- **Current phase:** Phase 154 - Post-Launch: Community + Roadmap (Complete); Phases 87-154 implemented - Stage 15 CLOSED (149-154, 6/6)
+  - Completed this engagement: audit repair (all packages), then Phases 87-154 - Stages 7-13 closed, Stage 14 (Observability & Evals, 143-148) complete, Stage 15 (Distribution & Polish, 149-154) 6/6 done
   - Phase 152 note: docs ship as VitePress (`packages/docs`, `/docs/`), landing as Astro (`packages/landing`, site root), demo GIFs pre-rendered from verbatim CLI transcripts; `docs-pages.yml` assembles landing + docs + plugin docs into one Pages artifact (Pages enablement still a manual repo setting). Framework choice recorded as ADR-046
   - Phase 153 note: launch drafts + Discord config live in root `launch/` (nothing auto-publishes); root README.md created with badges + demo GIFs; `bun test scripts/launch-materials.test.ts` is the re-check gate before posting
-- **Next action:** Phase 154 - Post-Launch: Community + Roadmap (final Stage 15 phase)
+  - Phase 154 note: issue templates + ROADMAP.md + docs/bounty.md shipped; the only remaining launch triggers are human steps: push tag `v0.1.0` (fires the release) and enable GitHub Pages (docs/landing), both listed in launch/README.md
+- **Next action:** user decision point - all planned phases (87-154) are implemented. Human launch triggers (tag push, Pages enablement, Discord/npm publication) per launch/README.md; stretch phases 155-204 only "if traction justifies" per plans/PLAN.md
 - **Blockers:**
   - Config key persistence (GET after POST returns 404)
   - Revoked key GET returns 401 instead of 404
