@@ -175,6 +175,9 @@ describe('ForgeServer Full Integration Suite', () => {
       headers: { 'content-type': 'application/json', authorization: authHeader },
       body: JSON.stringify({ name: 'bash', args: { command: 'echo hello' } }),
     })
+    if (res.status !== 200) {
+      throw new Error(`tool execute failed with ${res.status}: ${await res.clone().text()}`)
+    }
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.result).toContain('hello')

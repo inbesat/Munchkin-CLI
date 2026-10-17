@@ -42,9 +42,9 @@ export function normalizePath(inputPath: string, cwd?: string): string {
 
 /** Check if a path contains directory traversal attempts. */
 export function hasPathTraversal(inputPath: string): boolean {
-  // Check for .. segments in the path - handle both / and \ separators
-  const normalized = inputPath.replace(/\//g, path.sep)
-  const parts = normalized.split(path.sep)
+  // Handle both separators explicitly: on POSIX a backslash is not a
+  // separator, so '..'-hidden Windows paths would otherwise slip through.
+  const parts = inputPath.split(/[\\/]/)
   return parts.some((part) => part === '..')
 }
 
