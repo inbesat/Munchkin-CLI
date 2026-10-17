@@ -148,11 +148,27 @@ export function createToolsRoutes(logger?: Logger) {
           break
         }
         case 'bash': {
-          const { $ } = await import('bun')
+          // Run the command through a real shell: Bun's $ tag ESCAPES
+          // interpolations, so `$`echo hello`` spawns a binary named
+          // "echo hello" and fails with exit 1 on every platform.
+          const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash'
+          const flag = process.platform === 'win32' ? '/c' : '-c'
           const cmd = String(data.args.command)
           const cwd = data.args.cwd ? String(data.args.cwd) : process.cwd()
-          const proc = await $`${cmd}`.cwd(cwd).quiet()
-          result = proc.stdout.toString()
+          const proc = Bun.spawn([shell, flag, cmd], {
+            cwd,
+            stdout: 'pipe',
+            stderr: 'pipe',
+          })
+          const stdout = await new Response(proc.stdout).text()
+          const code = await proc.exited
+          if (code !== 0) {
+            return c.json<ToolExecuteResponse>(
+              { result: stdout, error: `Failed with exit code ${code}`, durationMs: Date.now() - start },
+              500,
+            )
+          }
+          result = stdout
           break
         }
         case 'glob': {

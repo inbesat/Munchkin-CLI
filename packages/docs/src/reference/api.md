@@ -37,7 +37,7 @@ Unless noted, responses are JSON. Set `Authorization` on protected endpoints if 
 | --- | --- | --- |
 | GET | `/api/tools` | List registered tools |
 | GET | `/api/tools/:name` | Describe one tool |
-| POST | `/api/tools/execute` | Execute a tool (goes through the permission engine) |
+| POST | `/api/tools/execute` | Execute a tool server-side (validation middleware; built-ins `read`/`write`/`edit`/`bash`/`glob`/`grep`) |
 
 ## Config
 
