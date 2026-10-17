@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a capability or improvement for forge.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](https://github.com/inbesat/Munchkin-CLI/blob/main/ROADMAP.md) first —
+        if this is already listed, add your use case as a comment on the tracking issue instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what blocks you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like forge to do? Be as specific as you can (CLI surface, config keys, plugin hook).
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which layer does this belong in?
+      options:
+        - Agent loop / core sessions
+        - Built-in tools
+        - Permission engine
+        - Model providers
+        - HTTP API / server
+        - TUI
+        - Plugins / hooks
+        - MCP / connectors
+        - Sandboxes
+        - Git integration
+        - Docs
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and workarounds you have tried
+    validations:
+      required: false
+  - type: checkboxes
+    id: bounty
+    attributes:
+      label: Bounty interest
+      description: Some plugin ideas carry bounties (see docs/bounty.md). Would you be interested in implementing this for one?
+      options:
+        - label: I would like to implement this (as a bounty or contribution)
+          required: false

@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in forge does not work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill in every section —
+        incomplete reports usually take longer to fix than complete ones take to write.
+        For security-sensitive findings (injection, sandbox escape, credential exposure),
+        please use GitHub's **Report a vulnerability** in the Security tab instead of a
+        public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect to happen, and what actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction steps
+      description: Minimal steps from a clean shell. Include the exact command you ran.
+      placeholder: |
+        1. forge setup   (answers used)
+        2. forge -p "..."
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Paste the output of `forge doctor --json` (redact any values you consider sensitive)
+        plus your OS and terminal.
+      placeholder: |
+        OS: e.g. Windows 11 / macOS 14 / Ubuntu 24.04
+        Terminal: e.g. Windows Terminal / iTerm2 / gnome-terminal
+        forge version: (forge version)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Session log excerpts or stderr output, if any.
+    validations:
+      required: false

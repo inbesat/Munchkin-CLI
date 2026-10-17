@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://inbesat.github.io/Munchkin-CLI/
+    about: Guides, configuration reference and the HTTP API map — most setup questions are answered there.
+  - name: Plugin development
+    url: https://inbesat.github.io/Munchkin-CLI/plugins/
+    about: Generated reference for the bundled plugins and the marketplace.
+  - name: Plugin bounty program
+    url: https://github.com/inbesat/Munchkin-CLI/blob/main/docs/bounty.md
+    about: Bountied plugin ideas and how to claim one.

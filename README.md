@@ -136,5 +136,7 @@ and `bunx turbo typecheck` before submitting.
 
 ## Community
 
+- Roadmap: [ROADMAP.md](ROADMAP.md)
+- Plugin bounty program: [docs/bounty.md](docs/bounty.md)
 - Docs: <https://inbesat.github.io/Munchkin-CLI/>
 - Privacy (telemetry is opt-in and off by default): [docs/privacy.md](docs/privacy.md)
