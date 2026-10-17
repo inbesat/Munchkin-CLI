@@ -28,6 +28,7 @@
   "dependencies": {
     "@forge/ai": "workspace:*",
     "@forge/core": "workspace:*",
+    "@forge/evals": "workspace:*",
     "@forge/git": "workspace:*",
     "@hono/node-server": "^2.0.0",
     "@hono/zod-openapi": "0.18.1",

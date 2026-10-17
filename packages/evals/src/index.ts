@@ -13,3 +13,14 @@ export {
   type CondenserThresholds,
   type EvalGates,
 } from './condenser'
+
+// Eval runner + built-in benchmark tasks (Phase 145)
+export {
+  runEvalTask,
+  runEvalSuite,
+  type EvalRunOptions,
+  type EvalRunResult,
+  type EvalSuiteOptions,
+  type EvalSuiteReport,
+} from './runner'
+export { BUILTIN_TASKS, type EvalTask } from './tasks'

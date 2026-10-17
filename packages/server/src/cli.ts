@@ -13,6 +13,7 @@ import { join } from 'node:path'
 import { VERSION } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { AuthStore } from './auth/store'
+import { runEvalCommand } from './eval/command'
 import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
 import { runStatsCommand } from './stats/command'
@@ -43,6 +44,7 @@ Usage:
   forge auth <list|create|revoke> [options]
   forge worktree <list|create|merge|remove> [options]
   forge stats [--json] [--base-dir <path>] [--db <path>]
+  forge eval <list|run> [--task <id>] [--model <id>] [--json]
   forge help
   forge version
 
@@ -54,6 +56,8 @@ Options:
   --cors <origin>       Allow a specific CORS origin (repeatable)
   --no-cors             Disable CORS (default allows '*')
   --auth-token <t>      Require a bearer token on every request (serve only)
+  --task <id>           Run a specific eval task (repeatable; eval run only)
+  --model <id>          Model id for eval runs (default \$FORGE_MODEL)
   GITHUB_WEBHOOK_SECRET  Mount /api/github/webhook (GitHub App; env)
   --help, -h            Show this help
   --version, -v         Show the version
@@ -69,6 +73,8 @@ Examples:
   forge auth revoke <key-id>
   forge stats                        # usage dashboard (cost, sessions, tools)
   forge stats --json                 # machine-readable stats
+  forge eval list                    # list built-in benchmark tasks
+  forge eval run --json              # run the eval suite, machine-readable
 `
 
 /**
@@ -254,6 +260,10 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   // usage dashboard over the on-disk session store.
   if (argv[0] === 'stats') {
     return runStatsCommand(argv, { write })
+  }
+  // Phase 145: `forge eval <list|run> [options]` - built-in eval runner.
+  if (argv[0] === 'eval') {
+    return runEvalCommand(argv, { write })
   }
   // Phase 137/139: `forge -p "prompt"` - one-shot print mode; `--json` emits
   // structured output for automation. Piped stdin combines with the prompt.
