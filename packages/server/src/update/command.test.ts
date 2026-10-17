@@ -102,7 +102,7 @@ describe('runUpdateCommand (Phase 150)', () => {
       const code = await run(['update', '--json'], { write: () => {} })
       expect(code).toBe(1)
     } finally {
-      process.env.FORGE_UPDATE_ENDPOINT = undefined
+      Reflect.deleteProperty(process.env, 'FORGE_UPDATE_ENDPOINT')
     }
   })
 })
