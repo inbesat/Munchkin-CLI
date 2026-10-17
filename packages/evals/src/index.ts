@@ -24,3 +24,15 @@ export {
   type EvalSuiteReport,
 } from './runner'
 export { BUILTIN_TASKS, type EvalTask } from './tasks'
+
+// Regression suite per release (Phase 146)
+export {
+  compareToBaseline,
+  defaultRegressionConfigPath,
+  loadRegressionConfig,
+  saveRegressionConfig,
+  type RegressionConfig,
+  type RegressionReport,
+  type RegressionResult,
+  type RegressionStatus,
+} from './regression'

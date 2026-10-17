@@ -44,7 +44,7 @@ Usage:
   forge auth <list|create|revoke> [options]
   forge worktree <list|create|merge|remove> [options]
   forge stats [--json] [--base-dir <path>] [--db <path>]
-  forge eval <list|run> [--task <id>] [--model <id>] [--json]
+  forge eval <list|run|regress> [--task <id>] [--model <id>] [--config <file>] [--json]
   forge help
   forge version
 
@@ -75,6 +75,7 @@ Examples:
   forge stats --json                 # machine-readable stats
   forge eval list                    # list built-in benchmark tasks
   forge eval run --json              # run the eval suite, machine-readable
+  forge eval regress                 # release gate: fail on eval regressions
 `
 
 /**

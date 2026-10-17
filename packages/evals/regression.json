@@ -1,0 +1,8 @@
+{
+  "tasks": ["create-file", "fix-off-by-one", "rename-across-files"],
+  "baseline": {
+    "create-file": true,
+    "fix-off-by-one": true,
+    "rename-across-files": true
+  }
+}
