@@ -222,7 +222,7 @@ describe('Path Boundaries', () => {
 
     it('handles trailing separators', () => {
       const src = nodePath.join(TEST_CWD, 'src')
-      const project = IS_WIN ? TEST_CWD + '\\' : TEST_CWD + '/'
+      const project = IS_WIN ? `${TEST_CWD}\\` : `${TEST_CWD}/`
       expect(isSubPath(src, project)).toBe(true)
       expect(isSubPath(src, TEST_CWD)).toBe(true)
     })
