@@ -13,6 +13,7 @@ import { join } from 'node:path'
 import { VERSION } from '@forge/core'
 import { worktreeCreate, worktreeList, worktreeMerge, worktreeRemove } from '@forge/git'
 import { AuthStore } from './auth/store'
+import { runDoctorCommand } from './doctor/command'
 import { runEvalCommand } from './eval/command'
 import { createGitHubAppFromEnv } from './github/env'
 import { type ServerOptions, createServer } from './server'
@@ -47,6 +48,7 @@ Usage:
   forge stats [--json] [--base-dir <path>] [--db <path>]
   forge eval <list|run|regress> [--task <id>] [--model <id>] [--config <file>] [--json]
   forge telemetry <status|on|off>
+  forge doctor [--json] [--online]
   forge help
   forge version
 
@@ -80,6 +82,8 @@ Examples:
   forge eval regress                 # release gate: fail on eval regressions
   forge telemetry status             # opt-in state and exactly what is sent
   forge telemetry off                # disable anonymous usage telemetry
+  forge doctor                       # diagnose the installation
+  forge doctor --json --online       # machine-readable, probe provider reachability
 `
 
 /**
@@ -273,6 +277,10 @@ export async function run(argv: string[], opts: ParseOptions = {}): Promise<numb
   // Phase 147: `forge telemetry <status|on|off>` - opt-in usage telemetry.
   if (argv[0] === 'telemetry') {
     return runTelemetryCommand(argv, { write })
+  }
+  // Phase 148: `forge doctor [--json] [--online]` - installation diagnostics.
+  if (argv[0] === 'doctor') {
+    return runDoctorCommand(argv, { write })
   }
   // Phase 137/139: `forge -p "prompt"` - one-shot print mode; `--json` emits
   // structured output for automation. Piped stdin combines with the prompt.
