@@ -39,6 +39,19 @@
         "typescript": "^5.7.0",
       },
     },
+    "packages/cli": {
+      "name": "forge",
+      "version": "0.1.0",
+      "bin": {
+        "forge": "./dist/forge.js",
+      },
+      "devDependencies": {
+        "@biomejs/biome": "^1.9.0",
+        "@forge/core": "workspace:*",
+        "@forge/server": "workspace:*",
+        "typescript": "^5.7.0",
+      },
+    },
     "packages/core": {
       "name": "@forge/core",
       "version": "0.1.0",
@@ -636,6 +649,8 @@
     "find-babel-config": ["find-babel-config@2.1.2", "", { "dependencies": { "json5": "^2.2.3" } }, "sha512-ZfZp1rQyp4gyuxqt1ZqjFGVeVBvmpURMqdIWXbPRfB97Bf6BzdK/xSIbylEINzQ0kB5tlDQfn9HkNXXWsqTqLg=="],
 
     "find-up": ["find-up@3.0.0", "", { "dependencies": { "locate-path": "^3.0.0" } }, "sha512-1yD6RmLI1XBfxugvORwlck6f75tYL+iR0jqwsOrOxMZyGYqUuDhJ0l4AXdO1iX/FTs9cBAMEk1gWSEx1kSbylg=="],
+
+    "forge": ["forge@workspace:packages/cli"],
 
     "forge-format": ["forge-format@workspace:plugins/forge-format"],
 

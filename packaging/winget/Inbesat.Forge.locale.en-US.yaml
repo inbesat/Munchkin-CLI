@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+PackageIdentifier: Inbesat.Forge
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: Inbesat
+PublisherUrl: https://github.com/inbesat
+PackageName: Forge
+PackageUrl: https://github.com/inbesat/Munchkin-CLI
+ShortDescription: Open-source CLI coding agent with a plugin-everything architecture
+Moniker: forge
+Tags:
+  - cli
+  - ai
+  - coding-agent
+  - developer-tools
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

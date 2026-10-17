@@ -1,0 +1,33 @@
+{
+  "name": "forge",
+  "version": "0.1.0",
+  "description": "Open-source CLI coding agent with a plugin-everything architecture",
+  "type": "module",
+  "bin": {
+    "forge": "./dist/forge.js"
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/inbesat/Munchkin-CLI.git"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "scripts": {
+    "build": "bun run src/bundle.ts",
+    "prepack": "bun run build",
+    "test": "bun test",
+    "lint": "biome check src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@forge/core": "workspace:*",
+    "@forge/server": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ScoopInstaller/Scoop/master/schema.json",
+  "version": "0.1.0",
+  "description": "Open-source CLI coding agent with a plugin-everything architecture",
+  "homepage": "https://github.com/inbesat/Munchkin-CLI",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/inbesat/Munchkin-CLI/releases/download/v0.1.0/forge-win-x64.exe",
+      "hash": "TODO_RELEASE_SHA256"
+    }
+  },
+  "bin": [["forge-win-x64.exe", "forge"]],
+  "checkver": {
+    "github": "https://github.com/inbesat/Munchkin-CLI"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/inbesat/Munchkin-CLI/releases/download/v$version/forge-win-x64.exe",
+        "hash": {
+          "url": "$baseurl/checksums.txt"
+        }
+      }
+    }
+  }
+}
