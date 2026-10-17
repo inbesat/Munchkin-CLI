@@ -164,7 +164,11 @@ export function createToolsRoutes(logger?: Logger) {
           const code = await proc.exited
           if (code !== 0) {
             return c.json<ToolExecuteResponse>(
-              { result: stdout, error: `Failed with exit code ${code}`, durationMs: Date.now() - start },
+              {
+                result: stdout,
+                error: `Failed with exit code ${code}`,
+                durationMs: Date.now() - start,
+              },
               500,
             )
           }
