@@ -1,12 +1,21 @@
-name: Deploy plugin docs to GitHub Pages
+name: Deploy site to GitHub Pages
+
+# Builds the full site artifact: landing (root) + VitePress docs (/docs/) +
+# generated plugin docs (/plugins/). Requires GitHub Pages enabled with the
+# "GitHub Actions" source (manual repository setting; see packaging/README.md).
 
 on:
   push:
     branches: [main]
     paths:
       - 'marketplace/**'
-      - 'scripts/generate-plugin-docs.ts'
+      - 'packages/docs/**'
+      - 'packages/landing/**'
       - 'packages/plugin-kernel/src/docs/**'
+      - 'scripts/generate-plugin-docs.ts'
+      - 'scripts/generate-demo-gifs.ts'
+      - 'scripts/assemble-pages-site.ts'
+      - 'scripts/pages-site.test.ts'
       - '.github/workflows/docs-pages.yml'
   workflow_dispatch:
 
@@ -25,8 +34,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - name: Generate plugin docs
-        run: bun run scripts/generate-plugin-docs.ts
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build site packages
+        run: bunx turbo build --filter=@forge/landing --filter=@forge/docs
+      - name: Assemble Pages artifact
+        run: bun run scripts/assemble-pages-site.ts
+      - name: Verify all pages load and every link resolves
+        run: bun test scripts/pages-site.test.ts
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

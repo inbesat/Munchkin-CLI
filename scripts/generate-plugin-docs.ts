@@ -5,12 +5,18 @@
  */
 
 import { existsSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
-import { generatePluginDocs, renderDocsSite, writeDocsSite } from '../packages/plugin-kernel/src/docs/generator'
+import { join, resolve } from 'node:path'
+import {
+  generatePluginDocs,
+  renderDocsSite,
+  writeDocsSite,
+} from '../packages/plugin-kernel/src/docs/generator'
 
 const repoRoot = join(import.meta.dir, '..')
 const pluginsRoot = join(repoRoot, 'marketplace', 'plugins')
-const outDir = join(repoRoot, 'dist-docs')
+// Optional explicit output directory (used by assemble-pages-site.ts); default dist-docs/
+const outDir =
+  process.argv[2] !== undefined ? resolve(process.argv[2]) : join(repoRoot, 'dist-docs')
 
 if (!existsSync(pluginsRoot)) {
   console.error(`no plugins directory at ${pluginsRoot} - nothing to document`)
@@ -18,7 +24,10 @@ if (!existsSync(pluginsRoot)) {
 }
 
 const entries = readdirSync(pluginsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && statSync(join(pluginsRoot, entry.name, 'forge.plugin.json')).isFile())
+  .filter(
+    (entry) =>
+      entry.isDirectory() && statSync(join(pluginsRoot, entry.name, 'forge.plugin.json')).isFile(),
+  )
   .map((entry) => {
     const dir = join(pluginsRoot, entry.name)
     const page = generatePluginDocs(dir, { slug: entry.name })
