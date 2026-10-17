@@ -71,21 +71,29 @@ export class RewindService {
    * checkpoint is newer than the target keep that newer restore point out
    * of scope - they are rolled back to their latest checkpoint at-or-before
    * the target; files with none are skipped.
+   *
+   * Selection uses journal POSITION, not timestamps: entries written within
+   * the same millisecond (fast CI machines) would otherwise resolve
+   * non-deterministically against `savedAt` comparisons.
    */
   rewindTo(request: { id?: string }): RewindResult {
+    const journal = this.engine.listCheckpoints()
     const point = this.resolvePoint(request.id)
     if (point === undefined) {
       return { ok: false, error: `checkpoint '${request.id ?? 'latest'}' not found in the journal` }
     }
+    const targetIndex = journal.findIndex((entry) => entry.id === point.id)
+    if (targetIndex === -1) {
+      return { ok: false, error: `checkpoint '${point.id}' not found in the journal` }
+    }
 
-    const journal = this.engine.listCheckpoints()
     const byFile = new Map<string, CheckpointEntry | null>()
-    for (const entry of journal) {
-      if (entry.savedAt > point.savedAt) {
-        byFile.set(entry.file, byFile.get(entry.file) ?? null)
-        continue
-      }
-      byFile.set(entry.file, entry)
+    for (let i = 0; i <= targetIndex; i += 1) {
+      byFile.set(journal[i].file, journal[i])
+    }
+    for (let i = targetIndex + 1; i < journal.length; i += 1) {
+      const file = journal[i].file
+      if (!byFile.has(file)) byFile.set(file, null)
     }
 
     const files: FileRewindResult[] = []

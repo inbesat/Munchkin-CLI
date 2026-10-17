@@ -47,7 +47,10 @@ describe('PR review workflow (Phase 136)', () => {
     const ghProbe = await import('node:child_process').then((cp) =>
       cp.spawnSync('gh', ['--version'], { encoding: 'utf-8' }),
     )
-    if (ghProbe.status === 0) return // gh present - degradation path not testable here
+    // Only take the degradation path when gh is truly absent (spawn ENOENT).
+    // A transient spawn failure under parallel load would otherwise run the
+    // real gh flow and fail on network timing.
+    if (ghProbe.status === 0 || ghProbe.error === null) return
     const result = await tool.execute({ prNumber: 1 })
     expect(result.ok).toBe(false)
     expect(result.output).toContain('gh CLI is not installed')

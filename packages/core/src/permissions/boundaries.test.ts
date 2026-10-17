@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import * as nodePath from 'node:path'
 import {
   type PathBoundaryConfig,
   addAllowedPath,
@@ -20,7 +21,7 @@ describe('Path Boundaries', () => {
   describe('normalizePath', () => {
     it('resolves relative paths', () => {
       expect(normalizePath('src/index.ts', TEST_CWD)).toBe(
-        'C:\\Users\\test\\project\\src\\index.ts',
+        nodePath.resolve(TEST_CWD, 'src/index.ts'),
       )
     })
 
@@ -31,12 +32,12 @@ describe('Path Boundaries', () => {
     it('normalizes separators', () => {
       // src/../project/file.ts from TEST_CWD: goes to project/project/file.ts because src/.. = project, then project/file.ts
       expect(normalizePath('src/../project/file.ts', TEST_CWD)).toBe(
-        'C:\\Users\\test\\project\\project\\file.ts',
+        nodePath.resolve(TEST_CWD, 'src/../project/file.ts'),
       )
     })
 
     it('handles current directory', () => {
-      expect(normalizePath('.', TEST_CWD)).toBe('C:\\Users\\test\\project')
+      expect(normalizePath('.', TEST_CWD)).toBe(nodePath.resolve(TEST_CWD))
     })
   })
 

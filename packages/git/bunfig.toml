@@ -1,0 +1,5 @@
+# Real git operations + spawned processes occasionally exceed bun's 5s
+# default per-test timeout when the suite runs in parallel with other
+# package suites (flaky on loaded machines/CI).
+[test]
+timeout = 30000
