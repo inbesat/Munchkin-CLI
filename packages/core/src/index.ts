@@ -161,6 +161,9 @@ export type {
 // Stats aggregation (Phase 143)
 export * from './stats'
 
+// Telemetry (Phase 147)
+export * from './telemetry'
+
 // Agent Loop (Phase 33)
 export * from './agent'
 
