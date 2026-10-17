@@ -36,8 +36,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - name: Build server closure (core dist needed by the CLI-help capture)
+        run: bunx turbo build --filter=@forge/server...
       - name: Build site packages
-        run: bunx turbo build --filter=@forge/server... --filter=@forge/docs --filter=@forge/landing
+        run: bunx turbo build --filter=@forge/docs --filter=@forge/landing
       - name: Assemble Pages artifact
         run: bun run scripts/assemble-pages-site.ts
       - name: Verify all pages load and every link resolves
